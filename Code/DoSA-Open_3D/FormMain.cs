@@ -1,0 +1,2672 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+// Debugging
+using System.Diagnostics;
+
+// File
+using System.IO;
+
+using System.Reflection;
+using System.Threading;
+using System.Windows.Forms.DataVisualization.Charting;
+
+using Microsoft.Win32;
+using System.Resources;
+using System.Globalization;
+
+// DoSA 생성 클래스들을 오픈한다
+// 같은 namespace 를 사용해도 가능하나 ClassView 에서 보기가 어려워서 구분해서 사용한다.
+using Parts;
+using Experiments;
+using Nodes;
+using gtLibrary;
+using Onelab;
+
+namespace DoSA
+{
+    public partial class FormMain : Form
+    {
+        #region-------------------------- 내부 변수 ----------------------------
+
+        // Treeview 접근 INDEX
+		const int FIRST_PARTS_INDEX = 0;
+		const int FIRST_ANALYSIS_INDEX = 1;
+
+        private CManageFile m_manageFile = new CManageFile();
+
+        private string m_strBackupNodeName = string.Empty;
+
+        private string m_strCommandLineDesignFullName = string.Empty;
+        private string m_strCommandLineDataFullName = string.Empty;
+
+        public CDesign m_design = new CDesign();
+
+        public ResourceManager m_resManager = null;        
+
+        #endregion
+
+        #region----------------------- 프로그램 초기화 --------------------------
+
+        public FormMain(string strDSAFileFullName = null, string strDataFileFullName = null)
+        {
+            InitializeComponent();
+
+            // 기존에 동작을 하고 있는 FEMM 이 있으면 오류가 발생한다.
+            //killProcessOfFEMM();
+
+            m_resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
+
+            ///------------------------------------------------------------------------
+            /// 언어설정 전 처리
+            /// 
+            /// 언어설정 전에 환경설정 파일 없음에 대한 알림 메시지의 언어를 결정하고 있다.
+            /// 여기에서 현재의 언어 정보을 읽어드려서 한국어가 아니면 모두 영어로 처리한다.
+            /// 그리고 열리는 환경설정 창 콤보 박스에도 반영을 한다.
+            /// 정상적인 언어 설정은 CSettingData.updataLanguge() 에서 이루어진다.
+            CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
+
+            /// 한국어가 아니라면 모두 영어로 처리하라.
+            if (ctInfo.Name.Contains("ko") != true)
+            {
+                ctInfo = new CultureInfo("en-US");
+
+                Thread.CurrentThread.CurrentCulture = ctInfo;
+                Thread.CurrentThread.CurrentUICulture = ctInfo;
+            }
+            else
+            {
+                ctInfo = new CultureInfo("ko-KR");
+
+                Thread.CurrentThread.CurrentCulture = ctInfo;
+                Thread.CurrentThread.CurrentUICulture = ctInfo;
+            }
+            ///------------------------------------------------------------------------
+
+
+            /// 리소스 파일을 확인하다.
+            bool retEnglish, retKorean;
+            retEnglish = m_manageFile.isExistFile(Path.Combine(Application.StartupPath, "LanguageResource.en-US.resources"));
+            retKorean = m_manageFile.isExistFile(Path.Combine(Application.StartupPath, "LanguageResource.ko-KR.resources"));
+
+            if(retEnglish == false || retKorean == false)
+            {
+                MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                System.Windows.Forms.Application.ExitThread();
+                Environment.Exit(0);            
+            }
+
+            initializeProgram();
+            
+            // FEMM 에서 지원되는 재질을 Loading 한다.
+            loadMaterial();
+
+            //m_femm = null;
+
+            /// 파라메터 처리 저장
+            /// 
+            /// Command Parameter 0 : 일반 실행
+            /// Command Parameter 1 : 지정 디자인만 오픈
+            /// Command Parameter 2 : 지정 디장인을 열고, 입력데이터 파일로 작업을 함
+            /// 
+            if (strDSAFileFullName != null)
+            {
+                m_strCommandLineDesignFullName = strDSAFileFullName;
+                if(strDataFileFullName != null)
+                    m_strCommandLineDataFullName = strDataFileFullName;
+            }                
+        }
+
+        private void initializeProgram()
+        {
+            try
+            {
+                /// Net Framework V4.51 이전버전이 설치 되었는지를 확인한다.
+                bool retFreamework = checkFramework451();
+
+                if (retFreamework == false)
+                {
+                    DialogResult result = CNotice.noticeWarningOKCancelID("DRIO1", "W");
+                    
+                    if(result == DialogResult.OK )
+                        openWebsite(@"https://www.microsoft.com/ko-kr/download/details.aspx?id=30653");
+
+                    System.Windows.Forms.Application.ExitThread();
+                    Environment.Exit(0);
+                }
+
+                // 실행파일의 위치를 읽어낸다.
+                CSettingData.m_strProgramDirName = System.Windows.Forms.Application.StartupPath;
+
+                // Log 디렉토리가 없으면 생성 한다.
+                string strLogDirName = Path.Combine(CSettingData.m_strProgramDirName, "Log");
+
+                if (m_manageFile.isExistDirectory(strLogDirName) == false)
+                    m_manageFile.createDirectory(strLogDirName);
+
+                // 출력방향을 결정함 (아래 코드가 동작하면 파일 출력, 동작하지 않으면 Output 창 출력)
+                Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(CSettingData.m_strProgramDirName, "Log", DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".Log")));
+
+                // 이벤트 생성 부
+                // 
+                // 내부함수인 printLogEvent() 의 함수포인트를 사용해서 이벤트 함수를 설정한다
+                CNotice.Notice += printLogEvent;
+
+                
+                /// 환경파일 작업
+                ///
+                string strSettingFileFullName = Path.Combine(CSettingData.m_strProgramDirName, "setting.ini");
+                
+                PopupSetting frmSetting = new PopupSetting();
+                frmSetting.StartPosition = FormStartPosition.CenterParent;
+
+                if (false == m_manageFile.isExistFile(strSettingFileFullName))
+                {
+                    ///------------------------------------------------------------------------
+                    /// 환경설정 창안의 언어를 현재의 언어로 지정한다.
+                    CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
+
+                    /// 한국어가 아니라면 모두 영어로 처리하라.
+                    if (ctInfo.Name.Contains("ko") != true)
+                    {
+                        frmSetting.setInitLanguage(EMLanguage.English);
+                    }
+                    else
+                    {
+                        frmSetting.setInitLanguage(EMLanguage.Korean);
+                    }
+                    ///------------------------------------------------------------------------
+
+                    // 언어 설정 후에 출력해야 한다.
+                    CNotice.noticeWarningID("TCFC");
+
+                    // 파일자체가 없기 때문에 다이얼로그의 데이터 설정없이 바로 호출한다.
+                    if (DialogResult.OK == frmSetting.ShowDialog())
+                    {
+                        frmSetting.saveSettingToFile();
+                    }
+                    else
+                    {
+                        CNotice.noticeWarningID("IYCT");
+
+                        System.Windows.Forms.Application.ExitThread();
+                        Environment.Exit(0);
+                    }
+                }
+                else
+                {
+                    frmSetting.loadSettingFromFile();
+
+                    if (CSettingData.isDataOK(false) == false)
+                    {
+                        CNotice.noticeWarningID("TIAP7");
+
+                        if (DialogResult.OK == frmSetting.ShowDialog())
+                        {
+                            frmSetting.saveSettingToFile();
+                        }
+                        else
+                        {
+                            CNotice.noticeWarningID("IYCT");
+
+                            System.Windows.Forms.Application.ExitThread();
+                            Environment.Exit(0);
+                        }
+                    }
+
+                    // WorkingDirectory 을 읽어온 후에 
+                    // 작업의 편의를 위해 디렉토리를 WorkingDirectory 로 변경한다.
+                    m_manageFile.setCurrentDirectory(CSettingData.m_strWorkingDirName);
+                }
+
+                /// 언어를 설정한다.
+                CSettingData.updataLanguge();
+
+                
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region----------------------- Notice Event 호출 함수 ----------------------
+
+        // 이벤트 발생 때 호출되는 함수
+        void printLogEvent(EMOutputTarget emTarget, string strMSG)
+        {
+            if (emTarget == EMOutputTarget.TRACE)
+            {
+                Trace.WriteLine(DateTime.Now.ToString() + ", " + strMSG);
+                Trace.Flush();
+            }
+            else
+            {
+                messageListView.addItem(strMSG);
+            }
+        }
+
+        #endregion
+
+        #region--------------------- 재질 초기화 ---------------------------
+        
+        private void loadMaterial()
+        {
+            List<string> listMaterialNames = new List<string>();
+
+            CReadFile readFile = new CReadFile();
+
+            string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirName, "Materials");
+
+            try
+            {
+
+                #region //--------------------- 기본 재료 추가하기 -------------------------
+
+                //------------------------------------------------
+                // 자기회로 Maxwell 내장 연자성 재료
+                //------------------------------------------------
+                // 내장 연자성재료를 추가할 때는 BH 곡선의 내장 연자성재료 설정도 같이 변경해 주어야 한다
+                
+                string strMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
+
+                readFile.readMaterialNames(strMaterialFileFullName, ref listMaterialNames);
+
+                foreach (string strName in listMaterialNames)
+                    CPropertyItemList.steelList.Add(strName);
+
+                //------------------------------------------------
+                // 자기회로 내장 영구자석
+                //------------------------------------------------
+                strMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MG.dmat");
+
+                readFile.readMaterialNames(strMaterialFileFullName, ref listMaterialNames);
+
+                foreach (string strName in listMaterialNames)
+                    CPropertyItemList.magnetList.Add(strName);
+
+                //------------------------------------------------
+                // 코일 동선 재료
+                //------------------------------------------------
+                CPropertyItemList.coilWireList.Add("Aluminum, 1100");
+                CPropertyItemList.coilWireList.Add("Copper");
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+        }
+        #endregion
+
+        #region------------------------- 전체 초기화 ------------------------
+        //전체 초기화 한다
+        private void closeDesign()
+        {
+            // 기존 자료를 초기화 한다
+            // Second Node 들을 삭제한다.
+            foreach (TreeNode firstLayerNode in treeViewMain.Nodes)
+                firstLayerNode.Nodes.Clear();
+
+            // First Node 들을 삭제한다.
+            treeViewMain.Nodes.Clear();
+            
+            m_design.clearDesign();
+
+            splitContainerRight.Panel1.Controls.Clear();
+            splitContainerRight.Panel1.Controls.Add(this.panelEmpty);
+
+            // PropertyGrid 창을 초기화 한다.
+            propertyGridMain.SelectedObject = null;
+        }
+        #endregion
+
+        
+        #region--------------------- Ribbon Menu ---------------------------
+
+        private void ribbonButtonNew_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (m_design.m_bChanged == true)
+                {
+                    if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT", "W"))
+                    {
+                        saveDesignFile();
+                    }
+                }
+
+                List<string> listScriptString = new List<string>();
+                List<string> listRemainedPartNames = new List<string>();
+                List<string> listAllPartNames = new List<string>();
+
+                PopupNewDesign formNewDesign = new PopupNewDesign();
+                formNewDesign.StartPosition = FormStartPosition.CenterParent;
+
+                /// 이해할 수 없지만, 자동으로 Owner 설정이 되는 경우도 있고 아닌 경우도 있기 때문에
+                /// Shape 창에서 MainForm 을 접근할 수 있도록 미리 설정을 한다.
+                formNewDesign.Owner = this;
+
+                if (DialogResult.Cancel == formNewDesign.ShowDialog())
+                    return;
+
+                // 기존 디자인 데이터를 모두 삭제한다.
+                closeDesign();
+
+                // 확장자나 경로가 없는 디자인 명이다.
+                string strDesignName = formNewDesign.m_strDesignName;
+                string strSTEPFileFullName = formNewDesign.m_strSTEPFileFullName;
+
+                // 빈칸 확인으로 null 비교를 사용하지 말라. 
+                // - .Length == 0 나 "" 를 사용하라
+                if (strDesignName.Length == 0)
+                {
+                    CNotice.printTraceID("DNIN");
+                    return;
+                }
+
+                #region ------------------------- 디렉토리 및 파일명 설정 ------------------------
+
+                // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
+                // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
+                // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
+                string strDesignDirName = Path.Combine(CSettingData.m_strWorkingDirName, strDesignName);
+
+                // 형상 디렉토리 
+                string strShapeDirName = Path.Combine(strDesignDirName, "Shape");
+                // 형상 디렉토리안의 만들어진다.
+                string strShapeModelFileFullName = Path.Combine(strShapeDirName, strDesignName + ".step");
+
+                string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+
+                // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
+                string strRunScriptFileFullName = Path.Combine(strShapeDirName, strDesignName + ".geo");
+                
+                // Part Names 파일도 형상 디렉토리에서 존재 한다.
+                string strPartNamesFileFullName = Path.Combine(strShapeDirName, strDesignName + ".txt");
+
+                // Mesh 파일도 형상 디렉토리에서 작업을 한다.
+                string strMeshFileFullName = Path.Combine(strShapeDirName, strDesignName + ".msh");
+
+                #endregion --------------------------------------------------------------------------
+
+
+                #region ------------------------- 디렉토리 생성 및 파일 복사------------------------
+
+                // 다지인 디렉토리를 생성한다.
+                m_manageFile.createDirectory(strDesignDirName);
+                // 형상 디렉토리도 같이 생성한다.
+                m_manageFile.createDirectory(strShapeDirName);
+
+                // Maxwell Shape 파일을 현 디자인에 복사한다.
+                m_manageFile.copyFile(strSTEPFileFullName, strShapeModelFileFullName);
+
+                #endregion --------------------------------------------------------------------------
+
+
+                CWriteFile writeFile = new CWriteFile();
+                CReadFile readFile = new CReadFile();
+
+                CScriptContents scriptContents = new CScriptContents();
+
+                string strOrgStriptContents = scriptContents.m_str01_CheckSTEP_Script;
+
+                // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
+                listScriptString.Add(strShapeModelFileFullName);
+                listScriptString.Add(strPartNamesFileFullName);
+
+                // Script 파일이 문제없이 만들어지면 아래 동작을 실시하다.
+                if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    //string strRunScriptFileFullName = m_manageFile.solveDirectoryNameInPC(m_strRunScriptFileFullName);
+
+                    string strArguments = " -2 " + strRunScriptFileFullName;
+                    //string strArguments = " " + strRunScriptFileFullName;
+
+                    // Maxwell 종료될 때 가지 툴킷을 기다린다.
+                    // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
+                    CScript.runScript(strGmshExeFileFullName, strArguments, true);
+
+                    // Maxwell 의 종료시간을 기다려준다.
+                    Thread.Sleep(500);
+
+                    if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
+                    {
+                        CNotice.noticeWarning("형상 파일을 찾지 못했습니다.");
+                        return;
+                    }
+
+                    // 순서 주의
+                    //  - closeDesign() 뒤에 호출되어야 한다.
+                    //
+                    // m_design 에 이름과 경로를 저장해 둔다.
+                    m_design.m_strDesignName = strDesignName;
+
+                    // 생성할 경우 Design Directory 는 CSettingData.m_strWorkingDirName + strActuatorDesignName 로
+                    // 무조건 프로그램 작업디렉토리에 생성되도록 하고 있다. 
+                    m_design.m_strDesignDirName = strDesignDirName;
+
+                    if( true == m_manageFile.isExistFile(strPartNamesFileFullName) )
+                    {
+                        // [주의 사항]
+                        // Part Name 을 한번 불러온 후에 
+                        // 파트명이 넘어온 동일한 List 로 RemainedShapeNameList 와 AllShapeNameList 에 복사를 하면
+                        // 데이터 복사가 아니라 Reference 복사가 되면서 RemainedShapeNameList 와 AllShapeNameList 가 동일 변수가 되어 버린다.
+                        // 그래서 두번 호출하고 두개의 임시 List 를 사용했다.
+                        readFile.readCSVRowString(strPartNamesFileFullName, ref listRemainedPartNames, 1);
+                        m_design.RemainedShapeNameList = listRemainedPartNames;
+
+                        readFile.readCSVRowString(strPartNamesFileFullName, ref listAllPartNames, 1);
+                        m_design.AllShapeNameList = listAllPartNames;
+
+                        // 정상적으로 스크립트 파일이 동작했다면 스크립트파일은 삭제한다.
+                        m_manageFile.deleteFile(strRunScriptFileFullName);
+
+                        // 단지 리스트를 확인하기 위한 창임을 구분하기 위해 SHOW_LIST 항목을 사용하고 있다.
+                        PopupAddNode dlgFormNodeName = new PopupAddNode(EMKind.SHOW_LIST, m_design.RemainedShapeNameList);
+
+                        if (DialogResult.Cancel == dlgFormNodeName.ShowDialog())
+                        {
+                            // 취소되면 디자인디렉토리를 삭제한다.
+                            m_manageFile.deleteDirectory(strDesignDirName);
+                            return;
+                        }
+                            
+                    }
+                    else
+                    {
+                        CNotice.printTrace("Part Names 파일이 존재하지 않는다.");
+
+                        // 생성된 Design 디렉토리를 내부파일과 같이 한꺼번에 삭제한다.
+                        m_manageFile.deleteDirectory(strDesignDirName);
+
+                        return;
+                    }
+
+                    m_design.calcShapeSize(strMeshFileFullName);
+                    
+                     // 초기 파일을 저장한다.
+                    saveDesignFile();
+                }
+                else
+                {
+                    CNotice.printTrace("CheckSTEP 배치파일 생성에 문제가 발생했습니다.");
+                    return;
+                }
+
+                // 프로젝트가 시작 했음을 표시하기 위해서 TreeView 에 기본 가지를 추가한다.
+                TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
+                treeViewMain.Nodes.Add(treeNode);
+
+                treeNode = new TreeNode("Experiments", (int)EMKind.EXPERIMENTS, (int)EMKind.EXPERIMENTS);
+                treeViewMain.Nodes.Add(treeNode);
+
+                // 수정 되었음을 기록한다.
+                m_design.m_bChanged = true;
+
+                // 제목줄에 디자인명을 표시한다
+                this.Text = "Designer of Solenoid & Actuator - " + m_design.m_strDesignName;
+
+                CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBC1"));    
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+                return;
+            }
+        }
+
+        private void ribbonButtonOpen_Click(object sender, EventArgs e)
+        {
+            if (m_design.m_bChanged == true)
+            {
+                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT", "W"))
+                {
+                    saveDesignFile();
+                }
+            }
+
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            // 파일 열기창 설정
+            openFileDialog.Title = "Open a Design File";
+            // 디자인 파일을 열 때 디렉토리는 프로그램 작업 디렉토리로 하고 있다.
+            openFileDialog.InitialDirectory = CSettingData.m_strWorkingDirName;
+            openFileDialog.FileName = null;
+            openFileDialog.Filter = "Toolkit Files (*.dsa)|*.dsa|All files (*.*)|*.*";
+            openFileDialog.FilterIndex = 1;
+            openFileDialog.RestoreDirectory = true;
+
+            DialogResult result = openFileDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                // 기존 디자인 데이터를 모두 삭제한다.
+                closeDesign();
+
+                string strActuatorDesignFileFullName = openFileDialog.FileName;
+
+                loadDesignFile(strActuatorDesignFileFullName);
+
+                // 디자인 파일이 생성될 때의 디자인 작업 디렉토리는 프로그램 기본 디렉토리 강제 설정하고 있다.
+                // 만약 디렉토리를 옮긴 디자인 디렉토리를 오픈 할 경우라면 
+                // 이전 다지인 작업 디렉토리를 그대로 사용하면 디렉토리 문제가 발생하여 실행이 불가능하게 된다.
+                // 이를 해결하기 위해
+                // 작업파일을 Open 할 때는 파일을 오픈하는 위치로 작업파일의 디렉토리를 다시 설정하고 있다.
+                m_design.m_strDesignDirName = Path.GetDirectoryName(strActuatorDesignFileFullName);
+
+                // 프로젝트가 시작 했음을 표시하기 위해서 TreeView 에 기본 가지를 추가한다.
+                TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
+                treeViewMain.Nodes.Add(treeNode);
+
+                treeNode = new TreeNode("Experiments", (int)EMKind.EXPERIMENTS, (int)EMKind.EXPERIMENTS);
+                treeViewMain.Nodes.Add(treeNode);
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    this.addTreeNode(node.NodeName, node.m_kindKey);
+                }
+            }
+            else
+                return;
+
+            //openFEMM();
+
+            // 제목줄에 디자인명을 표시한다
+            this.Text = "Designer of Solenoid & Actuator - " + m_design.m_strDesignName;
+
+            CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBO"));    
+        }
+
+        private void ribbonOrbMenuItemClose_Click(object sender, EventArgs e)
+        {
+            if (m_design.m_bChanged == true)
+            {
+                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT1", "W"))
+                {
+                    saveDesignFile();
+                }
+            }
+
+            // 저장을 하고 나면 초기화 한다.
+            m_design.m_bChanged = false;
+
+            CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBC"));
+
+            // 기존 디자인 데이터를 모두 삭제한다.
+            closeDesign();
+
+            // 제목줄에 디자인명을 삭제한다
+            this.Text = "Designer of Solenoid & Actuator";
+
+            //quitFEMM();
+        }
+
+        private void ribbonButtonSave_Click(object sender, EventArgs e)
+        {
+            if (m_design.m_strDesignName.Length == 0)
+            {
+                CNotice.noticeWarningID("TIND2");
+                return;
+            }
+
+            if (true == saveDesignFile())
+            {
+                CNotice.noticeInfomation(m_design.m_strDesignName + m_resManager.GetString("_DSHB1"), m_resManager.GetString("SN"));
+
+                CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DSHB"));
+            }
+        }
+
+        private void ribbonButtonSaveAs_Click(object sender, EventArgs e)
+        {
+            string strOrgDesignDirName, strSaveAsDesignDirName;
+            string strSaveAsDesignName;
+
+            CWriteFile writeFile = new CWriteFile();
+
+            string strOrgDesignName = this.m_design.m_strDesignName;
+            strOrgDesignDirName = this.m_design.m_strDesignDirName;
+
+            // 디자인이 없는 경우는 DesignName 없기 때문에 이름으로 작업디자인이 있는지를 판단한다.
+            if (strOrgDesignName.Length == 0)
+            {
+                CNotice.noticeWarningID("TIND1");
+                return;
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+
+            saveFileDialog.Title = "Write a New Design Name";
+            saveFileDialog.InitialDirectory = CSettingData.m_strWorkingDirName;
+            saveFileDialog.FileName = strOrgDesignName + "_Modify";
+
+            DialogResult result = saveFileDialog.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                try
+                {
+                    // 확장자가 제외된 전체 경로명이 넘어온다.
+                    // TofU 는 선택된 Design 명으로 디렉토리를 만들기 때문에 전체 확장자를 제외한 전체 경로명이 SaveAs 디자인 경로명이 된다.
+                    strSaveAsDesignDirName = saveFileDialog.FileName;
+
+                    // 신규 디자인 디렉토리가 들어갈 상위 디렉토리를 찾는다.
+                    string strSaveAsUpperDirName = Path.GetDirectoryName(strSaveAsDesignDirName);
+
+                    // 확장자가 제외된 디자인 네임을 얻어온다. (전체 경로의 마지막 명칭이다.)
+                    strSaveAsDesignName = Path.GetFileName(strSaveAsDesignDirName);
+
+                    // SaveAs 할 디렉토리에 새로운 디렉토리와 겹치는 디렉토리가 있는지를 확인하기 위해서 디렉토리들을 읽어낸다.
+                    List<string> listDirectories = m_manageFile.getDirectoryList(strSaveAsUpperDirName);
+
+                    foreach (string directoryName in listDirectories)
+                    {
+                        // 디자인 이름이 아니라 디자인 이름을 포함한 경로로 존재여부를 판단한다.
+                        if (directoryName == strSaveAsDesignDirName)
+                        {
+                            CNotice.noticeWarningID("YHCA");
+                            return;
+                        }
+                    }
+
+                    String strOrgDesingFileFullName = Path.Combine(strOrgDesignDirName, strOrgDesignName + ".dsa");
+                    String strSaveAsDesignFileFullName = Path.Combine(strSaveAsDesignDirName, strSaveAsDesignName + ".dsa");
+
+                    String strOrgShapeDirName = Path.Combine(strOrgDesignDirName, "Shape");
+                    String strSaveAsShapeDirName = Path.Combine(strSaveAsDesignDirName, "Shape");
+
+                    String strOrgMeshFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".msh");
+                    String strOrgStepFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".step");
+                    String strOrgPartNameFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".txt");
+
+                    String strSaveAsMeshFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".msh");
+                    String strSaveAsStepFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".step");
+                    String strSaveAsPartNameFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".txt");
+
+                    
+                    #region // --------------- 파일과 디렉토리 복사 ---------------------
+
+                    // SaveAs 디자인 디렉토리 생성
+                    m_manageFile.createDirectory(strSaveAsDesignDirName);
+
+                    // 디자인 파일 복사
+                    m_manageFile.copyFile(strOrgDesingFileFullName, strSaveAsDesignFileFullName);
+
+                    // 형상 디렉토리 복사
+                    m_manageFile.copyDirectory(strOrgShapeDirName, strSaveAsShapeDirName);
+
+                    // 형상 파일들의 이름을 변경한다.
+                    //
+                    // 함수가 없어서 파일을 다른이름으로 복사하고, 기존파일을 삭제하는 방식을 사용했다.
+                    // ( 추후에 m_manageFile 에 changeName() 를 추가하라 )
+                    m_manageFile.copyFile(strOrgMeshFileFullName, strSaveAsMeshFileFullName);
+                    m_manageFile.copyFile(strOrgStepFileFullName, strSaveAsStepFileFullName);
+                    m_manageFile.copyFile(strOrgPartNameFileFullName, strSaveAsPartNameFileFullName);
+                    m_manageFile.deleteFile(strOrgMeshFileFullName);
+                    m_manageFile.deleteFile(strOrgStepFileFullName);
+                    m_manageFile.deleteFile(strOrgPartNameFileFullName);
+                    
+                    #endregion                    
+
+
+                    // 현 모델을 SaveAs 모델명으로 변경한다.
+                    m_design.m_strDesignDirName = strSaveAsDesignDirName;
+                    m_design.m_strDesignName = strSaveAsDesignName;
+
+                    // 수정모델을 읽어드린 후에 바로 저장한다.
+                    saveDesignFile();
+
+                    // 화면을 갱신한다.
+                    splitContainerRight.Panel1.Controls.Clear();
+                    splitContainerRight.Panel1.Controls.Add(this.panelEmpty);
+
+                    // PropertyGrid 창을 초기화 한다.
+                    propertyGridMain.SelectedObject = null;
+
+                    // 제목줄에 디자인명을 변경한다
+                    this.Text = "Designer of Solenoid & Actuator - " + m_design.m_strDesignName;
+
+                    CNotice.noticeInfomation(m_design.m_strDesignName + m_resManager.GetString("_DHBS1"), m_resManager.GetString("SAN"));
+
+                    CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBS"));
+                }
+                catch (Exception ex)
+                {
+                    CNotice.printTrace(ex.Message);
+                    return;
+                }
+            }
+        }
+
+        private void ribbonOrbMenuItemExit_Click(object sender, EventArgs e)
+        {
+            if (m_design.m_bChanged == true)
+            {
+                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT", "W"))
+                {
+                    saveDesignFile();
+                }
+            }
+
+            System.Windows.Forms.Application.Exit();
+        }
+
+        private void ribbonButtonCoil_Click(object sender, EventArgs e)
+        {
+            addRawNode(EMKind.COIL);
+        }
+
+        private void ribbonButtonMagnet_Click(object sender, EventArgs e)
+        {
+            addRawNode(EMKind.MAGNET);
+        }
+        
+        private void ribbonButtonSteel_Click(object sender, EventArgs e)
+        {
+            addRawNode(EMKind.STEEL);
+        }
+
+        private void ribbonButtonForce_Click(object sender, EventArgs e)
+        {
+            addRawNode(EMKind.FORCE_EXPERIMENT);
+        }
+        
+        private void ribbonButtonSetting_Click(object sender, EventArgs e)
+        {
+            PopupSetting frmSetting = new PopupSetting();
+
+            frmSetting.uploadSettingData();
+
+            if (DialogResult.OK == frmSetting.ShowDialog())
+            {
+                frmSetting.saveSettingToFile();
+
+                // 언어를 수정과 동시에 반영한다.
+                CSettingData.updataLanguge();
+            }
+        }
+
+        private void ribbonButtonHelp_Click(object sender, EventArgs e)
+        {
+            PopupHelp frmHelp = new PopupHelp();
+
+            frmHelp.ShowDialog();
+        }
+
+        private void ribbonButtonAbout_Click(object sender, EventArgs e)
+        {
+            PopupAboutBox frmAbout = new PopupAboutBox();
+
+            frmAbout.ShowDialog();
+        }
+
+        #endregion
+
+        #region----------------------- Button -------------------------------
+
+        private void buttonMagnetUp_Click(object sender, EventArgs e)
+        {
+            CNode node = (CNode)propertyGridMain.SelectedObject;
+
+            if ("CMagnet" != node.GetType().Name)
+            {
+                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetUp_Click");
+                return;
+            }
+
+            ((CMagnet)node).MagnetAngle = 90.0;
+
+            propertyGridMain.Refresh();
+        }
+
+        private void buttonMagnetDown_Click(object sender, EventArgs e)
+        {
+            CNode node = (CNode)propertyGridMain.SelectedObject;
+
+            if ("CMagnet" != node.GetType().Name)
+            {
+                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetDown_Click");
+                return;
+            }
+
+            ((CMagnet)node).MagnetAngle = 270.0;
+
+            propertyGridMain.Refresh();
+        }
+
+        private void buttonMagnetLeft_Click(object sender, EventArgs e)
+        {
+            CNode node = (CNode)propertyGridMain.SelectedObject;
+
+            if ("CMagnet" != node.GetType().Name)
+            {
+                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetLeft_Click");
+                return;
+            }
+
+            ((CMagnet)node).MagnetAngle = 180.0;
+
+            propertyGridMain.Refresh();
+        }
+
+        private void buttonMagnetRight_Click(object sender, EventArgs e)
+        {
+            CNode node = (CNode)propertyGridMain.SelectedObject;
+
+            if ("CMagnet" != node.GetType().Name)
+            {
+                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetRight_Click");
+                return;
+            }
+
+            ((CMagnet)node).MagnetAngle = 0.0;
+
+            propertyGridMain.Refresh();
+        }
+
+        private void buttonDesignCoil_Click(object sender, EventArgs e)
+        {
+            ((CCoil)propertyGridMain.SelectedObject).designCoil();
+
+            propertyGridMain.Refresh();
+        }
+
+        private void buttonForceResult_Click(object sender, EventArgs e)
+        {
+            plotForceResult();
+        }
+                
+        private void buttonExperimentForce_Click(object sender, EventArgs e)
+        {
+            CScriptContents scriptContents = new CScriptContents();
+
+            CForceExperiment forceExperiment = (CForceExperiment)propertyGridMain.SelectedObject;
+            
+            string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirName, "Materials");
+
+            // 현재 시험의 이름을 m_nodeList 에서 찾지 않고
+            // 현재 표시되고 있는 PropertyGird 창에서 Experiment 이름을 찾아 낸다
+            string strExperimentName = forceExperiment.NodeName;
+
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strShapeDirName = Path.Combine(m_design.m_strDesignDirName, "Shape");
+
+            string strMeshFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".msh");
+
+            string strDefineGeoFileFullName = Path.Combine(strExperimentDirName, "Define.geo");
+            string strBHProFileFullName = Path.Combine(strExperimentDirName, "BH.pro");
+
+            string strImageScriptFileFullName = Path.Combine(strExperimentDirName, "Image.geo");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strExperimentDirName, "b_cut.pos");
+
+            string strSteelMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
+            string strMagnetMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MG.dmat");
+
+            string strOrgSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
+            string strExprimentSTEPFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".step");
+
+            string strGeometryScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".geo");
+            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+
+            string strForceFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".txt");
+            string strFieldImageFullName = Path.Combine(strExperimentDirName, strExperimentName + ".bmp");
+
+            // 해석 전에 전처리 조건을 확인한다.
+            if (false == isForceExperimentOK(forceExperiment))
+                return;
+
+            try
+            {
+                // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
+                if (m_manageFile.isExistDirectory(strExperimentDirName) == true)
+                {
+                    DialogResult ret = CNotice.noticeWarningOKCancelID("TIAP", "NE");
+
+                    if (ret == DialogResult.Cancel)
+                        return;
+
+                    m_manageFile.deleteDirectory(strExperimentDirName);
+
+                    // 삭제되는 시간이 필요한 듯 한다.
+                    Thread.Sleep(1000);
+                }
+
+                // 시험 디렉토리를 생성한다.
+                m_manageFile.createDirectory(strExperimentDirName);
+
+                // 해석전 현 설정을 저장한다.
+                saveDesignFile();
+
+                CWriteFile writeFile = new CWriteFile();
+                List<string> listScriptString = new List<string>();
+
+                string strOrgStriptContents;
+
+
+                #region --------------------------------- 02. Define.geo 생성 ----------------------------------
+
+                strOrgStriptContents = scriptContents.m_str02_Define_Script;
+
+                // Air 가 1이기 때문에 파트는 2 부터 시작한다.
+                int nDefineNumCount = 2;
+                string strTemp;
+
+                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
+                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
+                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
+                foreach (string strName in m_design.AllShapeNameList)
+                {
+                    strTemp = strName.ToUpper();
+
+                    strOrgStriptContents += String.Format("{0} = {1};\n", strTemp, nDefineNumCount);
+                    nDefineNumCount++;
+                }
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strDefineGeoFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+
+
+                #region --------------------------------- 03. BH.pro 생성 ----------------------------------
+
+                CReadFile readFile = new CReadFile();
+
+                List<double> listH = new List<double>();
+                List<double> listB = new List<double>();
+                string strMaterialName;
+
+                List<string> listWrittenSteelMaterialName = new List<string>();
+
+                strOrgStriptContents = "Function{\n\n";
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                bool bUsed = false;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    switch (node.m_kindKey)
+                    {
+                        case EMKind.STEEL:
+                            strMaterialName = ((CSteel)node).Material;
+
+                            // 이미 기록한 재질은 저장하지 않는다.
+                            foreach(string strName in listWrittenSteelMaterialName)
+                            {
+                                if (strName == strMaterialName)
+                                    bUsed = true;
+                            }
+
+                            if(bUsed == false)
+                            {
+                                // BH Data 기록하기
+                                readFile.readMaterialBHData(strSteelMaterialFileFullName, strMaterialName, ref listH, ref listB);
+
+                                scriptContents.getScriptBH(strMaterialName, ref strOrgStriptContents, listH, listB);
+
+                                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                                listScriptString.Clear();
+
+                                // BH 관련  수식 기록하기
+                                strOrgStriptContents = scriptContents.m_str03_BH_Calulate_Script;
+
+                                listScriptString.Add(strMaterialName);
+
+                                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                                listScriptString.Clear();
+
+                                // 중복 저장을 방지하기 위해서 List 에 재질명을 남겨 둔다.
+                                listWrittenSteelMaterialName.Add(strMaterialName);
+                            }
+
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+                strOrgStriptContents = "}\n";
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+                
+
+                #region ----------------------------- 04. *.geo 생성 for Mesh -------------------------------
+
+                // STEP 파일을 시험 디렉토리로 복사한다.
+                m_manageFile.copyFile(strOrgSTEPFileFullName, strExprimentSTEPFileFullName);
+
+                strOrgStriptContents = scriptContents.m_str04_Import_Script;
+
+                listScriptString.Add(strExprimentSTEPFileFullName);
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                strOrgStriptContents = string.Empty;
+                nDefineNumCount = 0;
+
+                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
+                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
+                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
+                foreach ( string strName in m_design.AllShapeNameList)
+                {
+                    strOrgStriptContents += String.Format("vol{0} = STEP_Volumes[{1}];\n", strName, nDefineNumCount);
+   
+                    nDefineNumCount++;
+                }
+
+                strOrgStriptContents += "\n";
+
+                string strNodeName;
+                string strMovingPartNames = string.Empty;
+                string strSteelPartNames = string.Empty;
+
+                int nMovingPartCount = 0;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    strNodeName = node.NodeName;
+                    strTemp = strNodeName.ToUpper();
+
+                    if (node.GetType().BaseType.Name == "CParts")
+                    {
+                        if (((CParts)node).MovingPart == EMMoving.MOVING) 
+                        {
+                            strMovingPartNames += String.Format("vol{0}, ", strNodeName);
+                            nMovingPartCount++;
+                        }                            
+                    }
+
+                    if (node.m_kindKey == EMKind.STEEL)
+                    {
+                        strSteelPartNames += String.Format("vol{0}, ", strNodeName);
+                    }
+                }
+
+                if(nMovingPartCount != 1)
+                {
+                    CNotice.noticeWarning("아직까지 구동부는 하나의 파트만을 지원하고 있습니다.");
+                    return;
+                }
+
+                int nIndex = 0;
+
+                if (strMovingPartNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strMovingPartNames.Length - 2;
+                    strMovingPartNames = strMovingPartNames.Remove(nIndex);
+
+                    strOrgStriptContents += "Translate {0, " + forceExperiment.MovingStroke.ToString() + "*mm, 0} {  Volume{" + strMovingPartNames + "}; }\n\n";
+                    
+                    strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{" + strMovingPartNames + "}; };\n";
+                }
+
+                if (strSteelPartNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strSteelPartNames.Length - 2;
+                    strSteelPartNames = strSteelPartNames.Remove(nIndex);
+
+                    strOrgStriptContents += "skinSteel() = CombinedBoundary{ Volume{" + strSteelPartNames + "}; };\n\n";
+                }
+
+                foreach (string strName in m_design.AllShapeNameList)
+                {
+                    strTemp = strName.ToUpper();
+
+                    strOrgStriptContents += String.Format("Physical Volume({0}) = vol{1};\n", strTemp, strName);
+
+                    nDefineNumCount++;
+                }
+
+                double dAirMeshSize, dPartMeshSize;
+
+                m_design.calcShapeSize(strMeshFileFullName);
+
+                // 볼륨을 길이단위로 바꾸기 위해서 1/3 승을 했다.
+                // 여기서, 0.0025f 은 실 Mesh 크기와 입력 % 간의 차이를 보정하기 위한 값이다.
+                dPartMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * CSettingData.m_dMeshLevelPercent / 100.0f * 0.0025f;
+                dAirMeshSize = CSettingData.m_dMeshLevelPercent / 100.0f * 6.5f;  
+
+                double dRegionMinX, dRegionMinY, dRegionMinZ;
+
+                // 200 % Padding 을 했을 때 가장 큰 방향으로 모든 방향의 Region 크기를 결정한다.
+                List<double> listPaddingLength = new List<double>();
+                int iPaddingPercent = 200;
+
+                listPaddingLength.Add(Math.Abs(m_design.MaxX - m_design.MinX) * iPaddingPercent / 100.0f);
+                listPaddingLength.Add(Math.Abs(m_design.MaxY - m_design.MinY) * iPaddingPercent / 100.0f);
+                listPaddingLength.Add(Math.Abs(m_design.MaxZ - m_design.MinZ) * iPaddingPercent / 100.0f);
+
+                double dPaddingLength = listPaddingLength.Max();
+
+                // 중심 위치 : (m_design.MinX + m_design.MaxX) / 2.0f 에서 Padding 길이을 뺀다.
+                double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
+                double dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
+                double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
+
+                dRegionMinX = dRegionCenterX - dPaddingLength;
+                dRegionMinY = dRegionCenterY - dPaddingLength;
+                dRegionMinZ = dRegionCenterZ - dPaddingLength;
+
+                listScriptString.Add(dAirMeshSize.ToString());
+                listScriptString.Add(dPartMeshSize.ToString());
+                listScriptString.Add(dRegionMinX.ToString());
+                listScriptString.Add(dRegionMinY.ToString());
+                listScriptString.Add(dRegionMinZ.ToString());
+                listScriptString.Add((dPaddingLength*2).ToString());
+                listScriptString.Add((dPaddingLength*2).ToString());
+                listScriptString.Add((dPaddingLength*2).ToString());
+
+                strOrgStriptContents += scriptContents.m_str04_1_Region_Script;
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+                
+                #endregion
+
+
+                #region ----------------------------- 05. Image.geo 생성 for Image -------------------------------
+
+
+                strOrgStriptContents = scriptContents.m_str05_Image_Script;
+
+                listScriptString.Add(strExprimentSTEPFileFullName);
+                listScriptString.Add(dPartMeshSize.ToString());
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strImageScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+                
+                #endregion
+
+
+                #region --------------------------------- 06. *.pro 생성 (Group)----------------------------------
+
+                strOrgStriptContents = scriptContents.m_str06_Group_Script;
+
+                // Air 가 1이기 때문에 파트는 2 부터 시작한다.
+                strTemp = string.Empty;
+                strNodeName = string.Empty;
+                string strNonlinearNames = string.Empty;
+                string strLinearNames = "volAir, ";
+                string strMagnetPartNames = string.Empty;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    strNodeName = node.NodeName;
+                    strTemp = strNodeName.ToUpper();
+
+                    switch (node.m_kindKey)
+                    {
+                        case EMKind.STEEL:
+                            strNonlinearNames += String.Format("vol{0}, ", strNodeName);
+                            break;
+
+                        case EMKind.COIL:
+                            strLinearNames += String.Format("vol{0}, ", strNodeName);
+                            break;
+
+                        case EMKind.MAGNET:
+                            strLinearNames += String.Format("vol{0}, ", strNodeName);
+                            strMagnetPartNames += String.Format("vol{0}, ", strNodeName);
+
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    if (node.GetType().BaseType.Name == "CParts")
+                        strOrgStriptContents += String.Format("    vol{0} = Region[{1}];\n", strNodeName, strTemp);
+                }
+
+                strOrgStriptContents += "\n";
+                
+                string strDomainAll = string.Empty;
+
+                if (strNonlinearNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strNonlinearNames.Length - 2;
+                    strNonlinearNames = strNonlinearNames.Remove(nIndex);
+
+                    strOrgStriptContents += "    domainNL = Region[ {" + strNonlinearNames + "} ];\n";
+                    strDomainAll += "domainNL";
+                }
+
+                if (strLinearNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strLinearNames.Length - 2;
+                    strLinearNames = strLinearNames.Remove(nIndex);
+
+                    strOrgStriptContents += "    domainL = Region[ {" + strLinearNames + "} ];\n";
+
+                    if(strDomainAll.Length > 0)
+                        strDomainAll += ", domainL";
+                    else
+                        strDomainAll += "domainL";
+                }
+
+                strOrgStriptContents += "    domainALL = Region[ {" + strDomainAll + "} ];\n\n";
+
+                if (strMagnetPartNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strMagnetPartNames.Length - 2;
+                    strMagnetPartNames = strMagnetPartNames.Remove(nIndex);
+
+                    strOrgStriptContents += "    domainMagnet = Region[ {" + strMagnetPartNames + "} ];\n\n";
+                    
+                }
+
+                strOrgStriptContents += "    domainHcurl_A = Region[ {domainALL, skinAir} ];\n";
+ 
+                strOrgStriptContents += "    domainSkin_A_NoGauge = Region [{skinAir, skinSteel} ];\n";
+
+                strOrgStriptContents += "}\n";
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+
+
+                #region --------------------------------- 07. Funciton 작업 ----------------------------------
+
+                strOrgStriptContents = scriptContents.m_str07_Function_Script;
+
+                double dCurrent, dCoilSectionArea, dCoilWidth;
+                double dHc, dBr, dMur;
+
+                double dHcX, dHcY, dHcZ;
+                double dBrX, dBrY, dBrZ;
+                EMMagnetPlane emMagnetPlane;
+                double dAngle;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    strNodeName = node.NodeName;
+
+                    switch (node.m_kindKey)
+                    {
+                        case EMKind.COIL:
+
+                            strOrgStriptContents += String.Format("    mu[vol{0}] = mu0;\n", strNodeName);
+                            strOrgStriptContents += String.Format("    nu[vol{0}] = 1.0/mu0;\n\n", strNodeName, strTemp);
+                        
+                            dCurrent = forceExperiment.Voltage / ((CCoil)node).Resistance;
+
+                            strOrgStriptContents += "    current = " + dCurrent.ToString() + ";\n";
+                            strOrgStriptContents += "    coilTurns = " + ((CCoil)node).Turns.ToString() + ";\n\n";
+
+                            strOrgStriptContents += "    coilTurns[] = coilTurns;\n\n";
+
+                            dCoilWidth = (((CCoil)node).OuterDiameter - ((CCoil)node).InnerDiameter)/2.0f;
+
+                            dCoilSectionArea = (dCoilWidth * ((CCoil)node).Height) / 1000000.0f;
+
+                            strOrgStriptContents += "    areaCoilSection[] = " + dCoilSectionArea.ToString() + ";\n";
+
+                            if (((CCoil)node).CurrentDirection == EMCurrentDirection.IN)
+                                strOrgStriptContents += "    vectorCurrent[] = Vector[ Cos[Atan2[X[], Z[]]], 0, -Sin[Atan2[X[], Z[]]]];\n\n";
+                            else
+                                strOrgStriptContents += "    vectorCurrent[] = - Vector[ Cos[Atan2[X[], Z[]]], 0, -Sin[Atan2[X[], Z[]]]];\n\n";
+
+                            strOrgStriptContents += "    js0[] = current * coilTurns[] /areaCoilSection[] * vectorCurrent[];\n\n";
+
+                            break;
+
+                        case EMKind.MAGNET:
+
+                            dHc = ((CMagnet)node).Hc;
+                            dBr = ((CMagnet)node).Br;
+                            dMur = dBr / dHc;
+    
+                            emMagnetPlane = ((CMagnet)node).emMagnetPlane;
+                            dAngle = ((CMagnet)node).MagnetAngle;
+
+                            if (emMagnetPlane == EMMagnetPlane.XY_Plane_Z)
+                            {
+                                dHcX = dHc * Math.Cos(dAngle * Math.PI / 180.0f);
+                                dHcY = dHc * Math.Sin(dAngle * Math.PI / 180.0f);
+                                dHcZ = 0.0;
+                                dBrX = dBr * Math.Cos(dAngle * Math.PI / 180.0f);
+                                dBrY = dBr * Math.Sin(dAngle * Math.PI / 180.0f);
+                                dBrZ = 0.0;
+                            }
+                            else if (emMagnetPlane == EMMagnetPlane.YZ_Plane_X)
+                            {
+                                dHcX = 0.0;
+                                dHcY = dHc * Math.Cos(dAngle * Math.PI / 180.0f);
+                                dHcZ = dHc * Math.Sin(dAngle * Math.PI / 180.0f);
+                                dBrX = 0.0;
+                                dBrY = dBr * Math.Cos(dAngle * Math.PI / 180.0f);
+                                dBrZ = dBr * Math.Sin(dAngle * Math.PI / 180.0f);
+                            }
+                            else            // EMMagnetPlane.ZX_Plane
+                            {
+                                dHcX = dHc * -Math.Cos(dAngle * Math.PI / 180.0f);
+                                dHcY = 0.0;
+                                dHcZ = dHc * Math.Sin(dAngle * Math.PI / 180.0f);
+                                dBrX = dBr * -Math.Cos(dAngle * Math.PI / 180.0f);
+                                dBrY = 0.0;
+                                dBrZ = dBr * Math.Sin(dAngle * Math.PI / 180.0f);
+                            }
+
+                            // 입력 자계의 세기는 양의 값이지만 실제 동작은 음에서 동작하기 때문에 '-' 을 사용해서 부호를 바꾸고 있다.
+                            //
+                            strOrgStriptContents += String.Format("    hc[vol{0}] = Vector[{1}, {2}, {3}];\n", strNodeName, (-dHcX).ToString(), (-dHcY).ToString(), (-dHcZ).ToString());
+                            strOrgStriptContents += String.Format("    br[vol{0}] = Vector[{1}, {2}, {3}];\n", strNodeName, (-dBrX).ToString(), (-dBrY).ToString(), (-dBrZ).ToString());
+
+                            strOrgStriptContents += String.Format("    mu[vol{0}] = {1} * mu0;\n", strNodeName, dMur.ToString());
+                            strOrgStriptContents += String.Format("    nu[vol{0}] = 1.0 / ({1} * mu0);\n\n", strNodeName, dMur.ToString());
+
+                            break;
+
+                        case EMKind.STEEL:
+
+                            strOrgStriptContents += String.Format("    nu[vol{0}] = nu_{1}[$1];\n", strNodeName, ((CSteel)node).Material);
+                            strOrgStriptContents += String.Format("    dhdb_NL[vol{0}] = dhdb_{1}[$1];\n\n", strNodeName, ((CSteel)node).Material);
+
+                            break;
+
+                        default:
+
+                            break;
+                    }
+                }
+
+                strOrgStriptContents += "    TM[] = ( SquDyadicProduct[$1] - SquNorm[$1] * TensorDiag[0.5, 0.5, 0.5] ) / mu[];\n}\n";
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+
+
+                #region --------------------------------- 08_09_10. Funciton 작업 ----------------------------------
+
+                strOrgStriptContents = scriptContents.m_str08_Constraint_Script;
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+
+
+                #region --------------------------------- 11. Formulation 작업 ----------------------------------
+
+                strOrgStriptContents = scriptContents.m_str11_Formulation_Resolution_Script;
+
+                int nCount = 0;
+                bool bUsedMagnet = false;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    if (node.m_kindKey == EMKind.COIL)
+                    {
+                        if (nCount != 0)
+                        {
+                            CNotice.printTrace("코일 수가 하나 이상이다.");
+                            return;
+                        }
+
+                        listScriptString.Add(node.NodeName);
+
+                        nCount++;
+                    }
+
+                    if(node.m_kindKey == EMKind.MAGNET)
+                        bUsedMagnet = true;
+                }
+
+                if(bUsedMagnet == true)
+                {
+                    listScriptString.Add("            Galerkin { [ nu[] * br[] , {d qnt_A} ] ;\n");
+                    listScriptString.Add("                In domainMagnet ; Jacobian jbVolume ; Integration igElement ; }\n");
+                }
+                
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+
+
+                #region --------------------------------- 12. PostProcessing 작업 ----------------------------------
+
+                strOrgStriptContents = scriptContents.m_str12_PostProcessing_Script;
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+
+
+                #region --------------------------------- 13. PostOperation 작업 ----------------------------------
+
+                strOrgStriptContents = scriptContents.m_str13_PostOperation_Script;
+
+                nCount = 0;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    if (node.m_kindKey == EMKind.COIL)
+                    {
+                        if (nCount != 0)
+                        {
+                            CNotice.printTrace("코일 수가 하나이상이다.");
+                            return;
+                        }
+
+                        listScriptString.Add(node.NodeName);
+
+                        nCount++;
+                    }
+                }
+
+                // 전체 영역의 1/2 로 자속밀도 단면 벡터출력면을 사용한다.
+                //# 2 : X Coord of Left Bottom Point on XY Plane 
+                //# 3 : Y Coord of Left Bottom Point on XY Plane 
+                //# 4 : X Coord of Right Bottom Point on XY Plane 
+                //# 5 : Y Coord of Left Top Point on XY Plane 
+                double dSectionBMinX = dRegionCenterX - dPaddingLength / 2.0f;
+                double dSectionBMinY = dRegionCenterY - dPaddingLength / 2.0f;
+                double dSectionBMaxX = dSectionBMinX + dPaddingLength;
+                double dSectionBMaxY = dSectionBMinY + dPaddingLength;
+
+                listScriptString.Add(dSectionBMinX.ToString());
+                listScriptString.Add(dSectionBMinY.ToString());
+                listScriptString.Add(dSectionBMaxX.ToString());
+                listScriptString.Add(dSectionBMaxY.ToString());
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                #endregion
+
+                string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+
+                string strArguments = " " + strSolveScriptFileFullName;
+                
+                // Maxwell 종료될 때 가지 툴킷을 기다린다.
+                // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
+                CScript.runScript(strGmshExeFileFullName, strArguments, true);
+
+                // Maxwell 의 종료시간을 기다려준다.
+                Thread.Sleep(500);
+
+                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == true)
+                {
+                    strArguments = " " + strMagneticDensityVectorFileFullName + " " + strImageScriptFileFullName;
+
+                    CScript.runScript(strGmshExeFileFullName, strArguments, true);
+
+                    //CScript.moveGmsh(0, 0);
+                                        
+                    // Maxwell 의 종료시간을 기다려준다.
+                    Thread.Sleep(500);
+
+                    plotForceResult();
+
+                    // Result 버튼이 동작하게 한다.
+                    buttonLoadForceResult.Enabled = true;
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+         
+        #endregion
+              
+        #region---------------------- Windows Message -----------------------
+
+        private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 이름이 지정된 Design 만 저장을 확인한다.
+            if (m_design.m_bChanged == true)
+            {
+                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT1", "W"))
+                {
+                    saveDesignFile();
+                }
+            }
+        }
+
+        private void FormMain_Shown(object sender, EventArgs e)
+        {
+            try
+            {
+                // 커멘드 파라메터로 디자인 파일명이 넘어오지 않은 경우는 바로 리턴한다.
+                if (m_strCommandLineDesignFullName == string.Empty)
+                    return;
+
+                if (false == m_manageFile.isExistFile(m_strCommandLineDesignFullName))
+                {
+                    CNotice.noticeWarning("커멘드라인으로 입력한 디자인 파일이 존재하지 않습니다.");
+                    return;
+                }
+
+                loadDesignFile(m_strCommandLineDesignFullName);
+
+                // 디자인 파일이 생성될 때의 디자인 작업 디렉토리는 프로그램 기본 디렉토리 강제 설정하고 있다.
+                // 만약 디렉토리를 옮긴 디자인 디렉토리를 오픈 할 경우라면 
+                // 이전 다지인 작업 디렉토리를 그대로 사용하면 디렉토리 문제가 발생하여 실행이 불가능하게 된다.
+                // 이를 해결하기 위해
+                // 작업파일을 Open 할 때는 파일을 오픈하는 위치로 작업파일의 디렉토리를 다시 설정하고 있다.
+                m_design.m_strDesignDirName = Path.GetDirectoryName(m_strCommandLineDesignFullName);
+
+                // 프로젝트가 시작 했음을 표시하기 위해서 TreeView 에 기본 가지를 추가한다.
+                TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
+                treeViewMain.Nodes.Add(treeNode);
+
+                treeNode = new TreeNode("Experiments", (int)EMKind.EXPERIMENTS, (int)EMKind.EXPERIMENTS);
+                treeViewMain.Nodes.Add(treeNode);
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    this.addTreeNode(node.NodeName, node.m_kindKey);
+                }
+
+                // 제목줄에 디자인명을 표시한다
+                this.Text = "Designer of Solenoid & Actuator - " + m_design.m_strDesignName;
+
+                CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBO"));
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region----------------------- 가상시험 관련 -------------------------------
+
+        private bool isForceExperimentOK(CForceExperiment forceExperiment)
+        {
+
+/// 1. 코일은 하나만 지원한다.
+/// 
+
+
+            bool bCheck = false;
+
+            foreach (CNode node in m_design.NodeList)
+            {
+                // 자기회로 재료만 지정
+                if (node.GetType().BaseType.Name == "CParts")
+                {
+                    if (((CParts)node).MovingPart == EMMoving.MOVING)
+                        bCheck = true;
+                }
+            }
+
+            if (bCheck == false)
+            {
+                CNotice.noticeWarningID("ALOM");
+                return false;
+            }
+
+            //if (m_design.isDesignShapeOK() == false)
+            //{
+            //    CNotice.printTraceID("AEOI");
+            //    return false;
+            //}
+
+            return true;
+        }
+
+        private void plotForceResult()
+        {
+            CForceExperiment forceExperiment = (CForceExperiment)propertyGridMain.SelectedObject;
+
+            // 현재 시험의 이름을 m_nodeList 에서 찾지 않고
+            // 현재 표시되고 있는 PropertyGird 창에서 Experiment 이름을 찾아 낸다
+            string strExperimentName = ((CForceExperiment)propertyGridMain.SelectedObject).NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
+            string strForceXFileFullName = Path.Combine(strExperimentDirName, "Fx.dat");
+            string strForceYFileFullName = Path.Combine(strExperimentDirName, "Fy.dat");
+            string strForceZFileFullName = Path.Combine(strExperimentDirName, "Fz.dat");
+
+            bool bCheck = false;
+
+            string strReturn;
+            double dForce;
+            CReadFile readfile = new CReadFile();
+
+            try
+            {
+                bCheck = m_manageFile.isExistFile(strForceXFileFullName);
+
+                if (bCheck == true)
+                {
+                    strReturn = readfile.pickoutString(strForceXFileFullName, "0 ", 3, 30);
+                    dForce = Double.Parse(strReturn);
+
+                    textBoxForceX.Text = string.Format("{0:0.0000}", dForce);
+                }
+                else
+                {
+                    CNotice.noticeWarningID("TROA1");
+                    return;
+                }
+
+                bCheck = m_manageFile.isExistFile(strForceYFileFullName);
+
+                if (bCheck == true)
+                {
+                    strReturn = readfile.pickoutString(strForceYFileFullName, "0 ", 3, 30);
+                    dForce = Double.Parse(strReturn);
+
+                    textBoxForceY.Text = string.Format("{0:0.0000}", dForce);
+                }
+                else
+                {
+                    CNotice.noticeWarningID("TROA1");
+                    return;
+                }
+
+                bCheck = m_manageFile.isExistFile(strForceZFileFullName);
+
+                if (bCheck == true)
+                {
+                    strReturn = readfile.pickoutString(strForceZFileFullName, "0 ", 3, 30);
+                    dForce = Double.Parse(strReturn);
+
+                    textBoxForceZ.Text = string.Format("{0:0.0000}", dForce);
+                }
+                else
+                {
+                    CNotice.noticeWarningID("TROA1");
+                    return;
+                }
+
+                bCheck = m_manageFile.isExistFile(strDensityImageFileFullName);
+
+                if (bCheck == true)
+                {
+                    // 파일을 잡고 있지 않기 위해서 임시 이미지를 사용하고 Dispose 한다.
+                    Image tmpImage = Image.FromFile(strDensityImageFileFullName);
+
+                    pictureBoxForce.Image = new Bitmap(tmpImage);
+                    pictureBoxForce.SizeMode = PictureBoxSizeMode.StretchImage;
+
+                    // 이미지이 연결을 끊어서 사용 가능하게 한다.
+                    tmpImage.Dispose();
+                }
+                else
+                {
+                    CNotice.noticeWarningID("TINR");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        #endregion        
+
+        #region-------------------------- Save & Load Data -------------------------
+
+        private bool saveDesignFile()
+        {
+            if (m_design.m_strDesignName.Length == 0)
+            {
+                CNotice.printTraceID("YATT9");
+                return false;
+            }
+
+            try
+            {
+                /// New 에서 생성할 때 바로 디렉토리를 생성하면 만약, 프로젝트를 저장하지 않으면 디렉토리만 남는다.
+                /// 따라서 저장할 때 없으면 디렉토리를 생성하는 것으로 바꾸었다.
+                string strDesignDirName = Path.Combine(CSettingData.m_strWorkingDirName, m_design.m_strDesignName);
+
+                if (false == m_manageFile.isExistDirectory(strDesignDirName))
+                {
+                    // 다지인 디렉토리를 생성한다.
+                    m_manageFile.createDirectory(strDesignDirName);
+                }
+
+                string strActuatorDesignFileFullName = Path.Combine(m_design.m_strDesignDirName, m_design.m_strDesignName + ".dsa");
+
+                StreamWriter writeStream = new StreamWriter(strActuatorDesignFileFullName);
+                CWriteFile writeFile = new CWriteFile();
+
+                // Project 정보를 기록한다.
+                writeFile.writeBeginLine(writeStream, "DoSA_3D_Project", 0);
+
+                writeFile.writeDataLine(writeStream, "Writed", DateTime.Now, 1);
+                writeFile.writeDataLine(writeStream, "DoSA_Version", Assembly.GetExecutingAssembly().GetName().Version, 1);
+                writeFile.writeDataLine(writeStream, "File_Version", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion, 1);
+
+                m_design.writeObject(writeStream);
+
+                writeFile.writeEndLine(writeStream, "DoSA_3D_Project", 0);
+
+
+                writeStream.Close();
+
+                // 저장을 하고 나면 초기화 한다.
+                m_design.m_bChanged = false;
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+            return true;
+        }
+
+        private bool loadDesignFile(string strDesignFileFullName)
+        {
+            CReadFile readFile = new CReadFile();
+            List<string> listStringLines = new List<string>();
+            List<string> listStringDesignData = new List<string>();
+            bool bDesignLine = false;
+
+            try
+            {
+                // 전체 내용을 읽어드린다.
+                readFile.getAllLines(strDesignFileFullName, ref listStringLines);
+
+                foreach (string strLine in listStringLines)
+                {
+                    // Design 구문 안의 내용만 listDesignActuator 담는다.
+                    //
+                    // endLine 과 beginLine 을 확인하는 위치가 중요하다. 
+                    // Design 의 시작과 끝을 알리는 구문 Line 을 포함하지 않기 위해 endLine확인 -> 복사 -> beginLine확인 순서로 진행한다.
+                    if (readFile.isEndLine(strLine) == "Design")
+                        bDesignLine = false;
+
+                    // Design 구문만 listStringDesignData 에 담는다
+                    if (bDesignLine == true)
+                    {
+                        listStringDesignData.Add(strLine);
+                    }
+                    else
+                    {
+                        if (readFile.isBeginLine(strLine) == "Design")
+                            bDesignLine = true;
+                    }
+                }
+
+                // 저장파일의 Project 영역안의 Design 영역을 분석하여 m_designActuator 로 Design 을 읽어온다
+                readObject(listStringDesignData);
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        // writeObject() 는 종류가 정해져 있는 Parts 객체를 상위클래스 Node 로 호출하기 때문에
+        // Virtual 함수를 사용할 수 있어 CDesign 의 멤버변수를 사용할 수 있다.
+        // 하지만 readObject() 은 아직 존재하지 않은 객체를 종류별로 만들어야 하기 때문에  
+        // CDesign 의 멤버변수를 사용할 수 없어서 MainForm 의 멤버함수로 사용한다.
+        internal void readObject(List<string> listStringDesignData)
+        {
+            string strCommand = string.Empty;
+            string strData = string.Empty;
+            bool bNodeDataRegion = false;
+            string[] arraySplit;
+
+            CReadFile readFile = new CReadFile();
+            List<string> listStringNode = new List<string>();
+
+            try
+            {
+
+                foreach (string strLine in listStringDesignData)
+                {
+                    // Design 구문 안의 내용만 listDesignActuator 담는다.
+                    //
+                    // endLine 과 beginLine 을 확인하는 위치가 중요하다. 
+                    // Design 의 시작과 끝을 알리는 구문 Line 을 포함하지 않기 위해 endLine확인 -> 복사 -> beginLine확인 순서로 진행한다.
+                    strCommand = readFile.isEndLine(strLine);
+                    if (strCommand != null)
+                    {
+                        bNodeDataRegion = false;
+
+                        // [주의사항]
+                        // - m_designActuator.addNode() 는 RemainedShapeName 에서 형상을 찾고 제외함으로 Open 용도로 사용해서는 안되고 생성용도로만 사용하라.
+                        switch (strCommand)
+                        {
+                            // CMagneticParts 하위 객체
+                            case "Coil":
+                                CCoil coil = new CCoil();
+                                if (true == coil.readObject(listStringNode))
+                                    m_design.NodeList.Add(coil);
+                                break;
+
+                            case "Steel":
+                                CSteel steel = new CSteel();
+                                if (true == steel.readObject(listStringNode))
+                                    m_design.NodeList.Add(steel);
+                                break;
+
+                            case "Magnet":
+                                CMagnet magnet = new CMagnet();
+                                if (true == magnet.readObject(listStringNode))
+                                    m_design.NodeList.Add(magnet);
+                                break;
+
+                            // CExpriment 하위 객체
+                            case "ForceExperiment":
+                                CForceExperiment forceExperiment = new CForceExperiment();
+                                if (true == forceExperiment.readObject(listStringNode))
+                                    m_design.NodeList.Add(forceExperiment);
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        // End 명령줄이 Node 이외 영역 처리가 되는 것을 막는다. 
+                        continue;
+                    }
+
+                    // Node 영역 처리
+                    if (bNodeDataRegion == true)
+                    {
+                        listStringNode.Add(strLine);
+                    }
+                    // Node 이외 영역 처리
+                    else
+                    {
+                        // Node 데이터 영역의 시작점인지를 확인한다.
+                        strCommand = readFile.isBeginLine(strLine);
+
+                        // Node 데이터 시작점이라면 "노드명" 이 리턴된다.
+                        if (strCommand != null)
+                        {
+                            listStringNode.Clear();
+                            // 노드 데이터를 List 에 저장하라.
+                            bNodeDataRegion = true;
+                        }
+                        else
+                        {
+                            readFile.readDataInLine(strLine, ref strCommand, ref strData);
+
+                            switch (strCommand)
+                            {
+                                case "DesignName":
+                                    m_design.m_strDesignName = strData;
+                                    break;
+
+
+                                case "AllShapeName":
+                                    arraySplit = strData.Split(',');
+
+                                    // -1 : 문자열을 만드는 과정에서 마지막에 ','가 추가되어 있어서 문자열 배열의 마지막은 "" 이기 때문이다.
+                                    // [주의사항]
+                                    // - m_actuator.addShape() 는 AllShapeName 와 RemainedShapeName 모두 추가되기 때문에 Open 용도로 사용해서는 안되고 생성용도로만 사용하라.
+                                    for (int i = 0; i < arraySplit.Length - 1; i++)
+                                        m_design.AllShapeNameList.Add(arraySplit[i]);
+
+                                    break;
+
+                                case "ShapeMinX":
+                                    m_design.MinX = Convert.ToDouble(strData);
+                                    break;
+
+                                case "ShapeMaxX":
+                                    m_design.MaxX = Convert.ToDouble(strData);
+                                    break;
+
+                                case "ShapeMinY":
+                                    m_design.MinY = Convert.ToDouble(strData);
+                                    break;
+
+                                case "ShapeMaxY":
+                                    m_design.MaxY = Convert.ToDouble(strData);
+                                    break;
+
+                                case "ShapeMinZ":
+                                    m_design.MinZ = Convert.ToDouble(strData);
+                                    break;
+
+                                case "ShapeMaxZ":
+                                    m_design.MaxZ = Convert.ToDouble(strData);
+                                    break;
+
+                                case "RemainedShapeName":
+                                    arraySplit = strData.Split(',');
+
+                                    // -1 : 문자열을 만드는 과정에서 마지막에 ','가 추가되어 있어서 문자열 배열의 마지막은 "" 이기 때문이다.
+                                    for (int i = 0; i < arraySplit.Length - 1; i++)
+                                        m_design.RemainedShapeNameList.Add(arraySplit[i]);
+
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region------------------------- TreeView 관련 -------------------------
+
+
+        //트리뷰에서 삭제 한다
+        private void treeView_KeyUp(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                // Delete 키에서 Tree 를 삭제한다.
+                if (e.KeyCode == Keys.Delete)
+                {
+                    // [주의] 
+                    // Node Name 이 SelectedNode.Name 아니라 SelectedNode.Text 에 들어 있다
+                    string selectedNodeText = this.treeViewMain.SelectedNode.Text;
+
+                    if (selectedNodeText == "Parts" || selectedNodeText == "Experiments")
+                    {
+                        return;
+                    }
+
+                    CNode node = m_design.getNode(selectedNodeText);
+
+                    if (node == null)
+                    {
+                        CNotice.printTraceID("TDNI");
+                        return;
+                    }
+
+                    // 가상 시험 Node 의 경우는 결과 디렉토리와 연결이 되기 때문에
+                    // 해석 결과 디렉토리가 있는 경우는 해석결과를 삭제할지를 물어보고 같이 삭제한다.
+                    if (node.GetType().BaseType.Name == "CExperiment")
+                    {
+                        string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, node.NodeName);
+
+                        if (m_manageFile.isExistDirectory(strExperimentDirName) == true)
+                        {
+                            DialogResult ret = CNotice.noticeWarningOKCancelID("TTHR", "W");
+
+                            if (ret == DialogResult.Cancel)
+                                return;
+
+                            m_manageFile.deleteDirectory(strExperimentDirName);
+
+                            // 삭제되는 시간이 필요한 듯 한다.
+                            Thread.Sleep(1000);
+                        }
+                    }
+
+                    // 수정 되었음을 기록한다.
+                    m_design.m_bChanged = true;
+
+                    this.treeViewMain.SelectedNode.Remove();
+                    deleteRawNode(selectedNodeText);
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+        }
+
+        // 사용하지 않음
+        private void treeViewMain_DoubleClick(object sender, EventArgs e)
+        {
+            //// [주의] 
+            //// Node Name 이 SelectedNode.Name 아니라 SelectedNode.Text 에 들어 있다
+            //string selectedNodeText = this.treeViewMain.SelectedNode.Text;
+
+            //if (selectedNodeText == "Parts" || selectedNodeText == "Experiments")
+            //{
+            //    return;
+            //}
+
+            //CNode node = m_design.getNode(selectedNodeText);
+
+            //if (node == null)
+            //{
+            //    CNotice.printTraceID("TDNI");
+            //    return;
+            //}
+
+            //// 수정 되었음을 기록한다.
+            //m_design.m_bChanged = true;
+        }
+
+        //트리 노드를 선택
+        private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            string selectedNodeText = this.treeViewMain.SelectedNode.Text;
+
+            if (selectedNodeText == "Parts" || selectedNodeText == "Experiments")
+            {
+                return;
+            }
+
+            // 신기하게 treeViewMain_Click 나 treeViewMain_MouseUp 이벤트에서 동작시키면 이상하게 동작한다.
+            // 그래서 중복 호출이 되더라도 AfterSelect 을 사용한다.
+            showNode(selectedNodeText);
+        }
+
+        //노드 추가를 위한 유효성검사
+        private void addRawNode(EMKind emKind)
+        {
+            string strNodeName = string.Empty;
+            bool bRet = false;
+
+            // 디자인이 존재하지 않으면 경고를 알리고 리턴한다.
+            if (m_design.m_strDesignName.Length == 0)
+            {
+                CNotice.noticeWarningID("TIND");
+                return;
+            }
+
+            try
+            {
+
+                PopupAddNode popupNodeName = new PopupAddNode(emKind, m_design.RemainedShapeNameList);
+                popupNodeName.StartPosition = FormStartPosition.CenterParent;
+
+                /// 이해할 수 없지만, 자동으로 Owner 설정이 되는 경우도 있고 아닌 경우도 있기 때문에
+                /// Shape 창에서 MainForm 을 접근할 수 있도록 미리 설정을 한다.
+                popupNodeName.Owner = this;
+
+                if (DialogResult.Cancel == popupNodeName.ShowDialog())
+                    return;
+
+                strNodeName = popupNodeName.NodeName;
+
+                switch (emKind)
+                {
+                    case EMKind.COIL:
+                        CCoil coil = new CCoil();
+                        coil.NodeName = strNodeName;
+                        coil.m_kindKey = emKind;
+
+                        bRet = m_design.addNode(coil);
+                        break;
+
+                    case EMKind.MAGNET:
+                        CMagnet magnet = new CMagnet();
+                        magnet.NodeName = strNodeName;
+                        magnet.m_kindKey = emKind;
+
+                        bRet = m_design.addNode(magnet);
+                        break;
+
+                    case EMKind.STEEL:
+                        CSteel steel = new CSteel();
+                        steel.NodeName = strNodeName;
+                        steel.m_kindKey = emKind;
+
+                        bRet = m_design.addNode(steel);
+                        break;
+
+                    case EMKind.FORCE_EXPERIMENT:
+                        CForceExperiment forceExperiment = new CForceExperiment();
+                        forceExperiment.NodeName = strNodeName;
+                        forceExperiment.m_kindKey = emKind;
+
+                        bRet = m_design.addNode(forceExperiment);
+                        break;
+
+                    default:
+                        CNotice.printTraceID("YATT4");
+                        return;
+                }
+
+                // 수정 되었음을 기록한다.
+                m_design.m_bChanged = true;
+
+                if (bRet == true)
+                {
+                    // Treeview 에 추가한다
+                    addTreeNode(strNodeName, emKind);
+
+                    // 해당 Node 의 Properies View 와 Information Windows 를 표시한다
+                    showNode(strNodeName);
+                }
+                else
+                    CNotice.noticeWarningID("TNIA");
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+        }
+
+        //노드추가
+        private void addTreeNode(string strName, EMKind kind)
+        {
+
+            try
+            {
+                // emKIND 와 imageList 의 이미지와 순서가 같아야 한다
+                TreeNode treeNode = new TreeNode(strName, (int)kind, (int)kind);
+
+                // [ 유의사항 ]
+                // TreeView 의 구조는 노드안에 노드가 들어있는 구조이다
+                // 특정 가지에 TreeNode 를 추가하려면 
+                // Nodes[2].Nodes[0].Nodes.Add() 와 같이 TreeNode 를 따라 특정노드로 들어간후에 추가한다
+                switch (kind)
+                {
+                    case EMKind.COIL:
+                    case EMKind.MAGNET:
+                    case EMKind.STEEL:
+                        treeViewMain.Nodes[FIRST_PARTS_INDEX].Nodes.Add(treeNode);
+                        break;
+
+                    case EMKind.FORCE_EXPERIMENT:
+                        treeViewMain.Nodes[FIRST_ANALYSIS_INDEX].Nodes.Add(treeNode);
+                        break;
+
+                    default:
+                        return;
+                }
+
+                // 추가후 노드를 선택한다
+                treeViewMain.SelectedNode = treeNode;
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        // 선택한 노드를 Information Window 와 Property View 에 보여준다
+        private void showNode(string nodeName)
+        {
+            CNode node = m_design.getNode(nodeName);
+
+            string strExperimentDirName = string.Empty;
+
+            try
+            {
+                if (node != null)
+                {
+                    // 프로퍼티창을 변경한다.
+                    propertyGridMain.SelectedObject = node;
+
+                    /// 프로퍼티창에서 이름을 변경할 때 기존에 이미 있는 이름을 선택하는 경우
+                    /// 복구를 위해 저장해 둔다.
+                    m_strBackupNodeName = node.NodeName;
+
+                    // Expand Treeview when starting
+                    foreach (TreeNode tn in treeViewMain.Nodes)
+                        tn.Expand();
+
+                    splitContainerRight.Panel1.Controls.Clear();
+
+                    strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, node.NodeName);
+
+                    switch (node.m_kindKey)
+                    {
+                        case EMKind.COIL:
+                            splitContainerRight.Panel1.Controls.Add(this.panelCoil);
+                            break;
+
+                        case EMKind.MAGNET:
+                            splitContainerRight.Panel1.Controls.Add(this.panelMagnet);
+                            break;
+
+                        case EMKind.STEEL:
+                            splitContainerRight.Panel1.Controls.Add(this.panelSteel);
+
+                            CSteel steel = (CSteel)node;
+                            drawBHCurve(steel.Material);
+                            break;
+
+                        case EMKind.FORCE_EXPERIMENT:
+
+                            string strFieldImageFullName = Path.Combine(strExperimentDirName, "Image.gif");
+
+                            // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
+                            if (m_manageFile.isExistFile(strFieldImageFullName) == true)
+                            {
+                                buttonLoadForceResult.Enabled = true;
+                            }
+                            else
+                            {
+                                buttonLoadForceResult.Enabled = false;
+                            }
+
+                            splitContainerRight.Panel1.Controls.Add(this.panelForce);
+
+                            // 초기이미지가 없어서 이미지를 비우고 있다.
+                            loadDefaultImage(EMKind.FORCE_EXPERIMENT);
+                            textBoxForceX.Text = "0.0";
+                            textBoxForceY.Text = "0.0";
+                            textBoxForceZ.Text = "0.0";
+
+                            break;
+
+                        default:
+                            return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        public class CSortDataSet
+        {
+            public double m_dLength;
+            public int m_iIndex;
+
+            public CSortDataSet(double length, int index)
+            {
+                m_dLength = length;
+                m_iIndex = index;
+            }
+        }       
+   
+
+        /// 트리를 삭제 한다
+        private void deleteRawNode(string nodeName)
+        {
+            // 내부적으로 명칭배열까지도 모두 삭제한다.
+            m_design.deleteNode(nodeName);
+
+            // 정보창을 초기화 한다
+            splitContainerRight.Panel1.Controls.Clear();
+            splitContainerRight.Panel1.Controls.Add(this.panelEmpty);
+
+            // PropertyGrid 창을 초기화 한다.
+            propertyGridMain.SelectedObject = null;
+        }
+
+        #endregion
+
+        #region------------------------ PropertyView 관련 ------------------------------
+
+        //property 수정
+        private void propertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
+        {
+            CNode node = (CNode)propertyGridMain.SelectedObject;
+
+            string strChangedItemValue = e.ChangedItem.Value.ToString();
+            string strChangedItemLabel = e.ChangedItem.Label;
+            
+            try
+            {
+                // Node 의 이름이 변경된 경우
+                if (strChangedItemLabel == "Node Name")
+                {
+                    /// Node 이름의 경우 PropertyGrid 에서 수정과 동시에 Node 이름이 같이 변경되기 때문에
+                    /// 기존에 존재하는 이름으로 변경했는지의 판단은 Node 이름을 겹치는 것으로 확인해야 한다.
+                    if (true == m_design.duplicateNodeName())
+                    {
+                        CNotice.noticeWarningID("TNIA");
+
+                        /// PropertyGrid 에 Node 를 올릴 때 저장해둔 Node 이름으로 복원한다.
+                        node.NodeName = m_strBackupNodeName;
+
+                        propertyGridMain.Refresh();
+
+                        return;
+                    }
+
+                    /// 변경된 이름은 입력과 동시에 Node 에 반영되었기 때문에 저장을 불 필요한다.
+                    //node.NodeName = strChangedItemValue;
+
+                    // 복원용 이름은 PropertyGrid 에 Node 를 올릴 때만 저장되기 때문에
+                    // PropertyGrid 를 갱신하지 않는 상태에서 여러번 이름을 변경하다가 문제가 발생하면
+                    // 이전 이름인 PropertyGrid 에 Node 를 올릴 때의 이름으로 복구 된다.
+                    // 이를 방지하기 위해서 재대로 저장이 된 경우는 복원용 이름을 변경한다.
+                    m_strBackupNodeName = strChangedItemValue;
+
+                    /// 트리의 이름을 변경한다.
+                    this.treeViewMain.SelectedNode.Text = strChangedItemValue;
+                }            
+                
+                switch (node.m_kindKey)
+                {
+                    case EMKind.COIL:
+
+                        CCoil coil = (CCoil)node;
+
+                        if (strChangedItemLabel == "Copper Diameter [mm]" || strChangedItemLabel == "Coil Wire Grade")
+                        {
+                            coil.WireDiameter = coil.calculateWireDiameter();
+                        }
+
+                        break;
+
+                    case EMKind.STEEL:
+
+                        // 연자성체의 재질을 선택한 경우만 실행을 한다.
+                        if (strChangedItemLabel == "Part Material")
+                        {
+                            drawBHCurve(strChangedItemValue);
+                        }
+
+                        break;
+
+                    case EMKind.MAGNET:
+
+                        CReadFile readFile = new CReadFile();
+
+                        string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirName, "Materials");
+                        string strMagnetMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MG.dmat");
+
+                        double dMur = 0;
+                        double dHc = 0;
+                        double dMu0 = 4 * Math.PI * 1e-7;
+                        
+                        // 영구자석의 재질을 선택한 경우만 실행을 한다.
+                        if (strChangedItemLabel == "Part Material")
+                        {
+                            readFile.readMaterialMagnetData(strMagnetMaterialFileFullName, strChangedItemValue, ref dMur, ref dHc);
+
+                            ((CMagnet)node).Hc = dHc;
+                            ((CMagnet)node).Br = Math.Round(dMu0 * 1.0378 * dHc, 5);
+                        }
+
+                        break;
+
+                    case EMKind.FORCE_EXPERIMENT:
+
+                        CForceExperiment forceExperiment = (CForceExperiment)node;
+
+                        if (e.ChangedItem.Label == "Voltage [V]")
+                        {
+                            // 총 저항은 합산이 필요함으로 0.0f 로 초기화 한다.
+                            double total_resistance = 0.0f;
+
+                            // 총 저항
+                            foreach (CNode nodeTemp in m_design.NodeList)
+                                if (nodeTemp.m_kindKey == EMKind.COIL)
+                                {
+                                    total_resistance += ((CCoil)nodeTemp).Resistance;
+                                }
+
+                            // 전류
+                            if (total_resistance != 0.0f)
+                                forceExperiment.Current = (forceExperiment.Voltage / total_resistance);
+                            else
+                                forceExperiment.Current = 0.0f;
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+            // 수정 되었음을 기록한다.
+            m_design.m_bChanged = true;
+
+            propertyGridMain.Refresh();
+        }
+
+        //property Category구성
+        private void CollapseOrExpandCategory(PropertyGrid propertyGrid, string categoryName, bool bExpand = false)
+        {
+            GridItem root = propertyGrid.SelectedGridItem;
+            //Get the parent
+            while (root.Parent != null)
+                root = root.Parent;
+
+            if (root != null)
+            {
+                foreach (GridItem g in root.GridItems)
+                {
+                    if (g.GridItemType == GridItemType.Category && g.Label == categoryName)
+                    {
+                        g.Expanded = bExpand;
+                        break;
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region----------------------- Information Window 관련 -----------------------
+
+        //steel 그래프를 생성한다
+        private void drawBHCurve(String strMaterialName)
+        {
+            CReadFile readFile = new CReadFile();
+
+            List<double> listH = new List<double>();
+            List<double> listB = new List<double>();
+
+
+            try
+            {
+                //string strMaxwellMaterialDirName = CSettingData.m_strMaxwellMaterialDirName;
+                string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirName, "Materials");
+
+                // 내장 비자성 재료
+                if (strMaterialName == "Aluminum, 1100" || strMaterialName == "Copper" ||
+                    strMaterialName == "316 Stainless Steel" || strMaterialName == "304 Stainless Steel" || strMaterialName == "Air")
+                {
+                    chartBHCurve.Series.Clear();                    // Series 삭제
+                    // Series 생성
+                    System.Windows.Forms.DataVisualization.Charting.Series sBHCurve = chartBHCurve.Series.Add("BH");
+                    sBHCurve.ChartType = SeriesChartType.Line;      // 그래프 모양을 '선'으로 지정
+
+                    listH.Clear();
+                    listB.Clear();
+
+                    // 공기와 같은 투자율로 처리한다.
+                    for (int x = 0; x <= 30000; x += 5000)
+                    {
+                        listH.Add(x);
+                        listB.Add(x * 1.25663706143592E-06);
+                    }
+
+                    drawXYChart(chartBHCurve, listH, listB, "H [A/m]", "B [T]", 0.0f, 30000.0f, 0.0f, 2.5f);
+                }
+                /// 내장 연자성 재료
+                else
+                {
+                    string strMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
+
+                    if (true == readFile.readMaterialBHData(strMaterialFileFullName, strMaterialName, ref listH, ref listB))
+                    {
+                        if (listH.Count == 0)
+                        {
+                            CNotice.printTraceID("TDFT");
+                            return;
+                        }
+
+                        if (listH.Count != listB.Count)
+                        {
+                            CNotice.printTraceID("TSOT");
+                            return;
+                        }
+
+                        drawXYChart(chartBHCurve, listH, listB, "H [A/m]", "B [T]", 0.0f, 30000.0f, 0.0f, 2.5f);
+                    }
+                    else
+                    {
+                        CNotice.noticeWarning("There is no DoSA_MS.dmat file.\nPlease check Material directory.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        //Information Window에 Stroke 이미지로드
+        private void loadDefaultImage(EMKind kind)
+        {
+            //string strImageFullFileName;
+            //bool bRet = false;
+
+            try
+            { 
+                switch (kind)
+                {
+                    case EMKind.FORCE_EXPERIMENT:
+                        // 이미지를 비운다
+                        pictureBoxForce.Image = null;
+                        break;
+
+                    case EMKind.COIL:
+                    case EMKind.MAGNET:
+                    case EMKind.STEEL:
+                        break;
+
+                    default:
+                        return;
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+                return;
+            }           
+        }
+
+        private void drawXYChart(System.Windows.Forms.DataVisualization.Charting.Chart chartData,
+                                List<double> listX, List<double> listY,
+                                string strXLabel = "X", string strYLabel = "Y",
+                                double dMinX = Double.NaN, double dMaxX = Double.NaN, double dMinY = Double.NaN, double dMaxY = Double.NaN)
+        {
+            try
+            {
+                chartData.Series.Clear();                    // Series 삭제
+
+                // Series 생성
+                System.Windows.Forms.DataVisualization.Charting.Series sCurve = chartData.Series.Add("Data");
+                sCurve.ChartType = SeriesChartType.Line;      // 그래프 모양을 '선'으로 지정
+
+                // 데이터를 추가한다.
+                for (int i = 0; i < listX.Count; i++)
+                    sCurve.Points.AddXY(listX[i], listY[i]);
+
+                chartData.ChartAreas[0].AxisX.Title = strXLabel;
+                chartData.ChartAreas[0].AxisY.Title = strYLabel;
+                chartData.ChartAreas[0].AxisX.TitleFont = new System.Drawing.Font("Arial", 12, FontStyle.Regular);
+                chartData.ChartAreas[0].AxisY.TitleFont = new System.Drawing.Font("Arial", 12, FontStyle.Regular);
+
+                chartData.ChartAreas[0].AxisX.LabelStyle.Format = "{0:0.00}";
+
+                if (dMinX >= dMaxX || dMinY >= dMaxY)
+                {
+                    CNotice.printTraceID("TMVI");
+                    return;
+                }
+
+                chartData.ChartAreas[0].AxisX.Minimum = dMinX;    // X 축 범위 지정
+                chartData.ChartAreas[0].AxisX.Maximum = dMaxX;
+
+                // 축 스케일을 입력하는 경우는 무조건 구분등분을 5로 설정하였다.
+                if (dMinX != double.NaN)
+                    chartData.ChartAreas[0].AxisX.Interval = (dMaxX - dMinX) / 5.0f;
+
+                chartData.ChartAreas[0].AxisY.Minimum = dMinY;   // Y1 축 범위 지정
+                chartData.ChartAreas[0].AxisY.Maximum = dMaxY;
+
+                // 축 스케일을 입력하는 경우는 무조건 구분등분을 5로 설정하였다.
+                if (dMinY != double.NaN)
+                    chartData.ChartAreas[0].AxisY.Interval = (dMaxY - dMinY) / 5.0f;
+
+                chartData.ChartAreas[0].RecalculateAxesScale();
+
+                sCurve.Color = Color.SteelBlue;
+                sCurve.BorderWidth = 2;
+                sCurve.MarkerColor = Color.SteelBlue;
+                sCurve.MarkerSize = 8;
+                sCurve.MarkerStyle = System.Windows.Forms.DataVisualization.Charting.MarkerStyle.Diamond;
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+                CNotice.printTraceID("AEOI1");
+                return;
+            }
+        }
+
+        #endregion
+
+        #region---------------------- 기타 기능함수 -----------------------------
+
+        private bool checkFramework451()
+        {
+            int iReleaseKey;
+
+            using (RegistryKey ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\"))
+            {
+                iReleaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
+
+                if (iReleaseKey >= 378675)
+                    return true;
+                else
+                    return false;
+
+                // 393273 : "4.6 RC or later"
+                // 379893 : "4.5.2 or later"
+                // 378675 : "4.5.1 or later"
+                // 378389 : "4.5 or later"
+            }
+        }
+
+        private void openWebsite(string strWebAddress)
+        {
+            System.Diagnostics.Process.Start(strWebAddress);
+        }
+        
+        #endregion
+                
+    }
+}

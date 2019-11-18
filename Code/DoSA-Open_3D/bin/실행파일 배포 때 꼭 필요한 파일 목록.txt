@@ -1,0 +1,13 @@
+1. 필요 디렉토리
+  - Help
+  - Images
+  - Materials
+  - SAmple
+
+2. 필요 파일들
+  - DoSA.exe
+  - Interop.Femm.dll
+  - LanguageResource.en-US.resources
+  - LanguageResource.ko-KR.resources
+  - readme.txt
+  - System.Windows.Forms.Ribbon35.dll

@@ -6,19 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("DoSA")]
-[assembly: AssemblyDescription(@"This application is an open source software for actuator design.
+[assembly: AssemblyDescription(@"DoSA-Open_3D is open source actuator design software using Onelab.
 
 This application uses open source software below.
-
-GetDP (A free finite element solver using mixed elements)
-  link: http://getdp.info/
-  license: GNU General Public License (GPL)
-  License link: http://getdp.info/doc/LICENSE.txt
-    
-Gmsh (An open source 3D finite element mesh generator)
-  link: http://gmsh.info/	
-  license: GNU General Public License (GPL)
-  License link: http://gmsh.info/LICENSE.txt
 
 Easily Add a Ribbon into a WinForms Application	
   link: http://www.codeproject.com/Articles/364272/	
@@ -50,7 +40,7 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
 
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Contributor : http://openactuator.org (zgitae@gmail.com)")]
-[assembly: AssemblyProduct("DoSA (Designer of Solenoid & Actuator)")]
+[assembly: AssemblyProduct("DoSA-Open_3D (Designer of Solenoid & Actuator)")]
 [assembly: AssemblyCopyright("License : GNU General Public License v3.0")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -73,5 +63,5 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.8.0.0")]
-[assembly: AssemblyFileVersion("0.8.0.0")]
+[assembly: AssemblyVersion("0.9.0.0")]
+[assembly: AssemblyFileVersion("0.9.0.0")]

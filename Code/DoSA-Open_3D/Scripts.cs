@@ -484,8 +484,8 @@ Function {
     mu0 = 4*Pi*1e-7;
 
     Nb_max_iter = 30;
-    stop_criterion = 1e-3;
-    relaxation_factor = 1;		
+    stop_criterion = 1e-5;
+    relaxation_factor = 1.0;		
 
     mu[volAir] = mu0;
     nu[volAir] = 1.0/mu0;

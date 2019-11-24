@@ -333,7 +333,6 @@ namespace DoSA
         }
         #endregion
 
-        
         #region--------------------- Ribbon Menu ---------------------------
 
         private void ribbonButtonShape_Click(object sender, EventArgs e)
@@ -967,285 +966,186 @@ namespace DoSA
 
         private void buttonForceResult_Click(object sender, EventArgs e)
         {
-            plotForceResult();
+            CForceExperiment forceExperiment = (CForceExperiment)propertyGridMain.SelectedObject;
+
+            plotForceResult(forceExperiment);
         }
                 
         private void buttonExperimentForce_Click(object sender, EventArgs e)
         {
-            CScriptContents scriptContents = new CScriptContents();
-
             CForceExperiment forceExperiment = (CForceExperiment)propertyGridMain.SelectedObject;
-            
-            string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirName, "Materials");
 
             // 현재 시험의 이름을 m_nodeList 에서 찾지 않고
             // 현재 표시되고 있는 PropertyGird 창에서 Experiment 이름을 찾아 낸다
             string strExperimentName = forceExperiment.NodeName;
-
             string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
-            string strShapeDirName = Path.Combine(m_design.m_strDesignDirName, "Shape");
-
-            string strMeshFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".msh");
-
-            string strDefineGeoFileFullName = Path.Combine(strExperimentDirName, "Define.geo");
-            string strBHProFileFullName = Path.Combine(strExperimentDirName, "BH.pro");
 
             string strImageScriptFileFullName = Path.Combine(strExperimentDirName, "Image.geo");
             string strMagneticDensityVectorFileFullName = Path.Combine(strExperimentDirName, "b_cut.pos");
-
-            string strSteelMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
-            string strMagnetMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MG.dmat");
-
-            string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
-//            string strExprimentSTEPFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".step");
-
-            string strGeometryScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".geo");
-            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
-
-            string strForceFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".txt");
-            string strFieldImageFullName = Path.Combine(strExperimentDirName, strExperimentName + ".bmp");
 
             // 해석 전에 전처리 조건을 확인한다.
             if (false == isForceExperimentOK(forceExperiment))
                 return;
 
+            // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
+            if (m_manageFile.isExistDirectory(strExperimentDirName) == true)
+            {
+                DialogResult ret = CNotice.noticeWarningOKCancelID("TIAP", "NE");
+
+                if (ret == DialogResult.Cancel)
+                    return;
+
+                m_manageFile.deleteDirectory(strExperimentDirName);
+
+                // 삭제되는 시간이 필요한 듯 한다.
+                Thread.Sleep(1000);
+
+                /// 영구자석 포함 자기회로 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
+                string strExperimentZeroDirName = strExperimentDirName + "_Zero";
+
+                if (m_manageFile.isExistDirectory(strExperimentZeroDirName ) == true)
+                    m_manageFile.deleteDirectory(strExperimentZeroDirName);
+                
+                // 삭제되는 시간이 필요한 듯 한다.
+                Thread.Sleep(1000);
+            }
+
+            // 시험 디렉토리를 생성한다.
+            m_manageFile.createDirectory(strExperimentDirName);
+
+            // 해석전 현 설정을 저장한다.
+            saveDesignFile();
+
+            solveForce(forceExperiment);
+
+            // 해석 결과 이미지가 있다면 후처리를 진행한다.
+            if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == true)
+            {
+                /// 영구자석이 포함된 경우는 자기력의 정확도가 크게 떨어진다.
+                /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
+                if(m_design.isExistMagnet() == true)
+                {
+                    /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
+                    CForceExperiment forceExperimentZeroCurrent = forceExperiment.Clone();
+
+                    forceExperimentZeroCurrent.NodeName = forceExperiment.NodeName + "_Zero";
+                    // 해석에 사용되는 전류값은 전압과 저항으로 다시 계산되기 때문에 전류 값을 0으로 하지않고 전압 값을 0으로 설정한다.
+                    forceExperimentZeroCurrent.Voltage = 0.0f;
+
+                    solveForce(forceExperimentZeroCurrent);
+                }
+
+                string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+                string strArguments;
+
+                strArguments = " " + strMagneticDensityVectorFileFullName + " " + strImageScriptFileFullName;
+
+                CScript.runScript(strGmshExeFileFullName, strArguments, true);
+
+                //CScript.moveGmshWindow(0, 0);
+
+                // Maxwell 의 종료시간을 기다려준다.
+                Thread.Sleep(500);
+
+                plotForceResult(forceExperiment);
+
+                // Result 버튼이 동작하게 한다.
+                buttonLoadForceResult.Enabled = true;
+
+                //m_manageFile.deleteFile(strImageScriptFileFullName);
+            }
+
+        }
+         
+        #endregion
+
+        #region------------------------------- Script 작업 함수 ---------------------------
+
+        public bool solveForce(CForceExperiment forceExperiment)
+        {
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+
+            createDefineGeoFile(forceExperiment);
+
+            createBHProFile(forceExperiment);
+
+            createDesignGeoFile(forceExperiment);
+
+            createImageGeoFile(forceExperiment);
+
+            createDesignProFile(forceExperiment);
+
+            addFuncitonToDesignProFile(forceExperiment);
+
+            addFormulationToDesignProFile(forceExperiment);
+
+            addPostToDesignProFile(forceExperiment);
+
+
+            string strArguments = " " + strSolveScriptFileFullName;
+
+            // Maxwell 종료될 때 가지 툴킷을 기다린다.
+            // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
+            CScript.runScript(strGmshExeFileFullName, strArguments, true);
+
+            // Maxwell 의 종료시간을 기다려준다.
+            Thread.Sleep(500);
+
+            return true;
+        }
+
+        private void addPostToDesignProFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
+
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
+
+            string strOrgStriptContents;
+
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+
             try
             {
-                // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
-                if (m_manageFile.isExistDirectory(strExperimentDirName) == true)
-                {
-                    DialogResult ret = CNotice.noticeWarningOKCancelID("TIAP", "NE");
+                strOrgStriptContents = scriptContents.m_str12_PostProcessing_Script;
 
-                    if (ret == DialogResult.Cancel)
-                        return;
-
-                    m_manageFile.deleteDirectory(strExperimentDirName);
-
-                    // 삭제되는 시간이 필요한 듯 한다.
-                    Thread.Sleep(1000);
-                }
-
-                // 시험 디렉토리를 생성한다.
-                m_manageFile.createDirectory(strExperimentDirName);
-
-                // 해석전 현 설정을 저장한다.
-                saveDesignFile();
-
-                CWriteFile writeFile = new CWriteFile();
-                List<string> listScriptString = new List<string>();
-
-                string strOrgStriptContents;
-
-
-                #region --------------------------------- 02. Define.geo 생성 ----------------------------------
-
-                strOrgStriptContents = scriptContents.m_str02_Define_Script;
-
-                // 파트 번호는 1 부터 시작한다. (저장된 STEP 파일의 Volume 번호와 일치 시킨다)
-                int nDefineNumCount = 1;
-                string strTemp;
-
-                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
-                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
-                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
-                foreach (string strName in m_design.AllShapeNameList)
-                {
-                    strTemp = strName.ToUpper();
-
-                    strOrgStriptContents += String.Format("{0} = {1};\n", strTemp, nDefineNumCount);
-                    nDefineNumCount++;
-                }
-
-                writeFile.createScriptFileUsingString(strOrgStriptContents, strDefineGeoFileFullName, listScriptString);
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
 
-                #endregion
+                strOrgStriptContents = scriptContents.m_str13_PostOperation_Script;
 
-
-                #region --------------------------------- 03. BH.pro 생성 ----------------------------------
-
-                CReadFile readFile = new CReadFile();
-
-                List<double> listH = new List<double>();
-                List<double> listB = new List<double>();
-                string strMaterialName;
-
-                List<string> listWrittenSteelMaterialName = new List<string>();
-
-                strOrgStriptContents = "Function{\n\n";
-
-                writeFile.createScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
-                listScriptString.Clear();
-
-                bool bUsed = false;
+                int nCount = 0;
 
                 foreach (CNode node in m_design.NodeList)
                 {
-                    switch (node.m_kindKey)
+                    if (node.m_kindKey == EMKind.COIL)
                     {
-                        case EMKind.STEEL:
-                            strMaterialName = ((CSteel)node).Material;
-
-                            // 이미 기록한 재질은 저장하지 않는다.
-                            foreach(string strName in listWrittenSteelMaterialName)
-                            {
-                                if (strName == strMaterialName)
-                                    bUsed = true;
-                            }
-
-                            if(bUsed == false)
-                            {
-                                // BH Data 기록하기
-                                readFile.readMaterialBHData(strSteelMaterialFileFullName, strMaterialName, ref listH, ref listB);
-
-                                scriptContents.getScriptBH(strMaterialName, ref strOrgStriptContents, listH, listB);
-
-                                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
-                                listScriptString.Clear();
-
-                                // BH 관련  수식 기록하기
-                                strOrgStriptContents = scriptContents.m_str03_BH_Calulate_Script;
-
-                                listScriptString.Add(strMaterialName);
-
-                                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
-                                listScriptString.Clear();
-
-                                // 중복 저장을 방지하기 위해서 List 에 재질명을 남겨 둔다.
-                                listWrittenSteelMaterialName.Add(strMaterialName);
-                            }
-
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-                strOrgStriptContents = "}\n";
-
-                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
-                listScriptString.Clear();
-
-                #endregion
-                
-
-                #region ----------------------------- 04. *.geo 생성 for Mesh -------------------------------
-
-                // STEP 파일을 시험 디렉토리로 복사한다.
-                //m_manageFile.copyFile(strOrgSTEPFileFullName, strExprimentSTEPFileFullName);
-
-                strOrgStriptContents = scriptContents.m_str04_Import_Script;
-
-                listScriptString.Add(strSTEPFileFullName);
-
-                writeFile.createScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
-                listScriptString.Clear();
-
-                strOrgStriptContents = string.Empty;
-                nDefineNumCount = 0;
-
-                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
-                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
-                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
-                foreach ( string strName in m_design.AllShapeNameList)
-                {
-                    strOrgStriptContents += String.Format("vol{0} = STEP_Volumes[{1}];\n", strName, nDefineNumCount);
-   
-                    nDefineNumCount++;
-                }
-
-                strOrgStriptContents += "\n";
-
-                string strNodeName;
-                string strMovingPartNames = string.Empty;
-                string strSteelPartNames = string.Empty;
-
-                int nMovingPartCount = 0;
-
-                foreach (CNode node in m_design.NodeList)
-                {
-                    strNodeName = node.NodeName;
-                    strTemp = strNodeName.ToUpper();
-
-                    if (node.GetType().BaseType.Name == "CParts")
-                    {
-                        if (((CParts)node).MovingPart == EMMoving.MOVING) 
+                        if (nCount != 0)
                         {
-                            strMovingPartNames += String.Format("vol{0}, ", strNodeName);
-                            nMovingPartCount++;
-                        }                            
+                            CNotice.printTrace("코일 수가 하나이상이다.");
+                            return;
+                        }
+
+                        listScriptString.Add(node.NodeName);
+
+                        nCount++;
                     }
-
-                    if (node.m_kindKey == EMKind.STEEL)
-                    {
-                        strSteelPartNames += String.Format("vol{0}, ", strNodeName);
-                    }
                 }
 
-                if(nMovingPartCount != 1)
-                {
-                    CNotice.noticeWarning("아직까지 구동부는 하나의 파트만을 지원하고 있습니다.");
-                    return;
-                }
-
-                int nIndex = 0;
-
-                if (strMovingPartNames.Length > 2)
-                {
-                    // 마지막 ", " 를 제거한다.
-                    nIndex = strMovingPartNames.Length - 2;
-                    strMovingPartNames = strMovingPartNames.Remove(nIndex);
-
-                    strOrgStriptContents += "Translate {0, " + forceExperiment.MovingStroke.ToString() + "*mm, 0} {  Volume{" + strMovingPartNames + "}; }\n\n";
-                    
-                    strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{" + strMovingPartNames + "}; };\n";
-                }
-
-                if (strSteelPartNames.Length > 2)
-                {
-                    // 마지막 ", " 를 제거한다.
-                    nIndex = strSteelPartNames.Length - 2;
-                    strSteelPartNames = strSteelPartNames.Remove(nIndex);
-
-                    strOrgStriptContents += "skinSteel() = CombinedBoundary{ Volume{" + strSteelPartNames + "}; };\n\n";
-                }
-
-                foreach (string strName in m_design.AllShapeNameList)
-                {
-                    strTemp = strName.ToUpper();
-
-                    strOrgStriptContents += String.Format("Physical Volume({0}) = vol{1};\n", strTemp, strName);
-
-                    nDefineNumCount++;
-                }
-
-                double dMeshSize;
-
-                m_design.calcShapeSize(strMeshFileFullName);
-
-                // 볼륨을 길이단위로 바꾸기 위해서 1/3 승을 했다.
-                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * CSettingData.m_dMeshLevelPercent / 100.0f;
-
-                // mm -> m 로 단위 변환 
-                dMeshSize = dMeshSize / 1000.0f;
-
-                listScriptString.Add(dMeshSize.ToString());
-                
-                double dOuterRegionMinX, dOuterRegionMinY, dOuterRegionMinZ;
-                double dProductLengthX, dProductLengthY, dProductLengthZ;
-                double dRegionCenterX, dRegionCenterY, dRegionCenterZ;
                 List<double> listProductLength = new List<double>();
-                
-                /// 여기서 Padding Percent 란 
-                /// 제품 외각에서 음과 양 방향으로 제품 폭의 몇 배를 더 붙이는 가의 의미가 있다.
-                /// 따라서 Padding 이 100 란 
-                /// 음의 방향으로 100 %, 양의 방향으로 100 % 그리고 제품 최대 폭이 더해져서 제품의 최대 폭대비 300% 의 외각 박스가 그려진다.
                 int iOuterPaddingPercent = 100;
 
-                dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
-                dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
-                dProductLengthZ = Math.Abs(m_design.MaxZ - m_design.MinZ);
+                double dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
+                double dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
+                double dProductLengthZ = Math.Abs(m_design.MaxZ - m_design.MinZ);
 
                 listProductLength.Add(dProductLengthX);
                 listProductLength.Add(dProductLengthY);
@@ -1257,174 +1157,116 @@ namespace DoSA
                 double dOuterPaddingLength = dMaxProductLength * (iOuterPaddingPercent / 100.0f);
 
                 // 중심 위치
-                dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
-                dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
-                dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
+                double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
+                double dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
+                double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
 
-                /// 음의 방향의 좌표 값은 
-                /// 중심 위치에서 먼저 dProductMaxLength / 2.0f 를 빼서 외각 위치를 얻고,
-                /// 거기에 Padding Length 를 추가로 빼서 결정한다.
-                dOuterRegionMinX = dRegionCenterX - dMaxProductLength / 2.0f - dOuterPaddingLength;
-                dOuterRegionMinY = dRegionCenterY - dMaxProductLength / 2.0f - dOuterPaddingLength;
-                dOuterRegionMinZ = dRegionCenterZ - dMaxProductLength / 2.0f - dOuterPaddingLength;
+                // 전체 영역의 1/2 로 자속밀도 단면 벡터출력면을 사용한다.
+                //# 2 : X Coord of Left Bottom Point on XY Plane 
+                //# 3 : Y Coord of Left Bottom Point on XY Plane 
+                //# 4 : X Coord of Right Bottom Point on XY Plane 
+                //# 5 : Y Coord of Left Top Point on XY Plane 
+                double dSectionBMinX = dRegionCenterX - dOuterPaddingLength / 2.0f;
+                double dSectionBMinY = dRegionCenterY - dOuterPaddingLength / 2.0f;
+                double dSectionBMaxX = dSectionBMinX + dOuterPaddingLength;
+                double dSectionBMaxY = dSectionBMinY + dOuterPaddingLength;
 
-                listScriptString.Add(dOuterRegionMinX.ToString());
-                listScriptString.Add(dOuterRegionMinY.ToString());
-                listScriptString.Add(dOuterRegionMinZ.ToString());
+                listScriptString.Add(dSectionBMinX.ToString());
+                listScriptString.Add(dSectionBMinY.ToString());
+                listScriptString.Add(dSectionBMaxX.ToString());
+                listScriptString.Add(dSectionBMaxY.ToString());
 
-                /// Outer Air Box 는 정사각형이기 때문에 X,Y,Z 방향 모두 같은 하나의 값만 사용하고 있다.
-                /// 양쪽에 PaddingLength 와 제품 길이로 구성된다.
-                double dOuterRegionLength = dMaxProductLength + dOuterPaddingLength * 2.0f;
-                
-                listScriptString.Add(dOuterRegionLength.ToString());
-
-
-                double dInnerRegionMinX, dInnerRegionMinY, dInnerRegionMinZ;
-                double dInnerPaddingLengthX, dInnerPaddingLengthY, dInnerPaddingLengthZ;
-                double dInnerRegionLengthX, dInnerRegionLengthY, dInnerRegionLengthZ;
-
-                /// Padding 이 20 란 
-                /// 음의 방향으로 20 %, 양의 방향으로 20 % 그리고 제품 각방향 폭이 더해져서 제품의 폭대비 140% 의 외각 박스가 그려진다.
-                int iInnerPaddingPercent = 20;
-
-                dInnerPaddingLengthX = dProductLengthX * iInnerPaddingPercent / 100.0f;
-                dInnerPaddingLengthY = dProductLengthY * iInnerPaddingPercent / 100.0f;
-                dInnerPaddingLengthZ = dProductLengthZ * iInnerPaddingPercent / 100.0f;
-
-                /// 음의 방향의 좌표 값은 
-                /// 중심 위치에서 먼저 dProductLengthX / 2.0f 를 빼서 외각 위치를 얻고,
-                /// 거기에 Padding Length 를 추가로 빼서 결정한다.
-                dInnerRegionMinX = dRegionCenterX - dProductLengthX / 2.0f - dInnerPaddingLengthX;
-                dInnerRegionMinY = dRegionCenterY - dProductLengthY / 2.0f - dInnerPaddingLengthY;
-                dInnerRegionMinZ = dRegionCenterZ - dProductLengthZ / 2.0f - dInnerPaddingLengthZ;
-
-                listScriptString.Add(dInnerRegionMinX.ToString());
-                listScriptString.Add(dInnerRegionMinY.ToString());
-                listScriptString.Add(dInnerRegionMinZ.ToString());
-
-                dInnerRegionLengthX = dProductLengthX + dInnerPaddingLengthX * 2.0f;
-                dInnerRegionLengthY = dProductLengthY + dInnerPaddingLengthY * 2.0f;
-                dInnerRegionLengthZ = dProductLengthZ + dInnerPaddingLengthZ * 2.0f;
-
-                listScriptString.Add(dInnerRegionLengthX.ToString());
-                listScriptString.Add(dInnerRegionLengthY.ToString());
-                listScriptString.Add(dInnerRegionLengthZ.ToString());
-
-                strOrgStriptContents += scriptContents.m_str04_1_Region_Script;
-
-                writeFile.addScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
-                listScriptString.Clear();
-                
-                #endregion
-
-
-                #region ----------------------------- 05. Image.geo 생성 for Image -------------------------------
-
-
-                strOrgStriptContents = scriptContents.m_str05_Image_Script;
-
-                listScriptString.Add(strSTEPFileFullName);
-
-                writeFile.createScriptFileUsingString(strOrgStriptContents, strImageScriptFileFullName, listScriptString);
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
 
-                #endregion
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        private void addFormulationToDesignProFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
+
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
+
+            string strOrgStriptContents;
+
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
 
 
-                #region --------------------------------- 06. *.pro 생성 (Group)----------------------------------
+            try
+            {
+                strOrgStriptContents = scriptContents.m_str11_Formulation_Resolution_Script;
 
-                strOrgStriptContents = scriptContents.m_str06_Group_Script;
-
-                // Air 가 1이기 때문에 파트는 2 부터 시작한다.
-                strTemp = string.Empty;
-                strNodeName = string.Empty;
-                string strNonlinearNames = string.Empty;
-                string strLinearNames = "volAir, ";
-                string strMagnetPartNames = string.Empty;
+                int nCount = 0;
+                bool bUsedMagnet = false;
 
                 foreach (CNode node in m_design.NodeList)
                 {
-                    strNodeName = node.NodeName;
-                    strTemp = strNodeName.ToUpper();
-
-                    switch (node.m_kindKey)
+                    if (node.m_kindKey == EMKind.COIL)
                     {
-                        case EMKind.STEEL:
-                            strNonlinearNames += String.Format("vol{0}, ", strNodeName);
-                            break;
+                        if (nCount != 0)
+                        {
+                            CNotice.printTrace("코일 수가 하나 이상이다.");
+                            return;
+                        }
 
-                        case EMKind.COIL:
-                            strLinearNames += String.Format("vol{0}, ", strNodeName);
-                            break;
+                        listScriptString.Add(node.NodeName);
 
-                        case EMKind.MAGNET:
-                            strLinearNames += String.Format("vol{0}, ", strNodeName);
-                            strMagnetPartNames += String.Format("vol{0}, ", strNodeName);
-
-                            break;
-
-                        default:
-                            break;
+                        nCount++;
                     }
 
-                    if (node.GetType().BaseType.Name == "CParts")
-                        strOrgStriptContents += String.Format("    vol{0} = Region[{1}];\n", strNodeName, strTemp);
+                    if (node.m_kindKey == EMKind.MAGNET)
+                        bUsedMagnet = true;
                 }
 
-                strOrgStriptContents += "\n";
-                
-                string strDomainAll = string.Empty;
-
-                if (strNonlinearNames.Length > 2)
+                if (bUsedMagnet == true)
                 {
-                    // 마지막 ", " 를 제거한다.
-                    nIndex = strNonlinearNames.Length - 2;
-                    strNonlinearNames = strNonlinearNames.Remove(nIndex);
-
-                    strOrgStriptContents += "    domainNL = Region[ {" + strNonlinearNames + "} ];\n";
-                    strDomainAll += "domainNL";
+                    listScriptString.Add("            Galerkin { [ nu[] * br[] , {d qnt_A} ] ;\n");
+                    listScriptString.Add("                In domainMagnet ; Jacobian jbVolume ; Integration igElement ; }\n");
                 }
-
-                if (strLinearNames.Length > 2)
+                else
                 {
-                    // 마지막 ", " 를 제거한다.
-                    nIndex = strLinearNames.Length - 2;
-                    strLinearNames = strLinearNames.Remove(nIndex);
-
-                    strOrgStriptContents += "    domainL = Region[ {" + strLinearNames + "} ];\n";
-
-                    if(strDomainAll.Length > 0)
-                        strDomainAll += ", domainL";
-                    else
-                        strDomainAll += "domainL";
+                    // 영구자석이 없는 경우도 파라메터는 설정해 주어야 한다.
+                    listScriptString.Add(" ");
+                    listScriptString.Add(" ");
                 }
 
-                strOrgStriptContents += "    domainALL = Region[ {" + strDomainAll + "} ];\n\n";
-
-                if (strMagnetPartNames.Length > 2)
-                {
-                    // 마지막 ", " 를 제거한다.
-                    nIndex = strMagnetPartNames.Length - 2;
-                    strMagnetPartNames = strMagnetPartNames.Remove(nIndex);
-
-                    strOrgStriptContents += "    domainMagnet = Region[ {" + strMagnetPartNames + "} ];\n\n";
-                    
-                }
-
-                strOrgStriptContents += "    domainHcurl_A = Region[ {domainALL, skinAir} ];\n";
- 
-                strOrgStriptContents += "    domainSkin_A_NoGauge = Region [{skinAir, skinSteel} ];\n";
-
-                strOrgStriptContents += "}\n";
-
-                writeFile.createScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
 
-                #endregion
+        private void addFuncitonToDesignProFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
 
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
 
-                #region --------------------------------- 07. Funciton 작업 ----------------------------------
+            string strOrgStriptContents;
 
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+
+            string strNodeName;
+            string strTemp = string.Empty;
+
+            try
+            {
                 strOrgStriptContents = scriptContents.m_str07_Function_Script;
 
                 double dCurrent, dCoilSectionArea, dCoilWidth;
@@ -1445,7 +1287,7 @@ namespace DoSA
 
                             strOrgStriptContents += String.Format("    mu[vol{0}] = mu0;\n", strNodeName);
                             strOrgStriptContents += String.Format("    nu[vol{0}] = 1.0/mu0;\n\n", strNodeName, strTemp);
-                        
+
                             dCurrent = forceExperiment.Voltage / ((CCoil)node).Resistance;
 
                             strOrgStriptContents += "    current = " + dCurrent.ToString() + ";\n";
@@ -1453,7 +1295,7 @@ namespace DoSA
 
                             strOrgStriptContents += "    coilTurns[] = coilTurns;\n\n";
 
-                            dCoilWidth = (((CCoil)node).OuterDiameter - ((CCoil)node).InnerDiameter)/2.0f;
+                            dCoilWidth = (((CCoil)node).OuterDiameter - ((CCoil)node).InnerDiameter) / 2.0f;
 
                             dCoilSectionArea = (dCoilWidth * ((CCoil)node).Height) / 1000000.0f;
 
@@ -1473,7 +1315,7 @@ namespace DoSA
                             dHc = ((CMagnet)node).Hc;
                             dBr = ((CMagnet)node).Br;
                             dMur = dBr / dHc;
-    
+
                             emMagnetPlane = ((CMagnet)node).emMagnetPlane;
                             dAngle = ((CMagnet)node).MagnetAngle;
 
@@ -1533,145 +1375,121 @@ namespace DoSA
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
 
-                #endregion
-
-
-                #region --------------------------------- 08_09_10. Funciton 작업 ----------------------------------
-
                 strOrgStriptContents = scriptContents.m_str08_Constraint_Script;
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
 
-                #endregion
+        private void createDesignProFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
 
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
 
-                #region --------------------------------- 11. Formulation 작업 ----------------------------------
+            string strOrgStriptContents;
 
-                strOrgStriptContents = scriptContents.m_str11_Formulation_Resolution_Script;
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
 
-                int nCount = 0;
-                bool bUsedMagnet = false;
+            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
 
-                foreach (CNode node in m_design.NodeList)
-                {
-                    if (node.m_kindKey == EMKind.COIL)
-                    {
-                        if (nCount != 0)
-                        {
-                            CNotice.printTrace("코일 수가 하나 이상이다.");
-                            return;
-                        }
+            try
+            {
+                strOrgStriptContents = scriptContents.m_str06_Group_Script;
 
-                        listScriptString.Add(node.NodeName);
+                // Air 가 1이기 때문에 파트는 2 부터 시작한다.
+                string strTemp = string.Empty;
+                string strNodeName = string.Empty;
+                string strNonlinearNames = string.Empty;
+                string strLinearNames = "volAir, ";
+                string strMagnetPartNames = string.Empty;
 
-                        nCount++;
-                    }
-
-                    if(node.m_kindKey == EMKind.MAGNET)
-                        bUsedMagnet = true;
-                }
-
-                if(bUsedMagnet == true)
-                {
-                    listScriptString.Add("            Galerkin { [ nu[] * br[] , {d qnt_A} ] ;\n");
-                    listScriptString.Add("                In domainMagnet ; Jacobian jbVolume ; Integration igElement ; }\n");
-                }
-                else
-                {
-                    // 영구자석이 없는 경우도 파라메터는 설정해 주어야 한다.
-                    listScriptString.Add(" ");
-                    listScriptString.Add(" ");
-                }
-                
-                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
-                listScriptString.Clear();
-
-                #endregion
-
-
-                #region --------------------------------- 12. PostProcessing 작업 ----------------------------------
-
-                strOrgStriptContents = scriptContents.m_str12_PostProcessing_Script;
-
-                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
-                listScriptString.Clear();
-
-                #endregion
-
-
-                #region --------------------------------- 13. PostOperation 작업 ----------------------------------
-
-                strOrgStriptContents = scriptContents.m_str13_PostOperation_Script;
-
-                nCount = 0;
+                int nIndex;
 
                 foreach (CNode node in m_design.NodeList)
                 {
-                    if (node.m_kindKey == EMKind.COIL)
+                    strNodeName = node.NodeName;
+                    strTemp = strNodeName.ToUpper();
+
+                    switch (node.m_kindKey)
                     {
-                        if (nCount != 0)
-                        {
-                            CNotice.printTrace("코일 수가 하나이상이다.");
-                            return;
-                        }
+                        case EMKind.STEEL:
+                            strNonlinearNames += String.Format("vol{0}, ", strNodeName);
+                            break;
 
-                        listScriptString.Add(node.NodeName);
+                        case EMKind.COIL:
+                            strLinearNames += String.Format("vol{0}, ", strNodeName);
+                            break;
 
-                        nCount++;
+                        case EMKind.MAGNET:
+                            strLinearNames += String.Format("vol{0}, ", strNodeName);
+                            strMagnetPartNames += String.Format("vol{0}, ", strNodeName);
+
+                            break;
+
+                        default:
+                            break;
                     }
+
+                    if (node.GetType().BaseType.Name == "CParts")
+                        strOrgStriptContents += String.Format("    vol{0} = Region[{1}];\n", strNodeName, strTemp);
                 }
 
-                // 전체 영역의 1/2 로 자속밀도 단면 벡터출력면을 사용한다.
-                //# 2 : X Coord of Left Bottom Point on XY Plane 
-                //# 3 : Y Coord of Left Bottom Point on XY Plane 
-                //# 4 : X Coord of Right Bottom Point on XY Plane 
-                //# 5 : Y Coord of Left Top Point on XY Plane 
-                double dSectionBMinX = dRegionCenterX - dOuterPaddingLength / 2.0f;
-                double dSectionBMinY = dRegionCenterY - dOuterPaddingLength / 2.0f;
-                double dSectionBMaxX = dSectionBMinX + dOuterPaddingLength;
-                double dSectionBMaxY = dSectionBMinY + dOuterPaddingLength;
+                strOrgStriptContents += "\n";
 
-                listScriptString.Add(dSectionBMinX.ToString());
-                listScriptString.Add(dSectionBMinY.ToString());
-                listScriptString.Add(dSectionBMaxX.ToString());
-                listScriptString.Add(dSectionBMaxY.ToString());
+                string strDomainAll = string.Empty;
 
-                writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
-                listScriptString.Clear();
-
-                #endregion
-
-                string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
-
-                string strArguments = " " + strSolveScriptFileFullName;
-                
-                // Maxwell 종료될 때 가지 툴킷을 기다린다.
-                // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
-                CScript.runScript(strGmshExeFileFullName, strArguments, true);
-
-                // Maxwell 의 종료시간을 기다려준다.
-                Thread.Sleep(500);
-
-                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == true)
+                if (strNonlinearNames.Length > 2)
                 {
-                    strArguments = " " + strMagneticDensityVectorFileFullName + " " + strImageScriptFileFullName;
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strNonlinearNames.Length - 2;
+                    strNonlinearNames = strNonlinearNames.Remove(nIndex);
 
-                    CScript.runScript(strGmshExeFileFullName, strArguments, true);
-
-                    //CScript.moveGmshWindow(0, 0);
-                                        
-                    // Maxwell 의 종료시간을 기다려준다.
-                    Thread.Sleep(500);
-
-                    plotForceResult();
-
-                    // Result 버튼이 동작하게 한다.
-                    buttonLoadForceResult.Enabled = true;
-
-                    //m_manageFile.deleteFile(strImageScriptFileFullName);
+                    strOrgStriptContents += "    domainNL = Region[ {" + strNonlinearNames + "} ];\n";
+                    strDomainAll += "domainNL";
                 }
 
+                if (strLinearNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strLinearNames.Length - 2;
+                    strLinearNames = strLinearNames.Remove(nIndex);
+
+                    strOrgStriptContents += "    domainL = Region[ {" + strLinearNames + "} ];\n";
+
+                    if (strDomainAll.Length > 0)
+                        strDomainAll += ", domainL";
+                    else
+                        strDomainAll += "domainL";
+                }
+
+                strOrgStriptContents += "    domainALL = Region[ {" + strDomainAll + "} ];\n\n";
+
+                if (strMagnetPartNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strMagnetPartNames.Length - 2;
+                    strMagnetPartNames = strMagnetPartNames.Remove(nIndex);
+
+                    strOrgStriptContents += "    domainMagnet = Region[ {" + strMagnetPartNames + "} ];\n\n";
+
+                }
+
+                strOrgStriptContents += "    domainHcurl_A = Region[ {domainALL, skinAir} ];\n";
+
+                strOrgStriptContents += "    domainSkin_A_NoGauge = Region [{skinAir, skinSteel} ];\n";
+
+                strOrgStriptContents += "}\n";
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
+                listScriptString.Clear();
 
             }
             catch (Exception ex)
@@ -1679,9 +1497,384 @@ namespace DoSA
                 CNotice.printTrace(ex.Message);
             }
         }
-         
-        #endregion
-              
+
+        private void createImageGeoFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
+
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
+
+            string strOrgStriptContents;
+
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strShapeDirName = Path.Combine(m_design.m_strDesignDirName, "Shape");
+
+            string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
+            string strImageScriptFileFullName = Path.Combine(strExperimentDirName, "Image.geo");
+
+            try
+            {
+
+                strOrgStriptContents = scriptContents.m_str05_Image_Script;
+
+                listScriptString.Add(strSTEPFileFullName);
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strImageScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        private void createDesignGeoFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
+
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
+
+            string strOrgStriptContents;
+
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strShapeDirName = Path.Combine(m_design.m_strDesignDirName, "Shape");
+            string strMeshFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".msh");
+            string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
+
+            string strGeometryScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".geo");
+
+            try
+            {
+                // STEP 파일을 시험 디렉토리로 복사한다.
+                //m_manageFile.copyFile(strOrgSTEPFileFullName, strExprimentSTEPFileFullName);
+
+                strOrgStriptContents = scriptContents.m_str04_Import_Script;
+
+                listScriptString.Add(strSTEPFileFullName);
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                strOrgStriptContents = string.Empty;
+                int nDefineNumCount = 0;
+                string strTemp;
+
+                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
+                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
+                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
+                foreach (string strName in m_design.AllShapeNameList)
+                {
+                    strOrgStriptContents += String.Format("vol{0} = STEP_Volumes[{1}];\n", strName, nDefineNumCount);
+
+                    nDefineNumCount++;
+                }
+
+                strOrgStriptContents += "\n";
+
+                string strNodeName;
+                string strMovingPartNames = string.Empty;
+                string strSteelPartNames = string.Empty;
+
+                int nMovingPartCount = 0;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    strNodeName = node.NodeName;
+                    strTemp = strNodeName.ToUpper();
+
+                    if (node.GetType().BaseType.Name == "CParts")
+                    {
+                        if (((CParts)node).MovingPart == EMMoving.MOVING)
+                        {
+                            strMovingPartNames += String.Format("vol{0}, ", strNodeName);
+                            nMovingPartCount++;
+                        }
+                    }
+
+                    if (node.m_kindKey == EMKind.STEEL)
+                    {
+                        strSteelPartNames += String.Format("vol{0}, ", strNodeName);
+                    }
+                }
+
+                if (nMovingPartCount != 1)
+                {
+                    CNotice.noticeWarning("아직까지 구동부는 하나의 파트만을 지원하고 있습니다.");
+                    return;
+                }
+
+                int nIndex = 0;
+
+                if (strMovingPartNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strMovingPartNames.Length - 2;
+                    strMovingPartNames = strMovingPartNames.Remove(nIndex);
+
+                    strOrgStriptContents += "Translate {0, " + forceExperiment.MovingStroke.ToString() + "*mm, 0} {  Volume{" + strMovingPartNames + "}; }\n\n";
+
+                    strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{" + strMovingPartNames + "}; };\n";
+                }
+
+                if (strSteelPartNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strSteelPartNames.Length - 2;
+                    strSteelPartNames = strSteelPartNames.Remove(nIndex);
+
+                    strOrgStriptContents += "skinSteel() = CombinedBoundary{ Volume{" + strSteelPartNames + "}; };\n\n";
+                }
+
+                foreach (string strName in m_design.AllShapeNameList)
+                {
+                    strTemp = strName.ToUpper();
+
+                    strOrgStriptContents += String.Format("Physical Volume({0}) = vol{1};\n", strTemp, strName);
+
+                    nDefineNumCount++;
+                }
+
+                double dMeshSize;
+
+                m_design.calcShapeSize(strMeshFileFullName);
+
+                // 볼륨을 길이단위로 바꾸기 위해서 1/3 승을 했다.
+                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * CSettingData.m_dMeshLevelPercent / 100.0f;
+
+                // mm -> m 로 단위 변환 
+                dMeshSize = dMeshSize / 1000.0f;
+
+                listScriptString.Add(dMeshSize.ToString());
+
+                double dOuterRegionMinX, dOuterRegionMinY, dOuterRegionMinZ;
+                double dProductLengthX, dProductLengthY, dProductLengthZ;
+                double dRegionCenterX, dRegionCenterY, dRegionCenterZ;
+                List<double> listProductLength = new List<double>();
+
+                /// 여기서 Padding Percent 란 
+                /// 제품 외각에서 음과 양 방향으로 제품 폭의 몇 배를 더 붙이는 가의 의미가 있다.
+                /// 따라서 Padding 이 100 란 
+                /// 음의 방향으로 100 %, 양의 방향으로 100 % 그리고 제품 최대 폭이 더해져서 제품의 최대 폭대비 300% 의 외각 박스가 그려진다.
+                int iOuterPaddingPercent = 100;
+
+                dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
+                dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
+                dProductLengthZ = Math.Abs(m_design.MaxZ - m_design.MinZ);
+
+                listProductLength.Add(dProductLengthX);
+                listProductLength.Add(dProductLengthY);
+                listProductLength.Add(dProductLengthZ);
+
+                double dMaxProductLength = listProductLength.Max();
+
+                // X,Y,Z 의 제품 폭 중에 최대 폭으로 모든 방향의 Region 크기를 결정한다.
+                double dOuterPaddingLength = dMaxProductLength * (iOuterPaddingPercent / 100.0f);
+
+                // 중심 위치
+                dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
+                dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
+                dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
+
+                /// 음의 방향의 좌표 값은 
+                /// 중심 위치에서 먼저 dProductMaxLength / 2.0f 를 빼서 외각 위치를 얻고,
+                /// 거기에 Padding Length 를 추가로 빼서 결정한다.
+                dOuterRegionMinX = dRegionCenterX - dMaxProductLength / 2.0f - dOuterPaddingLength;
+                dOuterRegionMinY = dRegionCenterY - dMaxProductLength / 2.0f - dOuterPaddingLength;
+                dOuterRegionMinZ = dRegionCenterZ - dMaxProductLength / 2.0f - dOuterPaddingLength;
+
+                listScriptString.Add(dOuterRegionMinX.ToString());
+                listScriptString.Add(dOuterRegionMinY.ToString());
+                listScriptString.Add(dOuterRegionMinZ.ToString());
+
+                /// Outer Air Box 는 정사각형이기 때문에 X,Y,Z 방향 모두 같은 하나의 값만 사용하고 있다.
+                /// 양쪽에 PaddingLength 와 제품 길이로 구성된다.
+                double dOuterRegionLength = dMaxProductLength + dOuterPaddingLength * 2.0f;
+
+                listScriptString.Add(dOuterRegionLength.ToString());
+
+
+                double dInnerRegionMinX, dInnerRegionMinY, dInnerRegionMinZ;
+                double dInnerPaddingLengthX, dInnerPaddingLengthY, dInnerPaddingLengthZ;
+                double dInnerRegionLengthX, dInnerRegionLengthY, dInnerRegionLengthZ;
+
+                /// Padding 이 20 란 
+                /// 음의 방향으로 20 %, 양의 방향으로 20 % 그리고 제품 각방향 폭이 더해져서 제품의 폭대비 140% 의 외각 박스가 그려진다.
+                int iInnerPaddingPercent = 20;
+
+                dInnerPaddingLengthX = dProductLengthX * iInnerPaddingPercent / 100.0f;
+                dInnerPaddingLengthY = dProductLengthY * iInnerPaddingPercent / 100.0f;
+                dInnerPaddingLengthZ = dProductLengthZ * iInnerPaddingPercent / 100.0f;
+
+                /// 음의 방향의 좌표 값은 
+                /// 중심 위치에서 먼저 dProductLengthX / 2.0f 를 빼서 외각 위치를 얻고,
+                /// 거기에 Padding Length 를 추가로 빼서 결정한다.
+                dInnerRegionMinX = dRegionCenterX - dProductLengthX / 2.0f - dInnerPaddingLengthX;
+                dInnerRegionMinY = dRegionCenterY - dProductLengthY / 2.0f - dInnerPaddingLengthY;
+                dInnerRegionMinZ = dRegionCenterZ - dProductLengthZ / 2.0f - dInnerPaddingLengthZ;
+
+                listScriptString.Add(dInnerRegionMinX.ToString());
+                listScriptString.Add(dInnerRegionMinY.ToString());
+                listScriptString.Add(dInnerRegionMinZ.ToString());
+
+                dInnerRegionLengthX = dProductLengthX + dInnerPaddingLengthX * 2.0f;
+                dInnerRegionLengthY = dProductLengthY + dInnerPaddingLengthY * 2.0f;
+                dInnerRegionLengthZ = dProductLengthZ + dInnerPaddingLengthZ * 2.0f;
+
+                listScriptString.Add(dInnerRegionLengthX.ToString());
+                listScriptString.Add(dInnerRegionLengthY.ToString());
+                listScriptString.Add(dInnerRegionLengthZ.ToString());
+
+                strOrgStriptContents += scriptContents.m_str04_1_Region_Script;
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
+                listScriptString.Clear();
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+        }
+
+        private void createBHProFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
+
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
+
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strBHProFileFullName = Path.Combine(strExperimentDirName, "BH.pro");
+
+            string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirName, "Materials");
+            string strSteelMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
+
+            string strOrgStriptContents;
+
+            try
+            {
+                CReadFile readFile = new CReadFile();
+
+                List<double> listH = new List<double>();
+                List<double> listB = new List<double>();
+                string strMaterialName;
+
+                List<string> listWrittenSteelMaterialName = new List<string>();
+
+                strOrgStriptContents = "Function{\n\n";
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                listScriptString.Clear();
+
+                bool bUsed = false;
+
+                foreach (CNode node in m_design.NodeList)
+                {
+                    switch (node.m_kindKey)
+                    {
+                        case EMKind.STEEL:
+                            strMaterialName = ((CSteel)node).Material;
+
+                            // 이미 기록한 재질은 저장하지 않는다.
+                            foreach (string strName in listWrittenSteelMaterialName)
+                            {
+                                if (strName == strMaterialName)
+                                    bUsed = true;
+                            }
+
+                            if (bUsed == false)
+                            {
+                                // BH Data 기록하기
+                                readFile.readMaterialBHData(strSteelMaterialFileFullName, strMaterialName, ref listH, ref listB);
+
+                                scriptContents.getScriptBH(strMaterialName, ref strOrgStriptContents, listH, listB);
+
+                                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                                listScriptString.Clear();
+
+                                // BH 관련  수식 기록하기
+                                strOrgStriptContents = scriptContents.m_str03_BH_Calulate_Script;
+
+                                listScriptString.Add(strMaterialName);
+
+                                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                                listScriptString.Clear();
+
+                                // 중복 저장을 방지하기 위해서 List 에 재질명을 남겨 둔다.
+                                listWrittenSteelMaterialName.Add(strMaterialName);
+                            }
+
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+                strOrgStriptContents = "}\n";
+
+                writeFile.addScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
+                listScriptString.Clear();
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+        }
+
+        private void createDefineGeoFile(CForceExperiment forceExperiment)
+        {
+            CScriptContents scriptContents = new CScriptContents();
+
+            CWriteFile writeFile = new CWriteFile();
+            List<string> listScriptString = new List<string>();
+
+            string strOrgStriptContents;
+
+            string strExperimentName = forceExperiment.NodeName;
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strDefineGeoFileFullName = Path.Combine(strExperimentDirName, "Define.geo");
+
+            try
+            {
+                strOrgStriptContents = scriptContents.m_str02_Define_Script;
+
+                // 파트 번호는 1 부터 시작한다. (저장된 STEP 파일의 Volume 번호와 일치 시킨다)
+                int nDefineNumCount = 1;
+                string strTemp;
+
+                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
+                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
+                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
+                foreach (string strName in m_design.AllShapeNameList)
+                {
+                    strTemp = strName.ToUpper();
+
+                    strOrgStriptContents += String.Format("{0} = {1};\n", strTemp, nDefineNumCount);
+                    nDefineNumCount++;
+                }
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strDefineGeoFileFullName, listScriptString);
+                listScriptString.Clear();
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+        }
+
+        #endregion        
+      
         #region---------------------- Windows Message -----------------------
 
         private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -1780,76 +1973,43 @@ namespace DoSA
             return true;
         }
 
-        private void plotForceResult()
+        private void plotForceResult(CForceExperiment forceExperiment)
         {
-            CForceExperiment forceExperiment = (CForceExperiment)propertyGridMain.SelectedObject;
-
-            // 현재 시험의 이름을 m_nodeList 에서 찾지 않고
-            // 현재 표시되고 있는 PropertyGird 창에서 Experiment 이름을 찾아 낸다
-            string strExperimentName = ((CForceExperiment)propertyGridMain.SelectedObject).NodeName;
+            string strExperimentName = forceExperiment.NodeName;
             string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
 
             string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
-            string strForceXFileFullName = Path.Combine(strExperimentDirName, "Fx.dat");
-            string strForceYFileFullName = Path.Combine(strExperimentDirName, "Fy.dat");
-            string strForceZFileFullName = Path.Combine(strExperimentDirName, "Fz.dat");
 
-            bool bCheck = false;
-
-            string strReturn;
-            double dForce;
-            CReadFile readfile = new CReadFile();
+            double dForceX = 0;
+            double dForceY = 0;
+            double dForceZ = 0;
+            double dZeroForceX = 0;
+            double dZeroForceY = 0;
+            double dZeroForceZ = 0;
 
             try
             {
-                bCheck = m_manageFile.isExistFile(strForceXFileFullName);
+                getForceResult(strExperimentName, ref dForceX, ref dForceY, ref dForceZ);
 
-                if (bCheck == true)
+                string strExperimentZeroDirName = strExperimentDirName + "_Zero";
+                
+                /// 영구자석이 포함된 자기회로의 정확도를 높이기위한 전류 0 시험이 존재하는 지를 확인한다.
+                /// 전류를 인가했을 때와 하지 않았을 때의 자기력 차를 자기력으로 사용한다.
+                if (m_manageFile.isExistDirectory(strExperimentZeroDirName) == true)
                 {
-                    strReturn = readfile.pickoutString(strForceXFileFullName, "0 ", 3, 30);
-                    dForce = Double.Parse(strReturn);
+                    getForceResult(strExperimentZeroDirName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ);
 
-                    textBoxForceX.Text = string.Format("{0:0.0000}", dForce);
-                }
-                else
-                {
-                    CNotice.noticeWarningID("TROA1");
-                    return;
-                }
-
-                bCheck = m_manageFile.isExistFile(strForceYFileFullName);
-
-                if (bCheck == true)
-                {
-                    strReturn = readfile.pickoutString(strForceYFileFullName, "0 ", 3, 30);
-                    dForce = Double.Parse(strReturn);
-
-                    textBoxForceY.Text = string.Format("{0:0.0000}", dForce);
-                }
-                else
-                {
-                    CNotice.noticeWarningID("TROA1");
-                    return;
+                    dForceX = dForceX - dZeroForceX;
+                    dForceY = dForceY - dZeroForceY;
+                    dForceZ = dForceZ - dZeroForceZ;
                 }
 
-                bCheck = m_manageFile.isExistFile(strForceZFileFullName);
+                textBoxForceX.Text = string.Format("{0:0.0000}", dForceX);
+                textBoxForceY.Text = string.Format("{0:0.0000}", dForceY);
+                textBoxForceZ.Text = string.Format("{0:0.0000}", dForceZ);
 
-                if (bCheck == true)
-                {
-                    strReturn = readfile.pickoutString(strForceZFileFullName, "0 ", 3, 30);
-                    dForce = Double.Parse(strReturn);
 
-                    textBoxForceZ.Text = string.Format("{0:0.0000}", dForce);
-                }
-                else
-                {
-                    CNotice.noticeWarningID("TROA1");
-                    return;
-                }
-
-                bCheck = m_manageFile.isExistFile(strDensityImageFileFullName);
-
-                if (bCheck == true)
+                if (m_manageFile.isExistFile(strDensityImageFileFullName) == true)
                 {
                     // 파일을 잡고 있지 않기 위해서 임시 이미지를 사용하고 Dispose 한다.
                     Image tmpImage = Image.FromFile(strDensityImageFileFullName);
@@ -1865,10 +2025,64 @@ namespace DoSA
                     CNotice.noticeWarningID("TINR");
                     return;
                 }
+ 
             }
             catch (Exception ex)
             {
                 CNotice.printTrace(ex.Message);
+            }
+        }
+
+        private void getForceResult(string strExperimentName, ref double dForceX, ref double dForceY, ref double dForceZ)
+        {
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+
+            string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
+            string strForceXFileFullName = Path.Combine(strExperimentDirName, "Fx.dat");
+            string strForceYFileFullName = Path.Combine(strExperimentDirName, "Fy.dat");
+            string strForceZFileFullName = Path.Combine(strExperimentDirName, "Fz.dat");
+
+            bool bCheck = false;
+            string strReturn;
+            CReadFile readfile = new CReadFile();
+
+            bCheck = m_manageFile.isExistFile(strForceXFileFullName);
+
+            if (bCheck == true)
+            {
+                strReturn = readfile.pickoutString(strForceXFileFullName, "0 ", 3, 30);
+                dForceX = Double.Parse(strReturn);
+            }
+            else
+            {
+                CNotice.noticeWarningID("TROA1");
+                return;
+            }
+
+            bCheck = m_manageFile.isExistFile(strForceYFileFullName);
+
+            if (bCheck == true)
+            {
+                strReturn = readfile.pickoutString(strForceYFileFullName, "0 ", 3, 30);
+                dForceY = Double.Parse(strReturn);
+            }
+            else
+            {
+                CNotice.noticeWarningID("TROA1");
+                return;
+            }
+
+            bCheck = m_manageFile.isExistFile(strForceZFileFullName);
+
+            if (bCheck == true)
+            {
+                strReturn = readfile.pickoutString(strForceZFileFullName, "0 ", 3, 30);
+                dForceZ = Double.Parse(strReturn);
+            }
+            else
+            {
+                CNotice.noticeWarningID("TROA1");
+                return;
             }
         }
 

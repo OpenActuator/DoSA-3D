@@ -136,5 +136,18 @@ namespace Experiments
 
             return true;
         }
+
+        public CForceExperiment Clone()
+        {
+            CForceExperiment forceExperiment = new CForceExperiment();
+
+            forceExperiment.m_kindKey = this.m_kindKey;
+            forceExperiment.Current = this.Current;
+            forceExperiment.MovingStroke = this.MovingStroke;
+            forceExperiment.NodeName = this.NodeName;
+            forceExperiment.Voltage = this.Voltage;
+
+            return forceExperiment;
+        }
     }
 }

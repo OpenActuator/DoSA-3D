@@ -9,7 +9,17 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription(@"This application is an open source software for actuator design.
 
 This application uses open source software below.
+
+GetDP (A free finite element solver using mixed elements)
+  link: http://getdp.info/
+  license: GNU General Public License (GPL)
+  License link: http://getdp.info/doc/LICENSE.txt
     
+Gmsh (An open source 3D finite element mesh generator)
+  link: http://gmsh.info/	
+  license: GNU General Public License (GPL)
+  License link: http://gmsh.info/LICENSE.txt
+
 Easily Add a Ribbon into a WinForms Application	
   link: http://www.codeproject.com/Articles/364272/	
   license: Microsoft Public License (MS-PL)	
@@ -37,6 +47,7 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
   link: http://www.icon-king.com/projects/nuvola/
   license: LGPL 2.1
   license link: http://creativecommons.org/licenses/LGPL/2.1/")]
+
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Contributor : http://openactuator.org (zgitae@gmail.com)")]
 [assembly: AssemblyProduct("DoSA (Designer of Solenoid & Actuator)")]

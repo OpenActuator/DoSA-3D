@@ -205,7 +205,7 @@ namespace Onelab
             }
         }
 
-        public static void moveGmsh(int iPosX, int iPosY, int iSizeX = 1024, int iSizeY = 768)
+        public static void moveGmshWindow(int iPosX, int iPosY, int iSizeX = 1024, int iSizeY = 768)
         {
             Process[] processList = Process.GetProcessesByName("gmsh");
 
@@ -230,18 +230,21 @@ namespace Onelab
         // 주의사항
         //--------------------------------------------------
         // - 내부에 사용되는 { 기호와 {{}} 는 분리하여 꼭 사용하라.
-        //
+        // - 메쉬 후에 파트명을 읽어낸다. (파트명 파일의 생성 유무를 사용해서 Gmsh 자동동작을 기다리기 때문이다.
 
         #region =========================== 01_Read Part Name ===========================
 
         public string m_str01_CheckSTEP_Script =
         @"#CHECK_STEP,2
 # 1 : Step File Full Name
-# 2 : Part Name File Fule Name
+# 2 : Part Name File Full Name
+# 3 : Design Name
 
 SetFactory(""OpenCASCADE"");
 
 Merge ""{{1}}"";
+
+Mesh 2;
 
 STEP_Volumes[] = Volume '*';
 
@@ -253,6 +256,27 @@ For k In {0 : #STEP_Volumes[]-1}
 	
 EndFor
 
+Geometry.Volumes = 1;
+Geometry.VolumeNumbers = 1;
+
+Save ""{{3}}.msh"";
+
+";
+        #endregion
+
+        #region =========================== 01_1 Show Shape  ===========================
+
+        public string m_str01_1_Show_Shape_Script =
+        @"#CHECK_STEP,1
+# 1 : Step File Full Name
+
+SetFactory(""OpenCASCADE"");
+
+Merge ""{{1}}"";
+
+Geometry.Volumes = 1;
+Geometry.VolumeNumbers = 1;
+
 ";
         #endregion
 
@@ -262,23 +286,24 @@ EndFor
         /// Define 번호 규칙
         ///----------------------------------------------
         /// 
-        /// Part Objects    : 1 ~ 99
-        ///  - 1 : Air
-        ///  - 2 : Parts ~
-        /// Part Skins      : 101 ~ 199
-        ///  - 101 : Air Skin
-        ///  - 102 : Parts Skin ~
+        /// Volume Objects    : 1 ~ 199
+        ///  - 1 ~ 198 : Parts
+        ///  - 199 : Air (Outer, Inner 같이 사용)
+        ///  
+        /// Skin Objects      : 301 ~ 399
+        ///  - 301 ~ 398 : Parts Skin
+        ///  - 399 : Air Skin (Outer Box 만)
         ///  
         public string m_str02_Define_Script =
         @"#DEFINE,0
 
 mm = 1e-3;
 
-AIR = 1;
-SKIN_AIR = 101;
+AIR = 199;
+SKIN_AIR = 399;
 
-SKIN_MOVING = 201;
-SKIN_STEEL = 202;
+SKIN_MOVING = 301;
+SKIN_STEEL = 302;
 
 ";
         #endregion
@@ -321,6 +346,8 @@ SKIN_STEEL = 202;
         @"#BH,1
 # 1 : Material Name
 
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
+
     Mat_{{1}}_B2() = Mat_{{1}}_B()^2;
     Mat_{{1}}_nu() = Mat_{{1}}_H() / Mat_{{1}}_B();
     Mat_{{1}}_nu(0) = Mat_{{1}}_nu(1);
@@ -353,7 +380,7 @@ Merge ""{{1}}"";
 
 STEP_Volumes[] = Volume '*';
 
-# {{ 가 발생하지 않도록 주의하라 
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
 ";
         #endregion
@@ -361,24 +388,36 @@ Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
         #region =========================== 04_1_Air_Region (*.geo) ===========================
 
         public string m_str04_1_Region_Script =
-        @"#IMPORT,8
-# 1 : Air Mesh Size
-# 2 : Part Mesh Size
-# 3 : Shape Min X
-# 4 : Shape Min Y
-# 5 : Shape Min Z
-# 6 : Shape Width X
-# 7 : Shape Width Y
-# 8 : Shape Width Z
+        @"#IMPORT,11
+# 1 : Mesh Size
+# 2 : Outer Min X
+# 3 : Outer Min Y
+# 4 : Outer Min Z
+# 5 : Outer Width X, Y, Z
+# 6 : Outer Min X
+# 7 : Outer Min Y
+# 8 : Outer Min Z
+# 9 : Outer Width X
+# 10 : Outer Width Y
+# 11 : Outer Width Z
 
-Mesh.CharacteristicLengthFactor = {{1}};
-Characteristic Length { PointsOf{ Volume{STEP_Volumes[]}; } } = {{2}};
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
-volBox = newv; Box(newv) = { {{3}}*mm, {{4}}*mm, {{5}}*mm, {{6}}*mm, {{7}}*mm, {{8}}*mm };
+# InnerBox 의 크기는 10% Pandding 을 사용한다. (즉, 제품크기보다 10% 큰 Box 이다)
+volInnerBox = newv; Box(newv) = { {{6}}*mm, {{7}}*mm, {{8}}*mm, {{9}}*mm, {{10}}*mm, {{11}}*mm };
+volInnerAir = newv; BooleanDifference(newv) = { Volume{volInnerBox}; Delete; }{ Volume{STEP_Volumes()}; };
+BooleanFragments{ Volume{volInnerAir(), STEP_Volumes()}; Delete; }{}
 
-volAir = newv; BooleanDifference(newv) = { Volume{volBox}; Delete; }{ Volume{STEP_Volumes()}; };
+# OuterBox 의 크기는 200% Pandding 을 사용하고 있다.
+# 따라서 최소값은 제품 외각 위치에서 음의 방향으로 제품 최대 폭의 2배 길이점, 최대점은 제품 외각 위치에서 양의 방향으로 제품 최대 폭의 2배 길이점이다.
+# 결국, OuterBox 한변의 길이는 제품 최대 길이의 5배가 된다.
+volOuterBox = newv; Box(newv) = { {{2}}*mm, {{3}}*mm, {{4}}*mm, {{5}}*mm, {{5}}*mm, {{5}}*mm };
+volOuterAir = newv; BooleanDifference(newv) = { Volume{volOuterBox}; Delete; }{ Volume{STEP_Volumes(), volInnerAir}; };
+BooleanFragments{ Volume{volOuterAir(), volInnerAir()}; Delete; }{}
 
-BooleanFragments{ Volume{volAir(), STEP_Volumes()}; Delete; }{}
+Characteristic Length { PointsOf{ Volume{volOuterAir}; } } = {{1}} * 5.0;
+Characteristic Length { PointsOf{ Volume{volInnerAir}; } } = {{1}} * 2.0;
+Characteristic Length { PointsOf{ Volume{STEP_Volumes[]}; } } = {{1}} * 1.0;
 
 Physical Surface(SKIN_MOVING) = skinMoving();
 Physical Surface(SKIN_STEEL) = skinSteel();
@@ -386,7 +425,7 @@ Physical Surface(SKIN_STEEL) = skinSteel();
 volAll() = Volume '*';
 skinAir() = CombinedBoundary{ Volume{ volAll() }; };
 
-Physical Volume(AIR) = volAir;
+Physical Volume(AIR) = {volInnerAir(), volOuterAir()};
 Physical Surface(SKIN_AIR) = skinAir();
 
 ";
@@ -397,27 +436,19 @@ Physical Surface(SKIN_AIR) = skinAir();
         public string m_str05_Image_Script =
         @"#IMPORT,1
 # 1 : STEP File Name
-# 2 : Part Mesh Size
 SetFactory(""OpenCASCADE"");
 
 mm = 1e-3;
-
-Mesh.Optimize = 1;
-Mesh.VolumeEdges = 0;
-Solver.AutoMesh = 2;
 
 Merge ""{{1}}"";
 
 STEP_Volumes[] = Volume '*';
 
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
 
-Characteristic Length { PointsOf{ Volume{STEP_Volumes[]}; } } = {{2}};
-
 General.Trackball = 0;
-General.RotationX = 10; General.RotationY = 0; General.RotationZ = 0;
-
-Mesh 2;
+General.RotationX = 20; General.RotationY = -20; General.RotationZ = 0;
 
 Print ""Image.gif"";
 
@@ -466,6 +497,8 @@ Function {
 
         public string m_str08_Constraint_Script =
         @"#DEFINE,0
+
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 Constraint {
 	{ Name cstDirichlet_A_0 ;
@@ -549,6 +582,8 @@ Integration {
 # 2 : Magnet Part String - 1
 # 3 : Magnet Part String - 2
 
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
+
 Formulation {
 
 	{ Name fmMagStatic_A; Type FemEquation;
@@ -599,6 +634,8 @@ Resolution {
 
         public string m_str12_PostProcessing_Script =
         @"#DEFINE,0
+
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 PostProcessing {
 
@@ -655,6 +692,8 @@ PostProcessing {
 # 3 : Y Coord of Left Bottom Point on XY Plane 
 # 4 : X Coord of Right Bottom Point on XY Plane 
 # 5 : Y Coord of Left Top Point on XY Plane 
+
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 PostOperation {
 	{ Name poMagStatic_A ; NameOfPostProcessing ppMagStatic_A;

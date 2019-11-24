@@ -336,6 +336,81 @@ namespace DoSA
         
         #region--------------------- Ribbon Menu ---------------------------
 
+        private void ribbonButtonShape_Click(object sender, EventArgs e)
+        {
+            List<string> listScriptString = new List<string>();
+            CWriteFile writeFile = new CWriteFile();
+
+            try
+            {
+                if (m_design.m_strDesignName.Length == 0)
+                {
+                    CNotice.noticeWarning("형상을 보여줄 디지인이 없습니다.\n작업을 취소합니다.");
+                    return;
+                }
+
+                #region ------------------------- 디렉토리 및 파일명 설정 ------------------------
+
+                // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
+                // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
+                // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
+                string strDesignDirName = Path.Combine(CSettingData.m_strWorkingDirName, m_design.m_strDesignName);
+                
+                string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+
+                // 형상 디렉토리 
+                string strShapeDirName = Path.Combine(strDesignDirName, "Shape");
+                // 형상 디렉토리안의 만들어진다.
+                string strShapeModelFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
+
+                // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
+                string strRunScriptFileFullName = Path.Combine(strShapeDirName, "shape.geo");
+
+                #endregion
+
+                CScriptContents scriptContents = new CScriptContents();
+
+                string strOrgStriptContents = scriptContents.m_str01_1_Show_Shape_Script;
+
+                listScriptString.Add(strShapeModelFileFullName);
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString);
+                if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    //string strRunScriptFileFullName = m_manageFile.solveDirectoryNameInPC(m_strRunScriptFileFullName);
+
+                    string strArguments = " " + strRunScriptFileFullName;
+       
+                    if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
+                    {
+                        CNotice.noticeWarning("형상 파일을 찾지 못했습니다.");
+                        return;
+                    }
+
+                    // Gmsh 를 종료할 때까지 기다리지 않는다.
+                    CScript.runScript(strGmshExeFileFullName, strArguments, false);
+                }
+                else
+                {
+                    CNotice.printTrace("Shape Script 파일 생성에 문제가 발생했습니다.");
+                    return;
+                }
+                
+                Thread.Sleep(500);
+
+                //m_manageFile.deleteFile(strRunScriptFileFullName);
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+                return;
+            }
+
+        }
+
         private void ribbonButtonNew_Click(object sender, EventArgs e)
         {
             try
@@ -400,7 +475,7 @@ namespace DoSA
                 // Mesh 파일도 형상 디렉토리에서 작업을 한다.
                 string strMeshFileFullName = Path.Combine(strShapeDirName, strDesignName + ".msh");
 
-                #endregion --------------------------------------------------------------------------
+                #endregion
 
 
                 #region ------------------------- 디렉토리 생성 및 파일 복사------------------------
@@ -426,6 +501,7 @@ namespace DoSA
                 // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
                 listScriptString.Add(strShapeModelFileFullName);
                 listScriptString.Add(strPartNamesFileFullName);
+                listScriptString.Add(strDesignName);
 
                 // Script 파일이 문제없이 만들어지면 아래 동작을 실시하다.
                 if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
@@ -434,21 +510,24 @@ namespace DoSA
                     // 아래와 같이 묶음처리를 사용한다.
                     //string strRunScriptFileFullName = m_manageFile.solveDirectoryNameInPC(m_strRunScriptFileFullName);
 
-                    string strArguments = " -2 " + strRunScriptFileFullName;
-                    //string strArguments = " " + strRunScriptFileFullName;
-
-                    // Maxwell 종료될 때 가지 툴킷을 기다린다.
-                    // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
-                    CScript.runScript(strGmshExeFileFullName, strArguments, true);
-
-                    // Maxwell 의 종료시간을 기다려준다.
-                    Thread.Sleep(500);
-
+                    string strArguments = " " + strRunScriptFileFullName;
+       
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
                         CNotice.noticeWarning("형상 파일을 찾지 못했습니다.");
                         return;
                     }
+
+                    // Gmsh 를 종료할 때까지 기다리지 않는다.
+                    // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
+                    CScript.runScript(strGmshExeFileFullName, strArguments, false);
+
+                    while(false == m_manageFile.isExistFile(strPartNamesFileFullName))
+                    {
+                        // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
+                        Thread.Sleep(500);
+                    }
+
 
                     // 순서 주의
                     //  - closeDesign() 뒤에 호출되어야 한다.
@@ -474,7 +553,7 @@ namespace DoSA
                         m_design.AllShapeNameList = listAllPartNames;
 
                         // 정상적으로 스크립트 파일이 동작했다면 스크립트파일은 삭제한다.
-                        m_manageFile.deleteFile(strRunScriptFileFullName);
+                        //m_manageFile.deleteFile(strRunScriptFileFullName);
 
                         // 단지 리스트를 확인하기 위한 창임을 구분하기 위해 SHOW_LIST 항목을 사용하고 있다.
                         PopupAddNode dlgFormNodeName = new PopupAddNode(EMKind.SHOW_LIST, m_design.RemainedShapeNameList);
@@ -504,7 +583,7 @@ namespace DoSA
                 }
                 else
                 {
-                    CNotice.printTrace("CheckSTEP 배치파일 생성에 문제가 발생했습니다.");
+                    CNotice.printTrace("Part Names Script 파일 생성에 문제가 발생했습니다.");
                     return;
                 }
 
@@ -917,8 +996,8 @@ namespace DoSA
             string strSteelMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
             string strMagnetMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MG.dmat");
 
-            string strOrgSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
-            string strExprimentSTEPFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".step");
+            string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
+//            string strExprimentSTEPFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".step");
 
             string strGeometryScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".geo");
             string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
@@ -962,8 +1041,8 @@ namespace DoSA
 
                 strOrgStriptContents = scriptContents.m_str02_Define_Script;
 
-                // Air 가 1이기 때문에 파트는 2 부터 시작한다.
-                int nDefineNumCount = 2;
+                // 파트 번호는 1 부터 시작한다. (저장된 STEP 파일의 Volume 번호와 일치 시킨다)
+                int nDefineNumCount = 1;
                 string strTemp;
 
                 // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
@@ -1054,11 +1133,11 @@ namespace DoSA
                 #region ----------------------------- 04. *.geo 생성 for Mesh -------------------------------
 
                 // STEP 파일을 시험 디렉토리로 복사한다.
-                m_manageFile.copyFile(strOrgSTEPFileFullName, strExprimentSTEPFileFullName);
+                //m_manageFile.copyFile(strOrgSTEPFileFullName, strExprimentSTEPFileFullName);
 
                 strOrgStriptContents = scriptContents.m_str04_Import_Script;
 
-                listScriptString.Add(strExprimentSTEPFileFullName);
+                listScriptString.Add(strSTEPFileFullName);
 
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
                 listScriptString.Clear();
@@ -1141,44 +1220,95 @@ namespace DoSA
                     nDefineNumCount++;
                 }
 
-                double dAirMeshSize, dPartMeshSize;
+                double dMeshSize;
 
                 m_design.calcShapeSize(strMeshFileFullName);
 
                 // 볼륨을 길이단위로 바꾸기 위해서 1/3 승을 했다.
-                // 여기서, 0.0025f 은 실 Mesh 크기와 입력 % 간의 차이를 보정하기 위한 값이다.
-                dPartMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * CSettingData.m_dMeshLevelPercent / 100.0f * 0.0025f;
-                dAirMeshSize = CSettingData.m_dMeshLevelPercent / 100.0f * 6.5f;  
+                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * CSettingData.m_dMeshLevelPercent / 100.0f;
 
-                double dRegionMinX, dRegionMinY, dRegionMinZ;
+                // mm -> m 로 단위 변환 
+                dMeshSize = dMeshSize / 1000.0f;
 
-                // 200 % Padding 을 했을 때 가장 큰 방향으로 모든 방향의 Region 크기를 결정한다.
-                List<double> listPaddingLength = new List<double>();
-                int iPaddingPercent = 200;
+                listScriptString.Add(dMeshSize.ToString());
+                
+                double dOuterRegionMinX, dOuterRegionMinY, dOuterRegionMinZ;
+                double dProductLengthX, dProductLengthY, dProductLengthZ;
+                double dRegionCenterX, dRegionCenterY, dRegionCenterZ;
+                List<double> listProductLength = new List<double>();
+                
+                /// 여기서 Padding Percent 란 
+                /// 제품 외각에서 음과 양 방향으로 제품 폭의 몇 배를 더 붙이는 가의 의미가 있다.
+                /// 따라서 Padding 이 100 란 
+                /// 음의 방향으로 100 %, 양의 방향으로 100 % 그리고 제품 최대 폭이 더해져서 제품의 최대 폭대비 300% 의 외각 박스가 그려진다.
+                int iOuterPaddingPercent = 100;
 
-                listPaddingLength.Add(Math.Abs(m_design.MaxX - m_design.MinX) * iPaddingPercent / 100.0f);
-                listPaddingLength.Add(Math.Abs(m_design.MaxY - m_design.MinY) * iPaddingPercent / 100.0f);
-                listPaddingLength.Add(Math.Abs(m_design.MaxZ - m_design.MinZ) * iPaddingPercent / 100.0f);
+                dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
+                dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
+                dProductLengthZ = Math.Abs(m_design.MaxZ - m_design.MinZ);
 
-                double dPaddingLength = listPaddingLength.Max();
+                listProductLength.Add(dProductLengthX);
+                listProductLength.Add(dProductLengthY);
+                listProductLength.Add(dProductLengthZ);
 
-                // 중심 위치 : (m_design.MinX + m_design.MaxX) / 2.0f 에서 Padding 길이을 뺀다.
-                double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
-                double dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
-                double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
+                double dMaxProductLength = listProductLength.Max();
 
-                dRegionMinX = dRegionCenterX - dPaddingLength;
-                dRegionMinY = dRegionCenterY - dPaddingLength;
-                dRegionMinZ = dRegionCenterZ - dPaddingLength;
+                // X,Y,Z 의 제품 폭 중에 최대 폭으로 모든 방향의 Region 크기를 결정한다.
+                double dOuterPaddingLength = dMaxProductLength * (iOuterPaddingPercent / 100.0f);
 
-                listScriptString.Add(dAirMeshSize.ToString());
-                listScriptString.Add(dPartMeshSize.ToString());
-                listScriptString.Add(dRegionMinX.ToString());
-                listScriptString.Add(dRegionMinY.ToString());
-                listScriptString.Add(dRegionMinZ.ToString());
-                listScriptString.Add((dPaddingLength*2).ToString());
-                listScriptString.Add((dPaddingLength*2).ToString());
-                listScriptString.Add((dPaddingLength*2).ToString());
+                // 중심 위치
+                dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
+                dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
+                dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
+
+                /// 음의 방향의 좌표 값은 
+                /// 중심 위치에서 먼저 dProductMaxLength / 2.0f 를 빼서 외각 위치를 얻고,
+                /// 거기에 Padding Length 를 추가로 빼서 결정한다.
+                dOuterRegionMinX = dRegionCenterX - dMaxProductLength / 2.0f - dOuterPaddingLength;
+                dOuterRegionMinY = dRegionCenterY - dMaxProductLength / 2.0f - dOuterPaddingLength;
+                dOuterRegionMinZ = dRegionCenterZ - dMaxProductLength / 2.0f - dOuterPaddingLength;
+
+                listScriptString.Add(dOuterRegionMinX.ToString());
+                listScriptString.Add(dOuterRegionMinY.ToString());
+                listScriptString.Add(dOuterRegionMinZ.ToString());
+
+                /// Outer Air Box 는 정사각형이기 때문에 X,Y,Z 방향 모두 같은 하나의 값만 사용하고 있다.
+                /// 양쪽에 PaddingLength 와 제품 길이로 구성된다.
+                double dOuterRegionLength = dMaxProductLength + dOuterPaddingLength * 2.0f;
+                
+                listScriptString.Add(dOuterRegionLength.ToString());
+
+
+                double dInnerRegionMinX, dInnerRegionMinY, dInnerRegionMinZ;
+                double dInnerPaddingLengthX, dInnerPaddingLengthY, dInnerPaddingLengthZ;
+                double dInnerRegionLengthX, dInnerRegionLengthY, dInnerRegionLengthZ;
+
+                /// Padding 이 20 란 
+                /// 음의 방향으로 20 %, 양의 방향으로 20 % 그리고 제품 각방향 폭이 더해져서 제품의 폭대비 140% 의 외각 박스가 그려진다.
+                int iInnerPaddingPercent = 20;
+
+                dInnerPaddingLengthX = dProductLengthX * iInnerPaddingPercent / 100.0f;
+                dInnerPaddingLengthY = dProductLengthY * iInnerPaddingPercent / 100.0f;
+                dInnerPaddingLengthZ = dProductLengthZ * iInnerPaddingPercent / 100.0f;
+
+                /// 음의 방향의 좌표 값은 
+                /// 중심 위치에서 먼저 dProductLengthX / 2.0f 를 빼서 외각 위치를 얻고,
+                /// 거기에 Padding Length 를 추가로 빼서 결정한다.
+                dInnerRegionMinX = dRegionCenterX - dProductLengthX / 2.0f - dInnerPaddingLengthX;
+                dInnerRegionMinY = dRegionCenterY - dProductLengthY / 2.0f - dInnerPaddingLengthY;
+                dInnerRegionMinZ = dRegionCenterZ - dProductLengthZ / 2.0f - dInnerPaddingLengthZ;
+
+                listScriptString.Add(dInnerRegionMinX.ToString());
+                listScriptString.Add(dInnerRegionMinY.ToString());
+                listScriptString.Add(dInnerRegionMinZ.ToString());
+
+                dInnerRegionLengthX = dProductLengthX + dInnerPaddingLengthX * 2.0f;
+                dInnerRegionLengthY = dProductLengthY + dInnerPaddingLengthY * 2.0f;
+                dInnerRegionLengthZ = dProductLengthZ + dInnerPaddingLengthZ * 2.0f;
+
+                listScriptString.Add(dInnerRegionLengthX.ToString());
+                listScriptString.Add(dInnerRegionLengthY.ToString());
+                listScriptString.Add(dInnerRegionLengthZ.ToString());
 
                 strOrgStriptContents += scriptContents.m_str04_1_Region_Script;
 
@@ -1193,12 +1323,11 @@ namespace DoSA
 
                 strOrgStriptContents = scriptContents.m_str05_Image_Script;
 
-                listScriptString.Add(strExprimentSTEPFileFullName);
-                listScriptString.Add(dPartMeshSize.ToString());
+                listScriptString.Add(strSTEPFileFullName);
 
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strImageScriptFileFullName, listScriptString);
                 listScriptString.Clear();
-                
+
                 #endregion
 
 
@@ -1448,6 +1577,12 @@ namespace DoSA
                     listScriptString.Add("            Galerkin { [ nu[] * br[] , {d qnt_A} ] ;\n");
                     listScriptString.Add("                In domainMagnet ; Jacobian jbVolume ; Integration igElement ; }\n");
                 }
+                else
+                {
+                    // 영구자석이 없는 경우도 파라메터는 설정해 주어야 한다.
+                    listScriptString.Add(" ");
+                    listScriptString.Add(" ");
+                }
                 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
@@ -1492,10 +1627,10 @@ namespace DoSA
                 //# 3 : Y Coord of Left Bottom Point on XY Plane 
                 //# 4 : X Coord of Right Bottom Point on XY Plane 
                 //# 5 : Y Coord of Left Top Point on XY Plane 
-                double dSectionBMinX = dRegionCenterX - dPaddingLength / 2.0f;
-                double dSectionBMinY = dRegionCenterY - dPaddingLength / 2.0f;
-                double dSectionBMaxX = dSectionBMinX + dPaddingLength;
-                double dSectionBMaxY = dSectionBMinY + dPaddingLength;
+                double dSectionBMinX = dRegionCenterX - dOuterPaddingLength / 2.0f;
+                double dSectionBMinY = dRegionCenterY - dOuterPaddingLength / 2.0f;
+                double dSectionBMaxX = dSectionBMinX + dOuterPaddingLength;
+                double dSectionBMaxY = dSectionBMinY + dOuterPaddingLength;
 
                 listScriptString.Add(dSectionBMinX.ToString());
                 listScriptString.Add(dSectionBMinY.ToString());
@@ -1524,7 +1659,7 @@ namespace DoSA
 
                     CScript.runScript(strGmshExeFileFullName, strArguments, true);
 
-                    //CScript.moveGmsh(0, 0);
+                    //CScript.moveGmshWindow(0, 0);
                                         
                     // Maxwell 의 종료시간을 기다려준다.
                     Thread.Sleep(500);
@@ -1533,6 +1668,8 @@ namespace DoSA
 
                     // Result 버튼이 동작하게 한다.
                     buttonLoadForceResult.Enabled = true;
+
+                    //m_manageFile.deleteFile(strImageScriptFileFullName);
                 }
 
 
@@ -2667,6 +2804,8 @@ namespace DoSA
         }
         
         #endregion
+
+
                 
     }
 }

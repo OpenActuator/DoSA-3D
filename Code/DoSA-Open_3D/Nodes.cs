@@ -428,6 +428,18 @@ namespace Nodes
             return false;
         }
 
+
+        public bool isExistMagnet()
+        {
+            foreach (CNode node in m_listNode)
+            {
+                if (node.m_kindKey == EMKind.MAGNET)
+                    return true;
+            }
+
+            return false;
+        }
+
         //public bool isDesignShapeOK(double dStroke = 0)
         //{
         //    //CFace face = null;
@@ -483,6 +495,7 @@ namespace Nodes
 
         //    return true;
         //}
+
 
     }
 }

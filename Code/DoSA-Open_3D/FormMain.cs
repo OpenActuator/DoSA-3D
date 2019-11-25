@@ -1059,7 +1059,7 @@ namespace DoSA
          
         #endregion
 
-        #region------------------------------- Script 작업 함수 ---------------------------
+        #region------------------------- Script 작업 함수 ---------------------------
 
         public bool solveForce(CForceExperiment forceExperiment)
         {
@@ -1352,8 +1352,8 @@ namespace DoSA
                             strOrgStriptContents += String.Format("    hc[vol{0}] = Vector[{1}, {2}, {3}];\n", strNodeName, (-dHcX).ToString(), (-dHcY).ToString(), (-dHcZ).ToString());
                             strOrgStriptContents += String.Format("    br[vol{0}] = Vector[{1}, {2}, {3}];\n", strNodeName, (-dBrX).ToString(), (-dBrY).ToString(), (-dBrZ).ToString());
 
-                            strOrgStriptContents += String.Format("    mu[vol{0}] = {1} * mu0;\n", strNodeName, dMur.ToString());
-                            strOrgStriptContents += String.Format("    nu[vol{0}] = 1.0 / ({1} * mu0);\n\n", strNodeName, dMur.ToString());
+                            strOrgStriptContents += String.Format("    mu[vol{0}] = {1};\n", strNodeName, dMur.ToString());
+                            strOrgStriptContents += String.Format("    nu[vol{0}] = 1.0 / {1};\n\n", strNodeName, dMur.ToString());
 
                             break;
 
@@ -1481,10 +1481,6 @@ namespace DoSA
                     strOrgStriptContents += "    domainMagnet = Region[ {" + strMagnetPartNames + "} ];\n\n";
 
                 }
-
-                strOrgStriptContents += "    domainHcurl_A = Region[ {domainALL, skinAir} ];\n";
-
-                strOrgStriptContents += "    domainSkin_A_NoGauge = Region [{skinAir, skinSteel} ];\n";
 
                 strOrgStriptContents += "}\n";
 
@@ -1659,9 +1655,11 @@ namespace DoSA
 
                 /// 여기서 Padding Percent 란 
                 /// 제품 외각에서 음과 양 방향으로 제품 폭의 몇 배를 더 붙이는 가의 의미가 있다.
-                /// 따라서 Padding 이 100 란 
-                /// 음의 방향으로 100 %, 양의 방향으로 100 % 그리고 제품 최대 폭이 더해져서 제품의 최대 폭대비 300% 의 외각 박스가 그려진다.
-                int iOuterPaddingPercent = 100;
+                /// 따라서 Padding 이 150 란 
+                /// 음의 방향으로 150 %, 양의 방향으로 150 % 그리고 제품 최대 폭이 더해져서 제품의 최대 폭대비 400% 의 외각 박스가 그려진다.
+                /// Air 바깥의 조건은 A = 0 이다. 
+                /// 따라서 자계가 밖을 나가는 VCM 이나 영구자석의 경우를 고려해서 150 이상을 사용한다.
+                int iOuterPaddingPercent = 150;
 
                 dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
                 dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
@@ -3017,9 +3015,6 @@ namespace DoSA
             System.Diagnostics.Process.Start(strWebAddress);
         }
         
-        #endregion
-
-
-                
+        #endregion                        
     }
 }

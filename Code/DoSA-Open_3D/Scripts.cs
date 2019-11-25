@@ -415,7 +415,7 @@ volOuterBox = newv; Box(newv) = { {{2}}*mm, {{3}}*mm, {{4}}*mm, {{5}}*mm, {{5}}*
 volOuterAir = newv; BooleanDifference(newv) = { Volume{volOuterBox}; Delete; }{ Volume{STEP_Volumes(), volInnerAir}; };
 BooleanFragments{ Volume{volOuterAir(), volInnerAir()}; Delete; }{}
 
-Characteristic Length { PointsOf{ Volume{volOuterAir}; } } = {{1}} * 5.0;
+Characteristic Length { PointsOf{ Volume{volOuterAir}; } } = {{1}} * 8.0;
 Characteristic Length { PointsOf{ Volume{volInnerAir}; } } = {{1}} * 2.0;
 Characteristic Length { PointsOf{ Volume{STEP_Volumes[]}; } } = {{1}} * 1.0;
 
@@ -515,7 +515,7 @@ Constraint {
 	
 	{ Name cstGaugeCondition_A ; Type Assign ;
 		Case {
-			{ Region Region[{domainALL}] ; SubRegion domainSkin_A_NoGauge ; Value 0. ; }
+			{ Region domainALL ; SubRegion skinAir ; Value 0. ; }
 		}
 	}	
 }
@@ -525,7 +525,7 @@ FunctionSpace {
 	{ Name fsHcurl_A_3D ; Type Form1 ;
 		BasisFunction {
 			{ 	Name se ; NameOfCoef ae ; Function BF_Edge ;
-				Support domainHcurl_A ; Entity EdgesOf[ All ] ; }
+				Support domainALL ; Entity EdgesOf[ All ] ; }
 		}
 		Constraint {
 			{ 	NameOfCoef ae;	EntityType EdgesOf ; NameOfConstraint cstDirichlet_A_0 ; }
@@ -562,9 +562,6 @@ Integration {
 					{ GeoElement Triangle    ; NumberOfPoints  4 ; }
 					{ GeoElement Quadrangle  ; NumberOfPoints  4 ; }
 					{ GeoElement Tetrahedron ; NumberOfPoints  4 ; }
-					{ GeoElement Hexahedron  ; NumberOfPoints  6 ; }
-					{ GeoElement Prism       ; NumberOfPoints  21 ; }
-					{ GeoElement Line        ; NumberOfPoints  4 ; }
 				}
 			}
 		}
@@ -643,7 +640,7 @@ PostProcessing {
 		PostQuantity {			
 			
 			{ Name b ; Value { 
-				Term { [ {d qnt_A} ]; In domainHcurl_A; Jacobian jbVolume; } 
+				Term { [ {d qnt_A} ]; In domainALL; Jacobian jbVolume; } 
 				} 
 			}	
 
@@ -653,7 +650,7 @@ PostProcessing {
 			}	
 		
 			{ Name psMovingForce ; Value {
-				Term { [ {qnt_MovingForce} ] ; In domainHcurl_A ; Jacobian jbVolume ; }
+				Term { [ {qnt_MovingForce} ] ; In domainALL ; Jacobian jbVolume ; }
 				}
 			}
 			{ Name forceMoving ; Value {

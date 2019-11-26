@@ -67,10 +67,12 @@
             this.propertyGridMain = new System.Windows.Forms.PropertyGrid();
             this.splitterHorizontal = new System.Windows.Forms.Splitter();
             this.splitContainerRight = new System.Windows.Forms.SplitContainer();
-            this.panelEmpty = new System.Windows.Forms.Panel();
-            this.messageListView = new gtLibrary.MessageListView();
-            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panelForce = new System.Windows.Forms.Panel();
+            this.comboBoxActuatorType = new System.Windows.Forms.ComboBox();
+            this.labelActuatorType = new System.Windows.Forms.Label();
+            this.labelPercent = new System.Windows.Forms.Label();
+            this.labelMeshSizePercent = new System.Windows.Forms.Label();
+            this.textBoxMeshPercent = new System.Windows.Forms.TextBox();
             this.labelN_Z = new System.Windows.Forms.Label();
             this.labelN_Y = new System.Windows.Forms.Label();
             this.labelForceZ = new System.Windows.Forms.Label();
@@ -83,6 +85,7 @@
             this.textBoxForceX = new System.Windows.Forms.TextBox();
             this.pictureBoxForce = new System.Windows.Forms.PictureBox();
             this.buttonExperimentForce = new System.Windows.Forms.Button();
+            this.panelEmpty = new System.Windows.Forms.Panel();
             this.panelSteel = new System.Windows.Forms.Panel();
             this.chartBHCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.panelMagnet = new System.Windows.Forms.Panel();
@@ -108,6 +111,8 @@
             this.buttonLoadCurrentResult = new System.Windows.Forms.Button();
             this.pictureBoxCurrent = new System.Windows.Forms.PictureBox();
             this.buttonExperimentCurrent = new System.Windows.Forms.Button();
+            this.messageListView = new gtLibrary.MessageListView();
+            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerLeft)).BeginInit();
             this.splitContainerLeft.Panel1.SuspendLayout();
             this.splitContainerLeft.Panel2.SuspendLayout();
@@ -394,7 +399,6 @@
             this.treeViewMain.Size = new System.Drawing.Size(331, 246);
             this.treeViewMain.TabIndex = 0;
             this.treeViewMain.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
-            this.treeViewMain.DoubleClick += new System.EventHandler(this.treeViewMain_DoubleClick);
             this.treeViewMain.KeyUp += new System.Windows.Forms.KeyEventHandler(this.treeView_KeyUp);
             // 
             // imageListTreeView
@@ -449,34 +453,13 @@
             this.splitContainerRight.SplitterDistance = 558;
             this.splitContainerRight.TabIndex = 3;
             // 
-            // panelEmpty
-            // 
-            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
-            this.panelEmpty.Name = "panelEmpty";
-            this.panelEmpty.Size = new System.Drawing.Size(742, 554);
-            this.panelEmpty.TabIndex = 0;
-            // 
-            // messageListView
-            // 
-            this.messageListView.BackColor = System.Drawing.Color.Ivory;
-            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderMessage});
-            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.messageListView.Location = new System.Drawing.Point(0, 0);
-            this.messageListView.Name = "messageListView";
-            this.messageListView.Size = new System.Drawing.Size(742, 178);
-            this.messageListView.TabIndex = 1;
-            this.messageListView.UseCompatibleStateImageBehavior = false;
-            this.messageListView.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeaderMessage
-            // 
-            this.columnHeaderMessage.Width = 732;
-            // 
             // panelForce
             // 
+            this.panelForce.Controls.Add(this.comboBoxActuatorType);
+            this.panelForce.Controls.Add(this.labelActuatorType);
+            this.panelForce.Controls.Add(this.labelPercent);
+            this.panelForce.Controls.Add(this.labelMeshSizePercent);
+            this.panelForce.Controls.Add(this.textBoxMeshPercent);
             this.panelForce.Controls.Add(this.labelN_Z);
             this.panelForce.Controls.Add(this.labelN_Y);
             this.panelForce.Controls.Add(this.labelForceZ);
@@ -494,6 +477,53 @@
             this.panelForce.Name = "panelForce";
             this.panelForce.Size = new System.Drawing.Size(742, 554);
             this.panelForce.TabIndex = 0;
+            // 
+            // comboBoxActuatorType
+            // 
+            this.comboBoxActuatorType.FormattingEnabled = true;
+            this.comboBoxActuatorType.Items.AddRange(new object[] {
+            "Solenoid",
+            "VCM",
+            "PMA"});
+            this.comboBoxActuatorType.Location = new System.Drawing.Point(25, 249);
+            this.comboBoxActuatorType.Name = "comboBoxActuatorType";
+            this.comboBoxActuatorType.Size = new System.Drawing.Size(122, 20);
+            this.comboBoxActuatorType.TabIndex = 18;
+            // 
+            // labelActuatorType
+            // 
+            this.labelActuatorType.AutoSize = true;
+            this.labelActuatorType.Location = new System.Drawing.Point(26, 234);
+            this.labelActuatorType.Name = "labelActuatorType";
+            this.labelActuatorType.Size = new System.Drawing.Size(92, 12);
+            this.labelActuatorType.TabIndex = 17;
+            this.labelActuatorType.Text = "Actuator Type :";
+            // 
+            // labelPercent
+            // 
+            this.labelPercent.AutoSize = true;
+            this.labelPercent.Location = new System.Drawing.Point(153, 201);
+            this.labelPercent.Name = "labelPercent";
+            this.labelPercent.Size = new System.Drawing.Size(15, 12);
+            this.labelPercent.TabIndex = 16;
+            this.labelPercent.Text = "%";
+            // 
+            // labelMeshSizePercent
+            // 
+            this.labelMeshSizePercent.AutoSize = true;
+            this.labelMeshSizePercent.Location = new System.Drawing.Point(25, 182);
+            this.labelMeshSizePercent.Name = "labelMeshSizePercent";
+            this.labelMeshSizePercent.Size = new System.Drawing.Size(121, 12);
+            this.labelMeshSizePercent.TabIndex = 15;
+            this.labelMeshSizePercent.Text = "Mesh Size Percent :";
+            // 
+            // textBoxMeshPercent
+            // 
+            this.textBoxMeshPercent.Location = new System.Drawing.Point(25, 198);
+            this.textBoxMeshPercent.Name = "textBoxMeshPercent";
+            this.textBoxMeshPercent.Size = new System.Drawing.Size(122, 21);
+            this.textBoxMeshPercent.TabIndex = 14;
+            this.textBoxMeshPercent.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // labelN_Z
             // 
@@ -549,7 +579,7 @@
             // 
             // buttonLoadForceResult
             // 
-            this.buttonLoadForceResult.Location = new System.Drawing.Point(25, 120);
+            this.buttonLoadForceResult.Location = new System.Drawing.Point(25, 116);
             this.buttonLoadForceResult.Name = "buttonLoadForceResult";
             this.buttonLoadForceResult.Size = new System.Drawing.Size(130, 50);
             this.buttonLoadForceResult.TabIndex = 7;
@@ -601,6 +631,14 @@
             this.buttonExperimentForce.Text = "Force Test";
             this.buttonExperimentForce.UseVisualStyleBackColor = true;
             this.buttonExperimentForce.Click += new System.EventHandler(this.buttonExperimentForce_Click);
+            // 
+            // panelEmpty
+            // 
+            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
+            this.panelEmpty.Name = "panelEmpty";
+            this.panelEmpty.Size = new System.Drawing.Size(742, 554);
+            this.panelEmpty.TabIndex = 0;
             // 
             // panelSteel
             // 
@@ -857,6 +895,24 @@
             this.buttonExperimentCurrent.Text = "Current Test";
             this.buttonExperimentCurrent.UseVisualStyleBackColor = true;
             // 
+            // messageListView
+            // 
+            this.messageListView.BackColor = System.Drawing.Color.Ivory;
+            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderMessage});
+            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.messageListView.Location = new System.Drawing.Point(0, 0);
+            this.messageListView.Name = "messageListView";
+            this.messageListView.Size = new System.Drawing.Size(742, 178);
+            this.messageListView.TabIndex = 1;
+            this.messageListView.UseCompatibleStateImageBehavior = false;
+            this.messageListView.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeaderMessage
+            // 
+            this.columnHeaderMessage.Width = 732;
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -984,6 +1040,11 @@
         private System.Windows.Forms.Label labelN_Z;
         private System.Windows.Forms.Label labelN_Y;
         private System.Windows.Forms.RibbonButton ribbonButtonShape;
+        private System.Windows.Forms.ComboBox comboBoxActuatorType;
+        private System.Windows.Forms.Label labelActuatorType;
+        private System.Windows.Forms.Label labelPercent;
+        private System.Windows.Forms.Label labelMeshSizePercent;
+        private System.Windows.Forms.TextBox textBoxMeshPercent;
 	}
 }
 

@@ -46,8 +46,9 @@ namespace DoSA
                 CSettingData.m_strWorkingDirName = textBoxWorkingDirectory.Text;
                 CSettingData.m_strGmshExeFileFullName = textBoxGmshPath.Text;
 
-                CSettingData.m_dMeshLevelPercent = Double.Parse(textBoxMeshSizeLevel.Text);
+                CSettingData.m_dMeshLevelPercent = Double.Parse(textBoxMeshSizePercent.Text);
                 CSettingData.m_emLanguage = (EMLanguage)Enum.Parse(typeof(EMLanguage), comboBoxLanguage.Text);
+                CSettingData.m_emActuatorType = (EMActuatorType)Enum.Parse(typeof(EMActuatorType), comboBoxActuatorType.Text);
             }
             catch (Exception ex)
             {
@@ -105,8 +106,9 @@ namespace DoSA
                 textBoxWorkingDirectory.Text = CSettingData.m_strWorkingDirName;
                 textBoxGmshPath.Text = CSettingData.m_strGmshExeFileFullName;
 
-                textBoxMeshSizeLevel.Text = CSettingData.m_dMeshLevelPercent.ToString();
+                textBoxMeshSizePercent.Text = CSettingData.m_dMeshLevelPercent.ToString();
                 comboBoxLanguage.Text = CSettingData.m_emLanguage.ToString();
+                comboBoxActuatorType.Text = CSettingData.m_emActuatorType.ToString();
             }
             catch (Exception ex)
             {

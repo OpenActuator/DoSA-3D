@@ -18,6 +18,13 @@ namespace DoSA
         English        
     };
 
+    public enum EMActuatorType
+    {
+        Solenoid,
+        VCM,
+        PMA
+    };
+
     static class Program
     {
         /// <summary>
@@ -52,6 +59,8 @@ namespace DoSA
 
         public static double m_dMeshLevelPercent { get; set; }
         public static EMLanguage m_emLanguage { get; set; }
+
+        public static EMActuatorType m_emActuatorType { get; set; }
 
 		// 내부 사용변수
 		// - 프로그램이 실행될때 초기화하여 내부에서 사용한다.
@@ -139,12 +148,15 @@ namespace DoSA
         public double m_dMeshLevelPercent { get; set; }
         public EMLanguage m_emLanguage { get; set; }
 
+        public EMActuatorType m_emActuatorType { get; set; }
+
         public void copyCloneToSettingData()
         {
             CSettingData.m_strWorkingDirName = m_strWorkingDirName;
             CSettingData.m_strGmshExeFileFullName = m_strGmshExeFileFullName;
             CSettingData.m_dMeshLevelPercent = m_dMeshLevelPercent;
             CSettingData.m_emLanguage = m_emLanguage;
+            CSettingData.m_emActuatorType = m_emActuatorType;
         }
 
         public void copySettingDataToClone()
@@ -153,6 +165,7 @@ namespace DoSA
             m_strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
             m_dMeshLevelPercent = CSettingData.m_dMeshLevelPercent;
             m_emLanguage = CSettingData.m_emLanguage;
+            m_emActuatorType = CSettingData.m_emActuatorType;
         }        
     }
 }

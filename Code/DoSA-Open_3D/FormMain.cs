@@ -1000,7 +1000,7 @@ namespace DoSA
                 // 삭제되는 시간이 필요한 듯 한다.
                 Thread.Sleep(1000);
 
-                /// 영구자석 포함 자기회로 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
+                /// VCM Type 으로 해석이 되어 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
                 string strExperimentZeroDirName = strExperimentDirName + "_Zero";
 
                 if (m_manageFile.isExistDirectory(strExperimentZeroDirName ) == true)
@@ -1021,9 +1021,9 @@ namespace DoSA
             // 해석 결과 이미지가 있다면 후처리를 진행한다.
             if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == true)
             {
-                /// 영구자석이 포함된 경우는 자기력의 정확도가 크게 떨어진다.
+                /// 영구자석이 포함된 VCM 방식인 경우는 자기력의 정확도가 크게 떨어진다.
                 /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
-                if(m_design.isExistMagnet() == true)
+                if (comboBoxActuatorType.Text == "VCM" )
                 {
                     /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
                     CForceExperiment forceExperimentZeroCurrent = forceExperiment.Clone();
@@ -1641,7 +1641,8 @@ namespace DoSA
                 m_design.calcShapeSize(strMeshFileFullName);
 
                 // 볼륨을 길이단위로 바꾸기 위해서 1/3 승을 했다.
-                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * CSettingData.m_dMeshLevelPercent / 100.0f;
+                // 사용하는 Mesh Size Percent 는 환경설정이 아니고 Force 페이지에 있는 값을 사용한다.
+                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * Convert.ToDouble(textBoxMeshPercent.Text) / 100.0f;
 
                 // mm -> m 로 단위 변환 
                 dMeshSize = dMeshSize / 1000.0f;
@@ -2403,30 +2404,6 @@ namespace DoSA
 
         }
 
-        // 사용하지 않음
-        private void treeViewMain_DoubleClick(object sender, EventArgs e)
-        {
-            //// [주의] 
-            //// Node Name 이 SelectedNode.Name 아니라 SelectedNode.Text 에 들어 있다
-            //string selectedNodeText = this.treeViewMain.SelectedNode.Text;
-
-            //if (selectedNodeText == "Parts" || selectedNodeText == "Experiments")
-            //{
-            //    return;
-            //}
-
-            //CNode node = m_design.getNode(selectedNodeText);
-
-            //if (node == null)
-            //{
-            //    CNotice.printTraceID("TDNI");
-            //    return;
-            //}
-
-            //// 수정 되었음을 기록한다.
-            //m_design.m_bChanged = true;
-        }
-
         //트리 노드를 선택
         private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
@@ -2633,6 +2610,9 @@ namespace DoSA
                             textBoxForceX.Text = "0.0";
                             textBoxForceY.Text = "0.0";
                             textBoxForceZ.Text = "0.0";
+
+                            textBoxMeshPercent.Text = CSettingData.m_dMeshLevelPercent.ToString();
+                            comboBoxActuatorType.Text = CSettingData.m_emActuatorType.ToString();
 
                             break;
 

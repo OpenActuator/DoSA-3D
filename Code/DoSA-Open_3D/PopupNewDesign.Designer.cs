@@ -37,12 +37,12 @@
             this.buttonSelectSTEP_File = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.groupBoxComment = new System.Windows.Forms.GroupBox();
+            this.labelComment6 = new System.Windows.Forms.Label();
             this.labelComment5 = new System.Windows.Forms.Label();
             this.labelComment4 = new System.Windows.Forms.Label();
             this.labelComment3 = new System.Windows.Forms.Label();
             this.labelComment2 = new System.Windows.Forms.Label();
             this.labelComment1 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.groupBoxNew.SuspendLayout();
             this.groupBoxComment.SuspendLayout();
             this.SuspendLayout();
@@ -58,7 +58,7 @@
             // 
             // buttonOK
             // 
-            this.buttonOK.Location = new System.Drawing.Point(222, 320);
+            this.buttonOK.Location = new System.Drawing.Point(224, 320);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(100, 30);
             this.buttonOK.TabIndex = 0;
@@ -70,7 +70,7 @@
             // 
             this.textBoxSTEPFileFullName.Location = new System.Drawing.Point(148, 76);
             this.textBoxSTEPFileFullName.Name = "textBoxSTEPFileFullName";
-            this.textBoxSTEPFileFullName.Size = new System.Drawing.Size(222, 21);
+            this.textBoxSTEPFileFullName.Size = new System.Drawing.Size(223, 21);
             this.textBoxSTEPFileFullName.TabIndex = 1;
             this.textBoxSTEPFileFullName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxName_KeyPress);
             // 
@@ -83,7 +83,7 @@
             this.groupBoxNew.Controls.Add(this.textBoxSTEPFileFullName);
             this.groupBoxNew.Location = new System.Drawing.Point(12, 12);
             this.groupBoxNew.Name = "groupBoxNew";
-            this.groupBoxNew.Size = new System.Drawing.Size(425, 122);
+            this.groupBoxNew.Size = new System.Drawing.Size(418, 122);
             this.groupBoxNew.TabIndex = 0;
             this.groupBoxNew.TabStop = false;
             this.groupBoxNew.Text = "New Design";
@@ -101,12 +101,12 @@
             // 
             this.textBoxDesignName.Location = new System.Drawing.Point(148, 36);
             this.textBoxDesignName.Name = "textBoxDesignName";
-            this.textBoxDesignName.Size = new System.Drawing.Size(222, 21);
+            this.textBoxDesignName.Size = new System.Drawing.Size(139, 21);
             this.textBoxDesignName.TabIndex = 0;
             // 
             // buttonSelectSTEP_File
             // 
-            this.buttonSelectSTEP_File.Location = new System.Drawing.Point(376, 76);
+            this.buttonSelectSTEP_File.Location = new System.Drawing.Point(377, 74);
             this.buttonSelectSTEP_File.Name = "buttonSelectSTEP_File";
             this.buttonSelectSTEP_File.Size = new System.Drawing.Size(27, 23);
             this.buttonSelectSTEP_File.TabIndex = 2;
@@ -117,7 +117,7 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(337, 320);
+            this.buttonCancel.Location = new System.Drawing.Point(330, 320);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 30);
             this.buttonCancel.TabIndex = 1;
@@ -127,7 +127,7 @@
             // 
             // groupBoxComment
             // 
-            this.groupBoxComment.Controls.Add(this.label1);
+            this.groupBoxComment.Controls.Add(this.labelComment6);
             this.groupBoxComment.Controls.Add(this.labelComment5);
             this.groupBoxComment.Controls.Add(this.labelComment4);
             this.groupBoxComment.Controls.Add(this.labelComment3);
@@ -135,10 +135,19 @@
             this.groupBoxComment.Controls.Add(this.labelComment1);
             this.groupBoxComment.Location = new System.Drawing.Point(12, 141);
             this.groupBoxComment.Name = "groupBoxComment";
-            this.groupBoxComment.Size = new System.Drawing.Size(425, 170);
+            this.groupBoxComment.Size = new System.Drawing.Size(418, 170);
             this.groupBoxComment.TabIndex = 2;
             this.groupBoxComment.TabStop = false;
             this.groupBoxComment.Text = "기능 제한";
+            // 
+            // labelComment6
+            // 
+            this.labelComment6.AutoSize = true;
+            this.labelComment6.Location = new System.Drawing.Point(36, 136);
+            this.labelComment6.Name = "labelComment6";
+            this.labelComment6.Size = new System.Drawing.Size(171, 12);
+            this.labelComment6.TabIndex = 5;
+            this.labelComment6.Text = "- 구동는 Y 축으로만 한정된다.";
             // 
             // labelComment5
             // 
@@ -173,9 +182,9 @@
             this.labelComment2.AutoSize = true;
             this.labelComment2.Location = new System.Drawing.Point(36, 47);
             this.labelComment2.Name = "labelComment2";
-            this.labelComment2.Size = new System.Drawing.Size(215, 12);
+            this.labelComment2.Size = new System.Drawing.Size(187, 12);
             this.labelComment2.TabIndex = 1;
-            this.labelComment2.Text = "- 코일 중심축이 Y 축과 평행해야 한다.";
+            this.labelComment2.Text = "- 코일 중심축은 Y 축이어야 한다.";
             // 
             // labelComment1
             // 
@@ -187,20 +196,11 @@
             this.labelComment1.TabIndex = 0;
             this.labelComment1.Text = "1. 코일 형상";
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(36, 136);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(171, 12);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "- 구동는 Y 축으로만 한정된다.";
-            // 
             // PopupNewDesign
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(448, 362);
+            this.ClientSize = new System.Drawing.Size(442, 362);
             this.Controls.Add(this.groupBoxComment);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.groupBoxNew);
@@ -232,6 +232,6 @@
         private System.Windows.Forms.Label labelComment1;
         private System.Windows.Forms.Label labelComment5;
         private System.Windows.Forms.Label labelComment4;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelComment6;
     }
 }

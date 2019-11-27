@@ -2,11 +2,10 @@
   - Help
   - Images
   - Materials
-  - SAmple
+  - Sample
 
 2. 필요 파일들
   - DoSA.exe
-  - Interop.Femm.dll
   - LanguageResource.en-US.resources
   - LanguageResource.ko-KR.resources
   - readme.txt

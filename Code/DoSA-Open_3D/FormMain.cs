@@ -429,6 +429,20 @@ namespace DoSA
                 PopupNewDesign formNewDesign = new PopupNewDesign();
                 formNewDesign.StartPosition = FormStartPosition.CenterParent;
 
+                ///------------------------------------------------------------------------
+                /// 환경설정 창안의 언어를 현재의 언어로 지정한다.
+                CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
+
+                /// 한국어가 아니라면 모두 영어로 처리하라.
+                if (ctInfo.Name.Contains("ko") != true)
+                {
+                    formNewDesign.setInitLanguage(EMLanguage.English);
+                }
+                else
+                {
+                    formNewDesign.setInitLanguage(EMLanguage.Korean);
+                }
+
                 /// 이해할 수 없지만, 자동으로 Owner 설정이 되는 경우도 있고 아닌 경우도 있기 때문에
                 /// Shape 창에서 MainForm 을 접근할 수 있도록 미리 설정을 한다.
                 formNewDesign.Owner = this;
@@ -882,6 +896,21 @@ namespace DoSA
         private void ribbonButtonHelp_Click(object sender, EventArgs e)
         {
             PopupHelp frmHelp = new PopupHelp();
+            frmHelp.StartPosition = FormStartPosition.CenterParent;
+
+            ///------------------------------------------------------------------------
+            /// 환경설정 창안의 언어를 현재의 언어로 지정한다.
+            CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
+
+            /// 한국어가 아니라면 모두 영어로 처리하라.
+            if (ctInfo.Name.Contains("ko") != true)
+            {
+                frmHelp.setInitLanguage(EMLanguage.English);
+            }
+            else
+            {
+                frmHelp.setInitLanguage(EMLanguage.Korean);
+            }
 
             frmHelp.ShowDialog();
         }

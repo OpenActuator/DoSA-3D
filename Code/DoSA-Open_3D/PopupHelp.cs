@@ -24,8 +24,18 @@ namespace DoSA
         {
             InitializeComponent();
 
-            // 아직 User Guide 를 작성하지 않아서 Disable 한다.
-            //buttonDoSAUserGuide.Enabled = false;
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                buttonDoSAUserGuide.Text = "DoSA 사용 설명서";
+                buttonVCMGuide.Text = "VCM 예제 따라하기";
+                buttonSolenoidGuide.Text = "Solenoid 예제 따라하기";
+            }
+            else
+            {
+                buttonDoSAUserGuide.Text = "DoSA User Manual";
+                buttonVCMGuide.Text = "VCM Example";
+                buttonSolenoidGuide.Text = "Solenoid Example";
+            }
         }
 
         private void buttonHelpClose_Click(object sender, EventArgs e)
@@ -94,22 +104,6 @@ namespace DoSA
             }
 
             System.Diagnostics.Process.Start(strHelpFileFullName);
-        }
-
-        internal void setInitLanguage(EMLanguage emLanguage)
-        {
-            if (emLanguage == EMLanguage.Korean)
-            {
-                buttonDoSAUserGuide.Text = "DoSA 사용 설명서";
-                buttonVCMGuide.Text = "VCM 예제 따라하기";
-                buttonSolenoidGuide.Text = "Solenoid 예제 따라하기";
-            }
-            else
-            {
-                buttonDoSAUserGuide.Text = "DoSA User Manual";
-                buttonVCMGuide.Text = "VCM Example";
-                buttonSolenoidGuide.Text = "Solenoid Example";
-            }
         }
     }
 }

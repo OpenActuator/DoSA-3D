@@ -65,29 +65,21 @@ namespace DoSA
             m_resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
             ///------------------------------------------------------------------------
-            /// 언어설정 전 처리
+            /// 환경설정전 언어의 초기 설정
             /// 
-            /// 언어설정 전에 환경설정 파일 없음에 대한 알림 메시지의 언어를 결정하고 있다.
-            /// 여기에서 현재의 언어 정보을 읽어드려서 한국어가 아니면 모두 영어로 처리한다.
-            /// 그리고 열리는 환경설정 창 콤보 박스에도 반영을 한다.
-            /// 정상적인 언어 설정은 CSettingData.updataLanguge() 에서 이루어진다.
+            /// 환경설정의 언어 설정값을 읽어드리기 전에 혹시 언어를 사용하는 경우를 대비하여
+            /// 환경설정의 언어 설정과 상관없이 무조건 시스템언어를 읽어서 프로그램 언어를 설정해 둔다.
+            /// 
+            /// 환경설정값으로 언어 설정은 이후에 바로 이어지는 CSettingData.updataLanguge() 에서 이루어진다.
             CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
 
             /// 한국어가 아니라면 모두 영어로 처리하라.
-            if (ctInfo.Name.Contains("ko") != true)
-            {
-                ctInfo = new CultureInfo("en-US");
-
-                Thread.CurrentThread.CurrentCulture = ctInfo;
-                Thread.CurrentThread.CurrentUICulture = ctInfo;
-            }
+            if (ctInfo.Name.Contains("ko") == true)
+                CSettingData.m_emLanguage = EMLanguage.Korean;
             else
-            {
-                ctInfo = new CultureInfo("ko-KR");
+                CSettingData.m_emLanguage = EMLanguage.English;
 
-                Thread.CurrentThread.CurrentCulture = ctInfo;
-                Thread.CurrentThread.CurrentUICulture = ctInfo;
-            }
+            CSettingData.updataLanguge();
             ///------------------------------------------------------------------------
 
 
@@ -164,30 +156,17 @@ namespace DoSA
                 /// 환경파일 작업
                 ///
                 string strSettingFileFullName = Path.Combine(CSettingData.m_strProgramDirName, "setting.ini");
-                
+
+                /// 환경설정을 읽어드리는 기능이 PopupSetting 안에 들어있기 때문에
+                /// 환경설정 파일이 있어서 PopupSetting 창을 띄우지 않더라도 PopupSetting 객체 생성을 하고 있다.
                 PopupSetting frmSetting = new PopupSetting();
                 frmSetting.StartPosition = FormStartPosition.CenterParent;
 
                 if (false == m_manageFile.isExistFile(strSettingFileFullName))
                 {
-                    ///------------------------------------------------------------------------
-                    /// 환경설정 창안의 언어를 현재의 언어로 지정한다.
-                    CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
-
-                    /// 한국어가 아니라면 모두 영어로 처리하라.
-                    if (ctInfo.Name.Contains("ko") != true)
-                    {
-                        frmSetting.setInitLanguage(EMLanguage.English);
-                    }
-                    else
-                    {
-                        frmSetting.setInitLanguage(EMLanguage.Korean);
-                    }
-                    ///------------------------------------------------------------------------
-
-                    // 언어 설정 후에 출력해야 한다.
+                    // 현 상태에서의 언어설정은 FormMain() 에서 시스템 언어로 설정되어 있다.
                     CNotice.noticeWarningID("TCFC");
-
+                    
                     // 파일자체가 없기 때문에 다이얼로그의 데이터 설정없이 바로 호출한다.
                     if (DialogResult.OK == frmSetting.ShowDialog())
                     {
@@ -227,10 +206,8 @@ namespace DoSA
                     m_manageFile.setCurrentDirectory(CSettingData.m_strWorkingDirName);
                 }
 
-                /// 언어를 설정한다.
-                CSettingData.updataLanguge();
-
-                
+                /// 파일에서 읽어오든 신규파일에서 생성을 하든 Setting 파일안의 프로그램 언어를 설정한다.
+                CSettingData.updataLanguge();                
             }
             catch (Exception ex)
             {
@@ -428,20 +405,6 @@ namespace DoSA
 
                 PopupNewDesign formNewDesign = new PopupNewDesign();
                 formNewDesign.StartPosition = FormStartPosition.CenterParent;
-
-                ///------------------------------------------------------------------------
-                /// 환경설정 창안의 언어를 현재의 언어로 지정한다.
-                CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
-
-                /// 한국어가 아니라면 모두 영어로 처리하라.
-                if (ctInfo.Name.Contains("ko") != true)
-                {
-                    formNewDesign.setInitLanguage(EMLanguage.English);
-                }
-                else
-                {
-                    formNewDesign.setInitLanguage(EMLanguage.Korean);
-                }
 
                 /// 이해할 수 없지만, 자동으로 Owner 설정이 되는 경우도 있고 아닌 경우도 있기 때문에
                 /// Shape 창에서 MainForm 을 접근할 수 있도록 미리 설정을 한다.
@@ -897,20 +860,6 @@ namespace DoSA
         {
             PopupHelp frmHelp = new PopupHelp();
             frmHelp.StartPosition = FormStartPosition.CenterParent;
-
-            ///------------------------------------------------------------------------
-            /// 환경설정 창안의 언어를 현재의 언어로 지정한다.
-            CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
-
-            /// 한국어가 아니라면 모두 영어로 처리하라.
-            if (ctInfo.Name.Contains("ko") != true)
-            {
-                frmHelp.setInitLanguage(EMLanguage.English);
-            }
-            else
-            {
-                frmHelp.setInitLanguage(EMLanguage.Korean);
-            }
 
             frmHelp.ShowDialog();
         }

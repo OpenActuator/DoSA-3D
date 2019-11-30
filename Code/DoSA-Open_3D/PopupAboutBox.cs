@@ -22,12 +22,85 @@ namespace DoSA
         {
             InitializeComponent();
 
+            string strDescription;
+            string strDonation;
+            string strQnaBoard;
+
+            if(CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                strDonation = "후원하기";
+                strQnaBoard = "QnA 게시판";
+
+                strDescription = @"DoSA-Open 은 
+정보통신산업진흥원 (NIPA) 의 지원사업으로 개발이 시작된 프로그램입니다.
+따라서 누구나 회사에서도 무료로 사용할 수 있는 
+오픈소스 액추에이터(솔레노이드) 자기력 전산해석 프로그램입니다.
+
+그리고 DoSA-Open 의 사용 환경은 액추에이터 제품개발과 유사해서
+전산해석 담당자보다도 액추에이터 개발자들이 오히려 쉽게 사용할 수 있는 
+전산해석 프로그램입니다.
+
+모든 액추에이터 개발자들이 액추에이터의 제품개발에 전산해석을 사용하여
+자기력을 예측할 수 있도록 도움이 되었으면 합니다.";
+            }
+            else
+            {
+                strDonation = "Donation";
+                strQnaBoard = "QnA Board";
+
+                strDescription = @"DoSA-Open is open source actuator design software. 
+Anyone can use it free of charge in the company.
+
+DoSA-Open's user environment is similar to actuator product development. 
+This allows actuator developers to easily use it rather than computational analysts.
+
+We hope that all actuator developers will be able to use magnetic analysis 
+to predict magnetic forces in product development of actuators..
+";
+            }
+
+            string strOpenLicense = @"DoSA-Open_3D is open source actuator design software using Onelab.
+
+This application uses open source software below.
+
+Easily Add a Ribbon into a WinForms Application	
+  link: http://www.codeproject.com/Articles/364272/	
+  license: Microsoft Public License (MS-PL)	
+  License link: https://opensource.org/licenses/ms-pl.html	
+	
+[ Open Icon Library ]	
+	
+Oxygen Icons 4.3.1 (KDE) (oxygen)	
+  link: http://www.oxygen-icons.org/	
+  license: Dual: CC-BY-SA 3.0 or LGPL	
+  License link: http://creativecommons.org/licenses/by-sa/3.0/
+                http://creativecommons.org/licenses/LGPL/2.1/	  	
+	
+Crystal Clear (crystal_clear)	
+  link: http://commons.wikimedia.org/wiki/Crystal_Clear	
+  license: LGPL-2.1	
+  license link: http://creativecommons.org/licenses/LGPL/2.1/	
+	
+Crystal Project (crystal)	
+  link: http://everaldo.com/crystal/, CrystalXp.net
+  license: LGPL-2.1
+  license link: http://creativecommons.org/licenses/LGPL/2.1/
+	
+Nuvola 1.0 (KDE 3.x icon set) (nuvola)	
+  link: http://www.icon-king.com/projects/nuvola/
+  license: LGPL 2.1
+  license link: http://creativecommons.org/licenses/LGPL/2.1/";
+
             this.Text = String.Format("About {0}", AssemblyTitle);
             this.labelProductName.Text = AssemblyProduct;
-            this.labelVersion.Text = String.Format("Version ({0})", AssemblyVersion);
-            this.labelCopyright.Text = AssemblyCopyright;
-            this.labelContributor.Text = AssemblyCompany;
-            this.textBoxDescription.Text = AssemblyDescription;
+            this.labelVersion.Text = String.Format("- Version ({0})", AssemblyVersion);
+            this.labelCopyright.Text = String.Format("- License : {0}", AssemblyCopyright);
+            this.labelContributor.Text = String.Format("- Contributor : {0}", AssemblyCompany);
+            this.textBoxDescription.Text = strDescription;           
+            this.textBoxOpenLicense.Text = strOpenLicense;
+
+            this.buttonDonation.Text = strDonation;
+            this.buttonQnA.Text = strQnaBoard;
         }
 
         #region Assembly Attribute Accessors
@@ -111,9 +184,18 @@ namespace DoSA
         #endregion
 
 
-        private void buttonHompage_Click(object sender, EventArgs e)
+        private void buttonQnA_Click(object sender, EventArgs e)
         {
-            string target = "http://www.openactuator.org";
+            string target;
+
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                target = "http://www.solenoid.or.kr/index_dosa_qna_kor.html";
+            }
+            else
+            {
+                target = "http://www.solenoid.or.kr/index_dosa_qna_eng.html";
+            }
 
             try
             {
@@ -133,6 +215,34 @@ namespace DoSA
         private void buttonLicense_Click(object sender, EventArgs e)
         {
             string target = "https://github.com/OpenActuator/DoSA-Open_3D/blob/master/LICENSE";
+
+            try
+            {
+                System.Diagnostics.Process.Start(target);
+            }
+            catch (System.ComponentModel.Win32Exception noBrowser)
+            {
+                if (noBrowser.ErrorCode == -2147467259)
+                    CNotice.printTrace(noBrowser.Message);
+            }
+            catch (System.Exception other)
+            {
+                CNotice.printTrace(other.Message);
+            }
+        }
+
+        private void buttonDonation_Click(object sender, EventArgs e)
+        {
+            string target;
+
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                target = "http://www.solenoid.or.kr/index_dosa_donation_kor.html";
+            }
+            else
+            {
+                target = "http://www.solenoid.or.kr/index_dosa_donation_eng.html";
+            }
 
             try
             {

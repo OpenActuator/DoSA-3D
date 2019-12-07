@@ -68,7 +68,7 @@ namespace DoSA
 
                 if (textBoxSTEPFileFullName.Text.Length == 0)
                 {
-                    CNotice.noticeWarning("STEP 을 선택하지 않았습니다.");
+                    CNotice.noticeWarning("You need to select a STEP file.\nSTEP 파일을 선택해 주세요.");
                     return false;
                 }
 
@@ -76,7 +76,7 @@ namespace DoSA
                 bCheck = m_manageFile.isExistFile(this.textBoxSTEPFileFullName.Text);
                 if (bCheck == false)
                 {
-                    CNotice.noticeWarning("선택한 STEP 파일이 존재하지 않습니다.");
+                    CNotice.printTrace("선택한 STEP 파일이 존재하지 않는다.");
                     return false;
                 }
 

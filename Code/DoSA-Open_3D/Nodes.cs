@@ -214,7 +214,7 @@ namespace Nodes
             return true;
         }
 
-        public int getNodeCount()
+        public int getNodeSize()
         {
             return m_listNode.Count;
         }
@@ -249,7 +249,7 @@ namespace Nodes
                     // 남아있는 Shape 형상 명으로 예약되었거나 사용중이 이름이라면 추가 작업을 취소한다.
                     if (enableUseNodeName(nodeName) == false)
                     {
-                        CNotice.noticeWarning("이미 존재하는 시험과 동일한 이름을 사용하여 시험 추가를 취소합니다.");
+                        CNotice.noticeWarning("There is the same name experiment already.\n동일한 이름의 가상실험이 이미 존재 합니다.");
                         return false;
                     }                        
 
@@ -330,6 +330,21 @@ namespace Nodes
             }
 
             return size;
+        }
+
+        // 이동 파트 갯수를 얻어 온다
+        public int getMovingPartSize()
+        {
+            int nMovingPartCount = 0;
+
+            foreach (CNode node in m_listNode)
+            {
+                if (node.GetType().BaseType.Name == "CParts")
+                    if (((CParts)node).MovingPart == EMMoving.MOVING)
+                        nMovingPartCount ++;
+            }
+
+            return nMovingPartCount;
         }
 
         public void writeObject(StreamWriter writeStream)
@@ -428,7 +443,6 @@ namespace Nodes
             return false;
         }
 
-
         public bool isExistMagnet()
         {
             foreach (CNode node in m_listNode)
@@ -440,62 +454,94 @@ namespace Nodes
             return false;
         }
 
+        internal bool isCoilAreaOK()
+        {
+            bool ret = false;
+
+            foreach (CNode node in m_listNode)
+            {
+                if (node.m_kindKey == EMKind.COIL)
+                {
+                    if (((CCoil)node).InnerDiameter > 0 && ((CCoil)node).OuterDiameter > 0
+                        && ((CCoil)node).Height > 0 && ((CCoil)node).CopperDiameter > 0)
+                        ret = true;
+                }
+            }
+
+            return ret;
+        }
+
+        internal bool isCoilSpecificationOK()
+        {
+            bool ret = false;
+
+            foreach (CNode node in m_listNode)
+            {
+                if (node.m_kindKey == EMKind.COIL)
+                {
+                    if (((CCoil)node).Resistance > 0 && ((CCoil)node).Turns > 0)
+                        ret = true;
+                }
+            }
+
+            return ret;
+        }
+
+
         //public bool isDesignShapeOK(double dStroke = 0)
         //{
-        //    //CFace face = null;
-        //    //bool bError = false;
-        //    //CParts nodeParts = null;
+        //    CFace face = null;
+        //    bool bError = false;
+        //    CParts nodeParts = null;
 
-        //    //// Moving Part 를 Stroke 만큼 이동시킨다.
-        //    //foreach (CNode node in NodeList)
-        //    //{
-        //    //    if (node.GetType().BaseType.Name == "CParts")
-        //    //    {
-        //    //        nodeParts = (CParts)node;
+        //    // Moving Part 를 Stroke 만큼 이동시킨다.
+        //    foreach (CNode node in NodeList)
+        //    {
+        //        if (node.GetType().BaseType.Name == "CParts")
+        //        {
+        //            nodeParts = (CParts)node;
 
-        //    //        if (nodeParts.MovingPart == EMMoving.MOVING)
-        //    //        {
-        //    //            face = nodeParts.Face;
-        //    //            face.BasePoint.m_dY = face.BasePoint.m_dY + dStroke;
-        //    //        }
-        //    //    }
-        //    //}
+        //            if (nodeParts.MovingPart == EMMoving.MOVING)
+        //            {
+        //                face = nodeParts.Face;
+        //                face.BasePoint.m_dY = face.BasePoint.m_dY + dStroke;
+        //            }
+        //        }
+        //    }
 
-        //    //if (isIntersectedAllLines() == true)
-        //    //{
-        //    //    CNotice.noticeWarningID("LCBP");
-        //    //    bError = true;
-        //    //}
+        //    if (isIntersectedAllLines() == true)
+        //    {
+        //        CNotice.noticeWarningID("LCBP");
+        //        bError = true;
+        //    }
 
-        //    //if (isContactedMovingParts() == true)
-        //    //{
-        //    //    CNotice.noticeWarningID("IHOT");
-        //    //    bError = true;
-        //    //}
+        //    if (isContactedMovingParts() == true)
+        //    {
+        //        CNotice.noticeWarningID("IHOT");
+        //        bError = true;
+        //    }
 
-        //    //// Moving Part 를 Stroke 만큼 복원 시킨다.
-        //    //foreach (CNode node in NodeList)
-        //    //{
-        //    //    if (node.GetType().BaseType.Name == "CParts")
-        //    //    {
-        //    //        nodeParts = (CParts)node;
+        //    // Moving Part 를 Stroke 만큼 복원 시킨다.
+        //    foreach (CNode node in NodeList)
+        //    {
+        //        if (node.GetType().BaseType.Name == "CParts")
+        //        {
+        //            nodeParts = (CParts)node;
 
-        //    //        if (nodeParts.MovingPart == EMMoving.MOVING)
-        //    //        {
-        //    //            face = nodeParts.Face;
-        //    //            face.BasePoint.m_dY = face.BasePoint.m_dY - dStroke;
-        //    //        }
-        //    //    }
-        //    //}
+        //            if (nodeParts.MovingPart == EMMoving.MOVING)
+        //            {
+        //                face = nodeParts.Face;
+        //                face.BasePoint.m_dY = face.BasePoint.m_dY - dStroke;
+        //            }
+        //        }
+        //    }
 
-        //    //if (bError == true)
-        //    //    return false;
-        //    //else
-        //    //    return true;
+        //    if (bError == true)
+        //        return false;
+        //    else
+        //        return true;
 
         //    return true;
         //}
-
-
     }
 }

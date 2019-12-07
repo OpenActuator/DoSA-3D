@@ -321,7 +321,7 @@ namespace DoSA
             {
                 if (m_design.m_strDesignName.Length == 0)
                 {
-                    CNotice.noticeWarning("형상을 보여줄 디지인이 없습니다.\n작업을 취소합니다.");
+                    CNotice.noticeWarning("There is no design to show 3D shape.This job is canceled.\n3차원 형상을 보여줄 디자인이 없습니다.");
                     return;
                 }
 
@@ -361,7 +361,7 @@ namespace DoSA
        
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
-                        CNotice.noticeWarning("형상 파일을 찾지 못했습니다.");
+                        CNotice.printTrace("형상 파일을 찾지 못했다.");
                         return;
                     }
 
@@ -370,7 +370,7 @@ namespace DoSA
                 }
                 else
                 {
-                    CNotice.printTrace("Shape Script 파일 생성에 문제가 발생했습니다.");
+                    CNotice.printTrace("Shape Script 파일 생성에 문제가 발생했다.");
                     return;
                 }
                 
@@ -400,8 +400,9 @@ namespace DoSA
                 }
 
                 List<string> listScriptString = new List<string>();
-                List<string> listRemainedPartNames = new List<string>();
+                List<string> listTempPartNames = new List<string>();
                 List<string> listAllPartNames = new List<string>();
+                List<string> listRemainedPartNames = new List<string>();                
 
                 PopupNewDesign formNewDesign = new PopupNewDesign();
                 formNewDesign.StartPosition = FormStartPosition.CenterParent;
@@ -490,7 +491,7 @@ namespace DoSA
        
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
-                        CNotice.noticeWarning("형상 파일을 찾지 못했습니다.");
+                        CNotice.printTrace("형상 파일을 찾지 못했다.");
                         return;
                     }
 
@@ -517,16 +518,32 @@ namespace DoSA
 
                     if( true == m_manageFile.isExistFile(strPartNamesFileFullName) )
                     {
-                        // [주의 사항]
-                        // Part Name 을 한번 불러온 후에 
-                        // 파트명이 넘어온 동일한 List 로 RemainedShapeNameList 와 AllShapeNameList 에 복사를 하면
-                        // 데이터 복사가 아니라 Reference 복사가 되면서 RemainedShapeNameList 와 AllShapeNameList 가 동일 변수가 되어 버린다.
-                        // 그래서 두번 호출하고 두개의 임시 List 를 사용했다.
-                        readFile.readCSVRowString(strPartNamesFileFullName, ref listRemainedPartNames, 1);
-                        m_design.RemainedShapeNameList = listRemainedPartNames;
+                        readFile.readCSVRowString(strPartNamesFileFullName, ref listTempPartNames, 1);
 
-                        readFile.readCSVRowString(strPartNamesFileFullName, ref listAllPartNames, 1);
+                        string[] arraySplitPartNames;
+                        string strTempPartName;
+
+                        foreach (string strPartName in listTempPartNames)
+                        {
+                            // Group 처리가 되어 있는 Step 파일의 이름은 kt100g/Yoke Cover/Yoke Cover 로 그룹까지 포함되어 있다.
+                            // 여기서 '/' 로 분리해서 가장 하위의 명칭을 파트명으로 사용한다.
+                            arraySplitPartNames = strPartName.Split('/');
+
+                            // 이름에 스페이스가 있으면 '_' 로 변경한다.
+                            strTempPartName = arraySplitPartNames[arraySplitPartNames.Length - 1];
+                            strTempPartName = strTempPartName.Replace(' ', '_');
+
+                            // [주의 사항]
+                            //
+                            // 하나의 문자열을 사용해서 m_design 에서 복사하면 m_design 안의 두개의 List 가 같이 동작하기 때문에
+                            // 두개의 문자열이 별도로 Add 해서 복사를 분리해서 진행한다.
+                            listRemainedPartNames.Add(strTempPartName);
+                            listAllPartNames.Add(strTempPartName);
+                        }
+
+                        m_design.RemainedShapeNameList = listRemainedPartNames;
                         m_design.AllShapeNameList = listAllPartNames;
+
 
                         // 정상적으로 스크립트 파일이 동작했다면 스크립트파일은 삭제한다.
                         //m_manageFile.deleteFile(strRunScriptFileFullName);
@@ -536,7 +553,7 @@ namespace DoSA
 
                         if (DialogResult.Cancel == dlgFormNodeName.ShowDialog())
                         {
-                            // 취소되면 디자인디렉토리를 삭제한다.
+                            // 취소되면 디자인 디렉토리를 삭제한다.
                             m_manageFile.deleteDirectory(strDesignDirName);
                             return;
                         }
@@ -1100,26 +1117,12 @@ namespace DoSA
 
                 strOrgStriptContents = scriptContents.m_str13_PostOperation_Script;
 
-                int nCount = 0;
-
-                foreach (CNode node in m_design.NodeList)
-                {
-                    if (node.m_kindKey == EMKind.COIL)
-                    {
-                        if (nCount != 0)
-                        {
-                            CNotice.printTrace("코일 수가 하나이상이다.");
-                            return;
-                        }
-
-                        listScriptString.Add(node.NodeName);
-
-                        nCount++;
-                    }
-                }
-
                 List<double> listProductLength = new List<double>();
-                int iOuterPaddingPercent = 100;
+                
+                // [주의 사항]
+                //
+                // 형상 작업의 값과 일치해야 한다.
+                int iOuterPaddingPercent = 150;
 
                 double dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
                 double dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
@@ -1129,10 +1132,10 @@ namespace DoSA
                 listProductLength.Add(dProductLengthY);
                 listProductLength.Add(dProductLengthZ);
 
-                double dMaxProductLength = listProductLength.Max();
+                double dAverageProductLength = listProductLength.Average();
 
                 // X,Y,Z 의 제품 폭 중에 최대 폭으로 모든 방향의 Region 크기를 결정한다.
-                double dOuterPaddingLength = dMaxProductLength * (iOuterPaddingPercent / 100.0f);
+                double dOuterPaddingLength = dAverageProductLength * (iOuterPaddingPercent / 100.0f);
 
                 // 중심 위치
                 double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
@@ -1140,19 +1143,22 @@ namespace DoSA
                 double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
 
                 // 전체 영역의 1/2 로 자속밀도 단면 벡터출력면을 사용한다.
-                //# 2 : X Coord of Left Bottom Point on XY Plane 
-                //# 3 : Y Coord of Left Bottom Point on XY Plane 
-                //# 4 : X Coord of Right Bottom Point on XY Plane 
-                //# 5 : Y Coord of Left Top Point on XY Plane 
-                double dSectionBMinX = dRegionCenterX - dOuterPaddingLength / 2.0f;
-                double dSectionBMinY = dRegionCenterY - dOuterPaddingLength / 2.0f;
-                double dSectionBMaxX = dSectionBMinX + dOuterPaddingLength;
-                double dSectionBMaxY = dSectionBMinY + dOuterPaddingLength;
+                //# 1 : X Coord of Left Bottom Point on XY Plane 
+                //# 2 : Y Coord of Left Bottom Point on XY Plane 
+                //# 3 : X Coord of Right Bottom Point on XY Plane 
+                //# 4 : Y Coord of Left Top Point on XY Plane 
+                //# 5 : Z Coord of Center Point on XY Plane 
+                double dSectionBMinX = dRegionCenterX - dAverageProductLength / 2.0f - dOuterPaddingLength;
+                double dSectionBMinY = dRegionCenterY - dAverageProductLength / 2.0f - dOuterPaddingLength;
+                double dSectionBMaxX = dRegionCenterX + dAverageProductLength / 2.0f + dOuterPaddingLength;
+                double dSectionBMaxY = dRegionCenterY + dAverageProductLength / 2.0f + dOuterPaddingLength;
 
                 listScriptString.Add(dSectionBMinX.ToString());
                 listScriptString.Add(dSectionBMinY.ToString());
                 listScriptString.Add(dSectionBMaxX.ToString());
                 listScriptString.Add(dSectionBMaxY.ToString());
+                listScriptString.Add(dRegionCenterZ.ToString());
+
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
@@ -1279,10 +1285,16 @@ namespace DoSA
 
                             strOrgStriptContents += "    areaCoilSection[] = " + dCoilSectionArea.ToString() + ";\n";
 
+                            // 중심 위치
+                            // * 0.001 은 meter -> mm 로 단위 변환
+                            double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f * 0.001;
+                            //double dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f * 0.001;       // Y 축과 평행한다는 가정에서 사용하지 않는다
+                            double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f * 0.001;
+
                             if (((CCoil)node).CurrentDirection == EMCurrentDirection.IN)
-                                strOrgStriptContents += "    vectorCurrent[] = Vector[ Cos[Atan2[X[], Z[]]], 0, -Sin[Atan2[X[], Z[]]]];\n\n";
+                                strOrgStriptContents += String.Format("    vectorCurrent[] = Vector[ Cos[Atan2[X[]-({0}), Z[]-({1})]], 0, -Sin[Atan2[X[]-({0}), Z[]-({1})]]];\n\n", dRegionCenterX, dRegionCenterZ);
                             else
-                                strOrgStriptContents += "    vectorCurrent[] = - Vector[ Cos[Atan2[X[], Z[]]], 0, -Sin[Atan2[X[], Z[]]]];\n\n";
+                                strOrgStriptContents += String.Format("    vectorCurrent[] = - Vector[ Cos[Atan2[X[]-({0}), Z[]-({1})]], 0, -Sin[Atan2[X[]-({0}), Z[]-({1})]]];\n\n", dRegionCenterX, dRegionCenterZ);
 
                             strOrgStriptContents += "    js0[] = current * coilTurns[] /areaCoilSection[] * vectorCurrent[];\n\n";
 
@@ -1555,8 +1567,6 @@ namespace DoSA
                 string strMovingPartNames = string.Empty;
                 string strSteelPartNames = string.Empty;
 
-                int nMovingPartCount = 0;
-
                 foreach (CNode node in m_design.NodeList)
                 {
                     strNodeName = node.NodeName;
@@ -1567,7 +1577,6 @@ namespace DoSA
                         if (((CParts)node).MovingPart == EMMoving.MOVING)
                         {
                             strMovingPartNames += String.Format("vol{0}, ", strNodeName);
-                            nMovingPartCount++;
                         }
                     }
 
@@ -1575,12 +1584,6 @@ namespace DoSA
                     {
                         strSteelPartNames += String.Format("vol{0}, ", strNodeName);
                     }
-                }
-
-                if (nMovingPartCount != 1)
-                {
-                    CNotice.noticeWarning("아직까지 구동부는 하나의 파트만을 지원하고 있습니다.");
-                    return;
                 }
 
                 int nIndex = 0;
@@ -1638,6 +1641,9 @@ namespace DoSA
                 /// 음의 방향으로 150 %, 양의 방향으로 150 % 그리고 제품 최대 폭이 더해져서 제품의 최대 폭대비 400% 의 외각 박스가 그려진다.
                 /// Air 바깥의 조건은 A = 0 이다. 
                 /// 따라서 자계가 밖을 나가는 VCM 이나 영구자석의 경우를 고려해서 150 이상을 사용한다.
+                /// 
+                /// [주의 사항] : 후처리 작업의 값과 일치해야 한다.
+                /// 
                 int iOuterPaddingPercent = 150;
 
                 dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
@@ -1648,10 +1654,11 @@ namespace DoSA
                 listProductLength.Add(dProductLengthY);
                 listProductLength.Add(dProductLengthZ);
 
-                double dMaxProductLength = listProductLength.Max();
+                // 평균을 사용한다.
+                double dAverageProductLength = listProductLength.Average();
 
                 // X,Y,Z 의 제품 폭 중에 최대 폭으로 모든 방향의 Region 크기를 결정한다.
-                double dOuterPaddingLength = dMaxProductLength * (iOuterPaddingPercent / 100.0f);
+                double dOuterPaddingLength = dAverageProductLength * (iOuterPaddingPercent / 100.0f);
 
                 // 중심 위치
                 dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
@@ -1659,11 +1666,11 @@ namespace DoSA
                 dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
 
                 /// 음의 방향의 좌표 값은 
-                /// 중심 위치에서 먼저 dProductMaxLength / 2.0f 를 빼서 외각 위치를 얻고,
+                /// 중심 위치에서 먼저 dAverageProductLength / 2.0f 를 빼서 외각 위치를 얻고,
                 /// 거기에 Padding Length 를 추가로 빼서 결정한다.
-                dOuterRegionMinX = dRegionCenterX - dMaxProductLength / 2.0f - dOuterPaddingLength;
-                dOuterRegionMinY = dRegionCenterY - dMaxProductLength / 2.0f - dOuterPaddingLength;
-                dOuterRegionMinZ = dRegionCenterZ - dMaxProductLength / 2.0f - dOuterPaddingLength;
+                dOuterRegionMinX = dRegionCenterX - dAverageProductLength / 2.0f - dOuterPaddingLength;
+                dOuterRegionMinY = dRegionCenterY - dAverageProductLength / 2.0f - dOuterPaddingLength;
+                dOuterRegionMinZ = dRegionCenterZ - dAverageProductLength / 2.0f - dOuterPaddingLength;
 
                 listScriptString.Add(dOuterRegionMinX.ToString());
                 listScriptString.Add(dOuterRegionMinY.ToString());
@@ -1671,11 +1678,11 @@ namespace DoSA
 
                 /// Outer Air Box 는 정사각형이기 때문에 X,Y,Z 방향 모두 같은 하나의 값만 사용하고 있다.
                 /// 양쪽에 PaddingLength 와 제품 길이로 구성된다.
-                double dOuterRegionLength = dMaxProductLength + dOuterPaddingLength * 2.0f;
+                double dOuterRegionLength = dAverageProductLength + dOuterPaddingLength * 2.0f;
 
                 listScriptString.Add(dOuterRegionLength.ToString());
 
-
+               
                 double dInnerRegionMinX, dInnerRegionMinY, dInnerRegionMinZ;
                 double dInnerPaddingLengthX, dInnerPaddingLengthY, dInnerPaddingLengthZ;
                 double dInnerRegionLengthX, dInnerRegionLengthY, dInnerRegionLengthZ;
@@ -1702,11 +1709,11 @@ namespace DoSA
                 dInnerRegionLengthX = dProductLengthX + dInnerPaddingLengthX * 2.0f;
                 dInnerRegionLengthY = dProductLengthY + dInnerPaddingLengthY * 2.0f;
                 dInnerRegionLengthZ = dProductLengthZ + dInnerPaddingLengthZ * 2.0f;
-
+                
                 listScriptString.Add(dInnerRegionLengthX.ToString());
                 listScriptString.Add(dInnerRegionLengthY.ToString());
                 listScriptString.Add(dInnerRegionLengthZ.ToString());
-
+   
                 strOrgStriptContents += scriptContents.m_str04_1_Region_Script;
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
@@ -1872,11 +1879,14 @@ namespace DoSA
             {
                 // 커멘드 파라메터로 디자인 파일명이 넘어오지 않은 경우는 바로 리턴한다.
                 if (m_strCommandLineDesignFullName == string.Empty)
+                {
+                    CNotice.printTrace("커멘드 파라메터로 디자인 파일명이 넘어오지 않았다.");
                     return;
+                }
 
                 if (false == m_manageFile.isExistFile(m_strCommandLineDesignFullName))
                 {
-                    CNotice.noticeWarning("커멘드라인으로 입력한 디자인 파일이 존재하지 않습니다.");
+                    CNotice.printTrace("커멘드라인으로 입력한 디자인 파일이 존재하지 않는다.");
                     return;
                 }
 
@@ -1918,29 +1928,35 @@ namespace DoSA
 
         private bool isForceExperimentOK(CForceExperiment forceExperiment)
         {
-
-/// 1. 코일은 하나만 지원한다.
-/// 
-
-
-            bool bCheck = false;
-
-            foreach (CNode node in m_design.NodeList)
+            // 1. Moving Part 는 하나만 지원한다.
+            //
+            if (m_design.getMovingPartSize() != 1)
             {
-                // 자기회로 재료만 지정
-                if (node.GetType().BaseType.Name == "CParts")
-                {
-                    if (((CParts)node).MovingPart == EMMoving.MOVING)
-                        bCheck = true;
-                }
-            }
-
-            if (bCheck == false)
-            {
-                CNotice.noticeWarningID("ALOM");
+                CNotice.noticeWarning("This version supports only one Moving Part.\n현버전은 하나의 구동부 파트까지만 지원합니다.");
                 return false;
             }
 
+            // 2. 코일은 하나만 지원한다.
+            if (m_design.getKindNodeSize(EMKind.COIL) != 1)
+            {
+                CNotice.noticeWarning("This version supports only one Coil.\n현 버전은 하나의 코일까지만 지원합니다.");
+                return false;
+            }
+
+            // 3. 코일형상 입력을 확인한다.
+            if (m_design.isCoilAreaOK() == false)
+            {
+                CNotice.noticeWarning("You need to enter the coil geometry dimensions.\n코일형상 입력이 필요합니다.");
+                return false;
+            }
+
+            // 4. 코일사양 계산을 확인한다.
+            if (m_design.isCoilSpecificationOK() == false)
+            {
+                CNotice.noticeWarning("You need to calculate the coil specification.\n코일사양 계산이 필요합니다.");
+                return false;
+            }            
+            
             //if (m_design.isDesignShapeOK() == false)
             //{
             //    CNotice.printTraceID("AEOI");
@@ -2843,7 +2859,7 @@ namespace DoSA
                     }
                     else
                     {
-                        CNotice.noticeWarning("There is no DoSA_MS.dmat file.\nPlease check Material directory.");
+                        CNotice.printTrace("There is no DoSA_MS.dmat file.\nPlease check Material directory.");
                     }
                 }
             }

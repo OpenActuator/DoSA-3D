@@ -134,13 +134,13 @@ namespace DoSA
                     }
                     else
                     {
-                        CNotice.noticeWarning("선택한 형상이 없습니다.");
+                        CNotice.noticeWarning("There is no selected part.\n선택된 파트가 존재하지 않습니다.");
                         return;
                     }
                 }
                 else
                 {
-                    CNotice.noticeWarning("선택할 부품 형상이 없습니다. 추가를 취소 하세요.");
+                    CNotice.noticeWarning("There is no part to select.\n선택할 파트가 존재하지 않습니다.");
                     return;
                 }
 
@@ -152,7 +152,7 @@ namespace DoSA
 
                 if (NodeName.Length == 0)
                 {
-                    CNotice.noticeWarning("노드 명을 입력하지 않았습니다.");
+                    CNotice.noticeWarning("You need to enter the Node Name.\n가상 실험의 이름을 입력하세요.");
                     return;
                 }
             }

@@ -308,13 +308,15 @@ SKIN_STEEL = 302;
 ";
         #endregion
 
+        #region =========================== 03_BH.pro ===========================
+
         public bool getScriptBH(string strMaterialName, ref string strScriptBH, List<double> listH, List<double> listB)
         {
             string strB, strH;
 
             strB = "    Mat_" + strMaterialName + "_B() = {\n    ";
 
-            foreach(double dB in listB)
+            foreach (double dB in listB)
                 strB += dB.ToString() + ", ";
 
             // 마지막 ", " 를 제거한다.
@@ -339,9 +341,7 @@ SKIN_STEEL = 302;
 
             return true;
         }
-
-        #region =========================== 03_BH.pro ===========================
-
+        
         public string m_str03_BH_Calulate_Script =
         @"#BH,1
 # 1 : Material Name
@@ -402,18 +402,17 @@ Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
 # 11 : Outer Width Z
 
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
-
-# InnerBox 의 크기는 10% Pandding 을 사용한다. (즉, 제품크기보다 10% 큰 Box 이다)
-volInnerBox = newv; Box(newv) = { {{6}}*mm, {{7}}*mm, {{8}}*mm, {{9}}*mm, {{10}}*mm, {{11}}*mm };
-volInnerAir = newv; BooleanDifference(newv) = { Volume{volInnerBox}; Delete; }{ Volume{STEP_Volumes()}; };
-BooleanFragments{ Volume{volInnerAir(), STEP_Volumes()}; Delete; }{}
-
-# OuterBox 의 크기는 200% Pandding 을 사용하고 있다.
-# 따라서 최소값은 제품 외각 위치에서 음의 방향으로 제품 최대 폭의 2배 길이점, 최대점은 제품 외각 위치에서 양의 방향으로 제품 최대 폭의 2배 길이점이다.
-# 결국, OuterBox 한변의 길이는 제품 최대 길이의 5배가 된다.
+#
 volOuterBox = newv; Box(newv) = { {{2}}*mm, {{3}}*mm, {{4}}*mm, {{5}}*mm, {{5}}*mm, {{5}}*mm };
-volOuterAir = newv; BooleanDifference(newv) = { Volume{volOuterBox}; Delete; }{ Volume{STEP_Volumes(), volInnerAir}; };
-BooleanFragments{ Volume{volOuterAir(), volInnerAir()}; Delete; }{}
+volInnerBox = newv; Box(newv) = { {{6}}*mm, {{7}}*mm, {{8}}*mm, {{9}}*mm, {{10}}*mm, {{11}}*mm };
+
+# volInnerBox 를 빼서 volOuterAir을 만들고, volInnerBox에 STEP_Volumes() 을 빼서 volInnerAir 만드는 순서로 작업한다.
+volOuterAir = newv; BooleanDifference(newv) = { Volume{volOuterBox}; Delete; }{ Volume{volInnerBox}; };
+volInnerAir = newv; BooleanDifference(newv) = { Volume{volInnerBox}; Delete; }{ Volume{STEP_Volumes()}; };
+
+# 경계면 처리
+BooleanFragments{ Volume{volOuterAir, volInnerAir}; Delete; }{}
+BooleanFragments{ Volume{volInnerAir, STEP_Volumes()}; Delete; }{}
 
 Characteristic Length { PointsOf{ Volume{volOuterAir}; } } = {{1}} * 8.0;
 Characteristic Length { PointsOf{ Volume{volInnerAir}; } } = {{1}} * 2.0;
@@ -425,7 +424,7 @@ Physical Surface(SKIN_STEEL) = skinSteel();
 volAll() = Volume '*';
 skinAir() = CombinedBoundary{ Volume{ volAll() }; };
 
-Physical Volume(AIR) = {volInnerAir(), volOuterAir()};
+Physical Volume(AIR) = {volInnerAir, volOuterAir};
 Physical Surface(SKIN_AIR) = skinAir();
 
 ";
@@ -684,11 +683,11 @@ PostProcessing {
 
         public string m_str13_PostOperation_Script =
         @"#DEFINE,2
-# 1 : Coil Name
-# 2 : X Coord of Left Bottom Point on XY Plane 
-# 3 : Y Coord of Left Bottom Point on XY Plane 
-# 4 : X Coord of Right Bottom Point on XY Plane 
-# 5 : Y Coord of Left Top Point on XY Plane 
+# 1 : X Coord of Left Bottom Point on XY Plane 
+# 2 : Y Coord of Left Bottom Point on XY Plane 
+# 3 : X Coord of Right Bottom Point on XY Plane 
+# 4 : Y Coord of Left Top Point on XY Plane 
+# 5 : Z Coord of Center Point on XY Plane 
 
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
@@ -696,8 +695,9 @@ PostOperation {
 	{ Name poMagStatic_A ; NameOfPostProcessing ppMagStatic_A;
 		Operation {			
 			
-			Print[ b, OnElementsOf domainALL, File ""b.pos"" ] ;			
-			Print[ b, OnPlane{ { {{2}}*mm, {{3}}*mm,0} { {{4}}*mm, {{3}}*mm,0} { {{2}}*mm, {{5}}*mm,0} } {100, 100}, File ""b_cut.pos"" ];
+            Print[ js, OnElementsOf volCoil, File ""js.pos"" ] ;	
+			Print[ b, OnElementsOf domainALL, File ""b.pos"" ] ;	
+            Print[ b, OnPlane { { {{1}}*mm, {{2}}*mm, {{5}}*mm } { {{3}}*mm, {{2}}*mm, {{5}}*mm } { {{1}}*mm, {{4}}*mm, {{5}}*mm } } {125, 75}, File ""b_cut.pos"" ];
 			
 			DeleteFile [""F.dat""];
 			DeleteFile [""Fx.dat""];

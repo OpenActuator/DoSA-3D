@@ -134,13 +134,21 @@ namespace DoSA
                     }
                     else
                     {
-                        CNotice.noticeWarning("There is no selected part.\n선택된 파트가 존재하지 않습니다.");
+                        if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                            CNotice.noticeWarning("선택된 파트가 존재하지 않습니다.");
+                        else
+                            CNotice.noticeWarning("There is no selected part.");
+
                         return;
                     }
                 }
                 else
                 {
-                    CNotice.noticeWarning("There is no part to select.\n선택할 파트가 존재하지 않습니다.");
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("선택된 파트가 존재하지 않습니다.");
+                    else
+                        CNotice.noticeWarning("There is no selected part.");
+
                     return;
                 }
 
@@ -152,7 +160,11 @@ namespace DoSA
 
                 if (NodeName.Length == 0)
                 {
-                    CNotice.noticeWarning("You need to enter the Node Name.\n가상 실험의 이름을 입력하세요.");
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("가상 실험의 이름을 입력하세요.");
+                    else
+                        CNotice.noticeWarning("You need to enter the Node Name.");
+
                     return;
                 }
             }

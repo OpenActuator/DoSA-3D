@@ -68,7 +68,11 @@ namespace DoSA
 
                 if (textBoxSTEPFileFullName.Text.Length == 0)
                 {
-                    CNotice.noticeWarning("You need to select a STEP file.\nSTEP 파일을 선택해 주세요.");
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("STEP 파일을 선택해 주세요.");
+                    else
+                        CNotice.noticeWarning("You need to select a STEP file.");
+
                     return false;
                 }
 

@@ -29,6 +29,7 @@ using Experiments;
 using Nodes;
 using gtLibrary;
 using Onelab;
+using System.Net;
 
 namespace DoSA
 {
@@ -59,8 +60,9 @@ namespace DoSA
         {
             InitializeComponent();
 
-            // 기존에 동작을 하고 있는 FEMM 이 있으면 오류가 발생한다.
-            //killProcessOfFEMM();
+
+            // 여러곳에서 CSettingData 을 사용하기 때문에 가장 먼저 실시한다.
+            CSettingData.m_strProgramDirName = System.Windows.Forms.Application.StartupPath;
 
             m_resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
@@ -117,10 +119,148 @@ namespace DoSA
             }                
         }
 
+        private void CheckVersion()
+        {
+            try
+            {
+                // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
+                string strNewVersion = new WebClient().DownloadString("http://actuator.or.kr/DoSA_3D_Version.txt");
+                
+                string strVersionPassFileFullName = Path.Combine(CSettingData.m_strProgramDirName, "VersionPass.txt");
+
+                /// 버전관리 유의사항
+                /// 
+                /// AssemblyInfo.cs 의 AssemblyVersion 이 아니라 AssemblyFileVersion 이 DoSA 실행파일의 Product Version 이다.
+                /// 따라서 DoSA 자동업데이트나 업데이트 요청메시지를 띄우기 위해 버전 확인을 DoSA 실행파일의 버전을 사용하고 있다.
+                /// 
+                /// About 창에서도 동일한 버전으로 표기하기 위해 AssemblyFileVersion 를 사용하려고 하였으나 
+                /// AssemblyFileVersion 는 직접 읽어오지 못해서 여기서도 DoSA 실행파일의 버전을 읽어서 ProductVersion 을 읽어낸다.
+                string strEXE_FileName = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string strProductVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(strEXE_FileName).ProductVersion;
+
+                string[] arrayNewVersion = strNewVersion.Split('.');
+                string[] arrayProductVersion = strProductVersion.Split('.');
+
+                int iNewVersion = 0;
+                int iProductVersion = 0;
+
+                // 버전에 문제가 있으면 바로 리턴한다.
+                if (arrayNewVersion.Length != 4 || arrayProductVersion.Length != 4)
+                    return;
+
+                // 3 자리만 사용한다. 마지막 자리는 너무 자주 버전업이 되어서 사용자들에 불편을 준다
+                // ex) 0.9.4.2 -> 마지막 2가 버려지고 94 가 된다.
+                for(int i=0; i < 3; i++)
+                {
+                    iNewVersion += (int)(Convert.ToInt32(arrayNewVersion[i]) * Math.Pow(10.0, (double)(2 - i)));
+                    iProductVersion += (int)(Convert.ToInt32(arrayProductVersion[i]) * Math.Pow(10.0, (double)(2 - i)));
+                }
+
+                bool bVersionCheckDialog = false;
+
+                CReadFile readFile = new CReadFile();
+                CWriteFile writeFile = new CWriteFile();
+
+                string strPassVersion;
+                string[] arrayPassVersion;
+                int iPassVersion;
+
+                if(iNewVersion > iProductVersion)
+                {
+                    // 이전에 업그레이드 안함을 선택하여 PassVersion 파일이 있는 경우
+                    if(m_manageFile.isExistFile(strVersionPassFileFullName) == true)
+                    {
+                        strPassVersion = readFile.getLine(strVersionPassFileFullName, 1);
+
+                        arrayPassVersion = strPassVersion.Split('.');
+
+                        // 버전에 문제가 있으면 바로 리턴한다.
+                        if (arrayPassVersion.Length != 4)
+                            return;
+
+                        iPassVersion = 0;
+
+                        // 3 자리만 사용한다. 마지막 자리는 너무 자주 버전업이 되어서 사용자들에 불편을 준다
+                        for (int i = 0; i < 3; i++)
+                            iPassVersion += (int)(Convert.ToInt32(arrayPassVersion[i]) * Math.Pow(10.0, (double)(2 - i)));
+
+                        // 저장된 보지 않기를 원하는 버전보다 신규버전이 높을 때만 신규버전 알림창을 띄운다.
+                        if (iNewVersion > iPassVersion)
+                            bVersionCheckDialog = true;
+                        else
+                            bVersionCheckDialog = false;
+                    }
+                    else
+                    {
+                        bVersionCheckDialog = true;
+                    }
+                }
+
+                // 신규버전을 알리는 창을 띄운다.
+                if(bVersionCheckDialog == true)
+                {
+                    PopupNewVersion formNewVersion = new PopupNewVersion(strNewVersion, strProductVersion);
+                    formNewVersion.StartPosition = FormStartPosition.CenterParent;
+
+                    formNewVersion.ShowDialog();
+
+                    // 취소를 하면 버전 확인 상관없이 프로그램이 실행 된다.
+                    if (formNewVersion.m_iStatus == 3)
+                        return;
+
+                    // 프로그램을 종료 하고 다운로드 웹사이트로 이동한다.
+                    // 단, 프로그램을 업데이트하지 않으면 다시 알림 창이 뜬다.
+                    if (formNewVersion.m_iStatus == 1)
+                    {
+                        string target;
+
+                        if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                            target = "http://solenoid.or.kr/index_dosa_kor.html";
+                        else
+                            target = "http://solenoid.or.kr/index_dosa_eng.html";
+
+                        try
+                        {
+                            System.Diagnostics.Process.Start(target);
+                        }
+                        catch (System.ComponentModel.Win32Exception noBrowser)
+                        {
+                            if (noBrowser.ErrorCode == -2147467259)
+                                CNotice.printTrace(noBrowser.Message);
+                        }
+                        catch (System.Exception other)
+                        {
+                            CNotice.printTrace(other.Message);
+                        }
+                        
+                        System.Windows.Forms.Application.ExitThread();
+                        Environment.Exit(0);
+                    }
+                    // formNewVersion.m_iStatus == 2 인 경우로 지금 New 버전에 대한 공지를 띄우지 않는 것이다.
+                    else
+                    {
+                        List<string> listStirng = new List<string>();
+                        listStirng.Add(strNewVersion);
+
+                        writeFile.writeLineString(strVersionPassFileFullName, listStirng, true);
+                    }
+                }
+            }
+            // 인터넷이 연결되지 않았으면 예외 처리가 되면서 함수를 빠져 나간다.
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+            }
+
+        }
+
         private void initializeProgram()
         {
             try
             {
+                // 설치버전을 확인 한다.
+                CheckVersion();
+
                 /// Net Framework V4.51 이전버전이 설치 되었는지를 확인한다.
                 bool retFreamework = checkFramework451();
 
@@ -134,9 +274,6 @@ namespace DoSA
                     System.Windows.Forms.Application.ExitThread();
                     Environment.Exit(0);
                 }
-
-                // 실행파일의 위치를 읽어낸다.
-                CSettingData.m_strProgramDirName = System.Windows.Forms.Application.StartupPath;
 
                 // Log 디렉토리가 없으면 생성 한다.
                 string strLogDirName = Path.Combine(CSettingData.m_strProgramDirName, "Log");
@@ -321,7 +458,11 @@ namespace DoSA
             {
                 if (m_design.m_strDesignName.Length == 0)
                 {
-                    CNotice.noticeWarning("There is no design to show 3D shape.This job is canceled.\n3차원 형상을 보여줄 디자인이 없습니다.");
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("3차원 형상을 보여줄 디자인이 없습니다.");
+                    else
+                        CNotice.noticeWarning("There is no design to show 3D shape.This job is canceled.");
+                    
                     return;
                 }
 
@@ -1932,28 +2073,44 @@ namespace DoSA
             //
             if (m_design.getMovingPartSize() != 1)
             {
-                CNotice.noticeWarning("This version supports only one Moving Part.\n현버전은 하나의 구동부 파트까지만 지원합니다.");
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.noticeWarning("현버전은 하나의 구동부 파트까지만 지원합니다.");
+                else
+                    CNotice.noticeWarning("This version supports only one Moving Part.");
+
                 return false;
             }
 
             // 2. 코일은 하나만 지원한다.
             if (m_design.getKindNodeSize(EMKind.COIL) != 1)
             {
-                CNotice.noticeWarning("This version supports only one Coil.\n현 버전은 하나의 코일까지만 지원합니다.");
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.noticeWarning("현 버전은 하나의 코일까지만 지원합니다.");
+                else
+                    CNotice.noticeWarning("This version supports only one Coil.");
+
                 return false;
             }
 
             // 3. 코일형상 입력을 확인한다.
             if (m_design.isCoilAreaOK() == false)
             {
-                CNotice.noticeWarning("You need to enter the coil geometry dimensions.\n코일형상 입력이 필요합니다.");
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.noticeWarning("코일형상 입력이 필요합니다.");
+                else
+                    CNotice.noticeWarning("You need to enter the coil geometry dimensions.");
+
                 return false;
             }
 
             // 4. 코일사양 계산을 확인한다.
             if (m_design.isCoilSpecificationOK() == false)
             {
-                CNotice.noticeWarning("You need to calculate the coil specification.\n코일사양 계산이 필요합니다.");
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.noticeWarning("코일사양 계산이 필요합니다.");
+                else
+                    CNotice.noticeWarning("You need to calculate the coil specification.");
+
                 return false;
             }            
             

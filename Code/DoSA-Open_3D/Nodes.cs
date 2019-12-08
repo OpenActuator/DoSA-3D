@@ -249,7 +249,11 @@ namespace Nodes
                     // 남아있는 Shape 형상 명으로 예약되었거나 사용중이 이름이라면 추가 작업을 취소한다.
                     if (enableUseNodeName(nodeName) == false)
                     {
-                        CNotice.noticeWarning("There is the same name experiment already.\n동일한 이름의 가상실험이 이미 존재 합니다.");
+                        if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                            CNotice.noticeWarning("동일한 이름의 가상실험이 이미 존재 합니다.");
+                        else
+                            CNotice.noticeWarning("There is the same name experiment already.");
+
                         return false;
                     }                        
 

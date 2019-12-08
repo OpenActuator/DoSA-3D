@@ -91,12 +91,23 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
   license: LGPL 2.1
   license link: http://creativecommons.org/licenses/LGPL/2.1/";
 
+            /// 버전관리 유의사항
+            /// 
+            /// AssemblyInfo.cs 의 AssemblyVersion 이 아니라 AssemblyFileVersion 이 DoSA 실행파일의 Product Version 이다.
+            /// 따라서 DoSA 자동업데이트나 업데이트 요청메시지를 띄우기 위해 버전 확인을 DoSA 실행파일의 버전을 사용하고 있다.
+            /// 
+            /// About 창에서도 동일한 버전으로 표기하기 위해 AssemblyFileVersion 를 사용하려고 하였으나 
+            /// AssemblyFileVersion 는 직접 읽어오지 못해서 여기서도 DoSA 실행파일의 버전을 읽어서 ProductVersion 을 읽어낸다.
+            string strEXE_FileName = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string strProductVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(strEXE_FileName).ProductVersion;
+
             this.Text = String.Format("About {0}", AssemblyTitle);
             this.labelProductName.Text = AssemblyProduct;
-            this.labelVersion.Text = String.Format("- Version ({0})", AssemblyVersion);
+            //this.labelVersion.Text = String.Format("- Version ({0})", AssemblyVersion);
+            this.labelVersion.Text = String.Format("- Version ({0})", strProductVersion);
             this.labelCopyright.Text = String.Format("- License : {0}", AssemblyCopyright);
             this.labelContributor.Text = String.Format("- Contributor : {0}", AssemblyCompany);
-            this.textBoxDescription.Text = strDescription;           
+            this.textBoxDescription.Text = strDescription;
             this.textBoxOpenLicense.Text = strOpenLicense;
 
             this.buttonDonation.Text = strDonation;

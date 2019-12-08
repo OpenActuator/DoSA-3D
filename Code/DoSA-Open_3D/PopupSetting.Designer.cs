@@ -209,7 +209,7 @@
             this.textBoxMeshSizePercent.Name = "textBoxMeshSizePercent";
             this.textBoxMeshSizePercent.Size = new System.Drawing.Size(105, 21);
             this.textBoxMeshSizePercent.TabIndex = 4;
-            this.textBoxMeshSizePercent.Text = "5";
+            this.textBoxMeshSizePercent.Text = "7";
             this.textBoxMeshSizePercent.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // labelMeshSize

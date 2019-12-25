@@ -33,6 +33,23 @@ namespace Experiments
     //------------------------------------------------------------------------------------------
     public class CExperiment : CNode
     {
+        [DisplayNameAttribute("Mesh Size [%]"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Mesh Size / Shape Length * 100")]
+        public double MeshSizePercent { get; set; }
+
+        [DisplayNameAttribute("Actuator Type"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Actuator Type")]
+        public EMActuatorType ActuatorType { get; set; }
+
+        public CExperiment()
+        {
+            // MeshSizePercent 와 Type 이 없는 이전 파일버전 인 경우는 아래의 값으로 초기화된다.
+            MeshSizePercent = 7;
+            ActuatorType = EMActuatorType.Solenoid;
+        }
+
+    }
+
+    public class CForceExperiment : CExperiment
+    {
         private double m_dCurrent;
 
         [DisplayNameAttribute("Voltage [V]"), CategoryAttribute("\t\tInput Fields"), DescriptionAttribute("Input Voltage")]
@@ -40,17 +57,13 @@ namespace Experiments
 
         [DisplayNameAttribute("Max. Current [A]"), CategoryAttribute("\t\tInput Fields"), DescriptionAttribute("Maximum Input Current")]
         [ReadOnlyAttribute(true)]
-        public double Current 
+        public double Current
         {
             // 소수점 5째 자리 까지만 출력한다.
             get { return Math.Round(m_dCurrent, 5); }
             set { m_dCurrent = value; }
         }
 
-    }
-
-    public class CForceExperiment : CExperiment
-    {
         [DisplayNameAttribute("Y Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Y Displacement")]
         public double MovingY { get; set; }
 
@@ -59,12 +72,6 @@ namespace Experiments
 
         [DisplayNameAttribute("Z Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Z Displacement")]
         public double MovingZ { get; set; }
-
-        [DisplayNameAttribute("Mesh Size [%]"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Mesh Size / Shape Length * 100")]
-        public double MeshSizePercent { get; set; }
-
-        [DisplayNameAttribute("Actuator Type"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Actuator Type")]
-        public EMActuatorType ActuatorType { get; set; }
 
         public CForceExperiment()
         {
@@ -83,17 +90,18 @@ namespace Experiments
 
                 // CNode
                 writeFile.writeDataLine(writeStream, "NodeName", NodeName, 3);
+                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, 3);
 
                 // CExperiment
-                writeFile.writeDataLine(writeStream, "Voltage", Voltage, 3);
-                writeFile.writeDataLine(writeStream, "Current", Current, 3);
+                writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, 3);
+                writeFile.writeDataLine(writeStream, "ActuatorType", ActuatorType, 3);
 
                 // CForceExperiment
+                writeFile.writeDataLine(writeStream, "Voltage", Voltage, 3);
+                writeFile.writeDataLine(writeStream, "Current", Current, 3); 
                 writeFile.writeDataLine(writeStream, "MovingY", MovingY, 3);
                 writeFile.writeDataLine(writeStream, "MovingX", MovingX, 3);
                 writeFile.writeDataLine(writeStream, "MovingZ", MovingZ, 3);
-                writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, 3);
-                writeFile.writeDataLine(writeStream, "ActuatorType", ActuatorType, 3);
 
                 writeFile.writeEndLine(writeStream, "ForceExperiment", 2);
             }
@@ -132,8 +140,21 @@ namespace Experiments
                         case "NodeName":
                             NodeName = arrayString[1];
                             break;
+                            
+                        case "KindKey":
+                            m_kindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
+                            break;
 
                         // CExperiment
+                        case "MeshSizePercent":
+                            MeshSizePercent = Convert.ToDouble(arrayString[1]);
+                            break;
+
+                        case "ActuatorType":
+                            ActuatorType = (EMActuatorType)Enum.Parse(typeof(EMActuatorType), arrayString[1]);
+                            break;
+
+                        // CForceExperiment
                         case "Voltage":
                             Voltage = Convert.ToDouble(arrayString[1]);
                             break;
@@ -141,8 +162,7 @@ namespace Experiments
                         case "Current":
                             Current = Convert.ToDouble(arrayString[1]);
                             break;
-
-                        // CForceExperiment
+                        
                         case "MovingY":
                             MovingY = Convert.ToDouble(arrayString[1]);
                             break;
@@ -153,14 +173,6 @@ namespace Experiments
 
                         case "MovingZ":
                             MovingZ = Convert.ToDouble(arrayString[1]);
-                            break;
-
-                        case "MeshSizePercent":
-                            MeshSizePercent = Convert.ToDouble(arrayString[1]);
-                            break;
-
-                        case "ActuatorType":
-                            ActuatorType = (EMActuatorType)Enum.Parse(typeof(EMActuatorType), arrayString[1]);
                             break;
 
                         default:
@@ -188,6 +200,8 @@ namespace Experiments
             forceExperiment.MovingZ = this.MovingZ;
             forceExperiment.NodeName = this.NodeName;
             forceExperiment.Voltage = this.Voltage;
+            forceExperiment.MeshSizePercent = this.MeshSizePercent;
+            forceExperiment.ActuatorType = this.ActuatorType;
 
             return forceExperiment;
         }

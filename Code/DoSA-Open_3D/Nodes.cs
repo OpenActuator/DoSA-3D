@@ -318,8 +318,6 @@ namespace Nodes
             m_listRemainedShapeName.Clear();
 
             m_listNode.Clear();
-
-            m_bChanged = true;
         }
 
         // 해당 종류의 노드 갯수를 얻어 온다

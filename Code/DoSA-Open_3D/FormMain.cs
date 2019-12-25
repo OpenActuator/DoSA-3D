@@ -2714,6 +2714,26 @@ namespace DoSA
             }
         }
 
+        //-------------------------------------------------------------------
+        // propertyGridMain.Refresh() 와 충돌이 발생하여 사용을 포기한다.
+        //-------------------------------------------------------------------
+        // PropertyGrid Column 의 폭을 변경한다.
+        //public static void setLabelColumnWidth(PropertyGrid grid, int width)
+        //{
+        //    if (grid == null)
+        //        throw new ArgumentNullException("grid");
+
+        //    // get the grid view
+        //    Control view = (Control)grid.GetType().GetField("gridView", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(grid);
+
+        //    // set label width
+        //    FieldInfo fi = view.GetType().GetField("labelWidth", BindingFlags.Instance | BindingFlags.NonPublic);
+        //    fi.SetValue(view, width);
+
+        //    // refresh
+        //    view.Invalidate();
+        //}
+
         // 선택한 노드를 Information Window 와 Property View 에 보여준다
         private void showNode(string nodeName)
         {
@@ -2727,6 +2747,9 @@ namespace DoSA
                 {
                     // 프로퍼티창을 변경한다.
                     propertyGridMain.SelectedObject = node;
+
+                    // 프로퍼티창의 첫번째 Column 의 폭을 변경한다. (사용 포기함)
+                    //setLabelColumnWidth(propertyGridMain, 160);
 
                     /// 프로퍼티창에서 이름을 변경할 때 기존에 이미 있는 이름을 선택하는 경우
                     /// 복구를 위해 저장해 둔다.

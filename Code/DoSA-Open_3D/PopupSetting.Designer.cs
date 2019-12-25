@@ -37,7 +37,7 @@
             this.labelWorkingDirectory = new System.Windows.Forms.Label();
             this.buttonSettingOK = new System.Windows.Forms.Button();
             this.buttonSettingCancel = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.groupBoxETC = new System.Windows.Forms.GroupBox();
             this.comboBoxActuatorType = new System.Windows.Forms.ComboBox();
             this.labelActuatorType = new System.Windows.Forms.Label();
             this.comboBoxLanguage = new System.Windows.Forms.ComboBox();
@@ -45,9 +45,9 @@
             this.textBoxMeshSizePercent = new System.Windows.Forms.TextBox();
             this.labelMeshSize = new System.Windows.Forms.Label();
             this.labelLanguage = new System.Windows.Forms.Label();
-            this.labelMeshSizeLevel = new System.Windows.Forms.Label();
+            this.labelMeshSizePercent = new System.Windows.Forms.Label();
             this.groupBoxSetting.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.groupBoxETC.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxSetting
@@ -142,22 +142,22 @@
             this.buttonSettingCancel.UseVisualStyleBackColor = true;
             this.buttonSettingCancel.Click += new System.EventHandler(this.buttonSettingCancel_Click);
             // 
-            // groupBox1
+            // groupBoxETC
             // 
-            this.groupBox1.Controls.Add(this.comboBoxActuatorType);
-            this.groupBox1.Controls.Add(this.labelActuatorType);
-            this.groupBox1.Controls.Add(this.comboBoxLanguage);
-            this.groupBox1.Controls.Add(this.labelPercent);
-            this.groupBox1.Controls.Add(this.textBoxMeshSizePercent);
-            this.groupBox1.Controls.Add(this.labelMeshSize);
-            this.groupBox1.Controls.Add(this.labelLanguage);
-            this.groupBox1.Controls.Add(this.labelMeshSizeLevel);
-            this.groupBox1.Location = new System.Drawing.Point(12, 123);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(346, 172);
-            this.groupBox1.TabIndex = 13;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "ETC";
+            this.groupBoxETC.Controls.Add(this.comboBoxActuatorType);
+            this.groupBoxETC.Controls.Add(this.labelActuatorType);
+            this.groupBoxETC.Controls.Add(this.comboBoxLanguage);
+            this.groupBoxETC.Controls.Add(this.labelPercent);
+            this.groupBoxETC.Controls.Add(this.textBoxMeshSizePercent);
+            this.groupBoxETC.Controls.Add(this.labelMeshSize);
+            this.groupBoxETC.Controls.Add(this.labelLanguage);
+            this.groupBoxETC.Controls.Add(this.labelMeshSizePercent);
+            this.groupBoxETC.Location = new System.Drawing.Point(12, 123);
+            this.groupBoxETC.Name = "groupBoxETC";
+            this.groupBoxETC.Size = new System.Drawing.Size(346, 172);
+            this.groupBoxETC.TabIndex = 13;
+            this.groupBoxETC.TabStop = false;
+            this.groupBoxETC.Text = "ETC";
             // 
             // comboBoxActuatorType
             // 
@@ -230,21 +230,21 @@
             this.labelLanguage.TabIndex = 3;
             this.labelLanguage.Text = "Language :";
             // 
-            // labelMeshSizeLevel
+            // labelMeshSizePercent
             // 
-            this.labelMeshSizeLevel.AutoSize = true;
-            this.labelMeshSizeLevel.Location = new System.Drawing.Point(24, 77);
-            this.labelMeshSizeLevel.Name = "labelMeshSizeLevel";
-            this.labelMeshSizeLevel.Size = new System.Drawing.Size(121, 12);
-            this.labelMeshSizeLevel.TabIndex = 3;
-            this.labelMeshSizeLevel.Text = "Mesh Size Percent :";
+            this.labelMeshSizePercent.AutoSize = true;
+            this.labelMeshSizePercent.Location = new System.Drawing.Point(24, 77);
+            this.labelMeshSizePercent.Name = "labelMeshSizePercent";
+            this.labelMeshSizePercent.Size = new System.Drawing.Size(121, 12);
+            this.labelMeshSizePercent.TabIndex = 3;
+            this.labelMeshSizePercent.Text = "Mesh Size Percent :";
             // 
             // PopupSetting
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(527, 309);
-            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.groupBoxETC);
             this.Controls.Add(this.groupBoxSetting);
             this.Controls.Add(this.buttonSettingOK);
             this.Controls.Add(this.buttonSettingCancel);
@@ -254,8 +254,8 @@
             this.Text = "Setting";
             this.groupBoxSetting.ResumeLayout(false);
             this.groupBoxSetting.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.groupBoxETC.ResumeLayout(false);
+            this.groupBoxETC.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -271,10 +271,10 @@
         private System.Windows.Forms.Label labelWorkingDirectory;
         private System.Windows.Forms.Button buttonSettingOK;
         private System.Windows.Forms.Button buttonSettingCancel;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox groupBoxETC;
         private System.Windows.Forms.Label labelPercent;
         private System.Windows.Forms.TextBox textBoxMeshSizePercent;
-        private System.Windows.Forms.Label labelMeshSizeLevel;
+        private System.Windows.Forms.Label labelMeshSizePercent;
         private System.Windows.Forms.Label labelMeshSize;
         private System.Windows.Forms.ComboBox comboBoxLanguage;
         private System.Windows.Forms.Label labelLanguage;

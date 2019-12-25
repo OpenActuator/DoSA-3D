@@ -52,7 +52,9 @@ namespace DoSA
         public static string m_strWorkingDirName { get; set; }
         public static string m_strGmshExeFileFullName { get; set; }
 
+        // m_dMeshLevelPercent 이름을 변경하지말라. 다시 환경설정을 해야한다.
         public static double m_dMeshLevelPercent { get; set; }
+
         public static EMLanguage m_emLanguage { get; set; }
 
         public static EMActuatorType m_emActuatorType { get; set; }
@@ -140,6 +142,7 @@ namespace DoSA
         public string m_strWorkingDirName { get; set; }
         public string m_strGmshExeFileFullName { get; set; }
         
+        // m_dMeshLevelPercent 이름을 변경하지말라. 다시 환경설정을 해야한다.
         public double m_dMeshLevelPercent { get; set; }
         public EMLanguage m_emLanguage { get; set; }
 

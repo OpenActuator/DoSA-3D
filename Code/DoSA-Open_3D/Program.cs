@@ -10,19 +10,14 @@ using gtLibrary;
 using System.Globalization;
 using System.Threading;
 
+using Experiments;
+
 namespace DoSA
 {
     public enum EMLanguage
     {
         Korean,
         English        
-    };
-
-    public enum EMActuatorType
-    {
-        Solenoid,
-        VCM,
-        PMA
     };
 
     static class Program

@@ -21,6 +21,13 @@ namespace Experiments
         X_Force
     }
 
+    public enum EMActuatorType
+    {
+        Solenoid,
+        VCM,
+        PMA
+    };
+
     //------------------------------------------------------------------------------------------
     // 측정조건에 대해 Node 들을 만들고 성능결과를 얻고 싶을 때 개발자에게 측정 조건의 입력을 요청한다 
     //------------------------------------------------------------------------------------------
@@ -44,8 +51,20 @@ namespace Experiments
 
     public class CForceExperiment : CExperiment
     {
-        [DisplayNameAttribute("Y-Dir Moving [mm]"), CategoryAttribute("Stroke Fields"), DescriptionAttribute("Moving Displacement")]
-        public double MovingStroke { get; set; }
+        [DisplayNameAttribute("Y Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Y Displacement")]
+        public double MovingY { get; set; }
+
+        [DisplayNameAttribute("X Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("X Displacement")]
+        public double MovingX { get; set; }
+
+        [DisplayNameAttribute("Z Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Z Displacement")]
+        public double MovingZ { get; set; }
+
+        [DisplayNameAttribute("Mesh Size [%]"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Mesh Size / Shape Length * 100")]
+        public double MeshSizePercent { get; set; }
+
+        [DisplayNameAttribute("Actuator Type"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Actuator Type")]
+        public EMActuatorType ActuatorType { get; set; }
 
         public CForceExperiment()
         {
@@ -70,7 +89,11 @@ namespace Experiments
                 writeFile.writeDataLine(writeStream, "Current", Current, 3);
 
                 // CForceExperiment
-                writeFile.writeDataLine(writeStream, "MovingStroke", MovingStroke, 3);
+                writeFile.writeDataLine(writeStream, "MovingY", MovingY, 3);
+                writeFile.writeDataLine(writeStream, "MovingX", MovingX, 3);
+                writeFile.writeDataLine(writeStream, "MovingZ", MovingZ, 3);
+                writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, 3);
+                writeFile.writeDataLine(writeStream, "ActuatorType", ActuatorType, 3);
 
                 writeFile.writeEndLine(writeStream, "ForceExperiment", 2);
             }
@@ -114,13 +137,30 @@ namespace Experiments
                         case "Voltage":
                             Voltage = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "Current":
                             Current = Convert.ToDouble(arrayString[1]);
                             break;
 
                         // CForceExperiment
-                        case "MovingStroke":
-                            MovingStroke = Convert.ToDouble(arrayString[1]);
+                        case "MovingY":
+                            MovingY = Convert.ToDouble(arrayString[1]);
+                            break;
+
+                        case "MovingX":
+                            MovingX = Convert.ToDouble(arrayString[1]);
+                            break;
+
+                        case "MovingZ":
+                            MovingZ = Convert.ToDouble(arrayString[1]);
+                            break;
+
+                        case "MeshSizePercent":
+                            MeshSizePercent = Convert.ToDouble(arrayString[1]);
+                            break;
+
+                        case "ActuatorType":
+                            ActuatorType = (EMActuatorType)Enum.Parse(typeof(EMActuatorType), arrayString[1]);
                             break;
 
                         default:
@@ -143,7 +183,9 @@ namespace Experiments
 
             forceExperiment.m_kindKey = this.m_kindKey;
             forceExperiment.Current = this.Current;
-            forceExperiment.MovingStroke = this.MovingStroke;
+            forceExperiment.MovingY = this.MovingY;
+            forceExperiment.MovingX = this.MovingX;
+            forceExperiment.MovingZ = this.MovingZ;
             forceExperiment.NodeName = this.NodeName;
             forceExperiment.Voltage = this.Voltage;
 

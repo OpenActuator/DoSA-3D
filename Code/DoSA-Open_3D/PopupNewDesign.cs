@@ -31,20 +31,18 @@ namespace DoSA
                 groupBoxComment.Text = "기능 제한";
                 labelComment1.Text = "1. 코일 형상";
                 labelComment2.Text = "- 코일 중심축은 Y 축이어야 한다.";
-                labelComment3.Text = "- 원통 코일만 지원가능 하다.";
+                labelComment3.Text = "- 원통코일 형태로 전류가 인가된다.";
                 labelComment4.Text = "2. 구동부 제한";
                 labelComment5.Text = "- 구동부는 하나의 부품만을 지원하고 있다.";
-                labelComment6.Text = "- 구동는 Y 축으로만 한정된다. ";
             }
             else
             {
                 groupBoxComment.Text = "Limited functionality";
                 labelComment1.Text = " 1. Coil Shape";
                 labelComment2.Text = "- Coil center axis should be Y axis.";
-                labelComment3.Text = "- Only cylinderical coils are possible.";
-                labelComment4.Text = "2. Linited Motion";
-                labelComment5.Text = "- One moving part is possible.";
-                labelComment6.Text = "- Motion is only possible for Y axis.";
+                labelComment3.Text = "- The current is applied like a cylindrical coil.";
+                labelComment4.Text = "2. Moving Part";
+                labelComment5.Text = "- The moving part still supports only one component.";
             }
         }
 

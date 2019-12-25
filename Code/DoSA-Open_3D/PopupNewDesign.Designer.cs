@@ -37,7 +37,6 @@
             this.buttonSelectSTEP_File = new System.Windows.Forms.Button();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.groupBoxComment = new System.Windows.Forms.GroupBox();
-            this.labelComment6 = new System.Windows.Forms.Label();
             this.labelComment5 = new System.Windows.Forms.Label();
             this.labelComment4 = new System.Windows.Forms.Label();
             this.labelComment3 = new System.Windows.Forms.Label();
@@ -58,7 +57,7 @@
             // 
             // buttonOK
             // 
-            this.buttonOK.Location = new System.Drawing.Point(224, 320);
+            this.buttonOK.Location = new System.Drawing.Point(224, 305);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(100, 30);
             this.buttonOK.TabIndex = 0;
@@ -117,7 +116,7 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(330, 320);
+            this.buttonCancel.Location = new System.Drawing.Point(330, 305);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 30);
             this.buttonCancel.TabIndex = 1;
@@ -127,7 +126,6 @@
             // 
             // groupBoxComment
             // 
-            this.groupBoxComment.Controls.Add(this.labelComment6);
             this.groupBoxComment.Controls.Add(this.labelComment5);
             this.groupBoxComment.Controls.Add(this.labelComment4);
             this.groupBoxComment.Controls.Add(this.labelComment3);
@@ -135,19 +133,10 @@
             this.groupBoxComment.Controls.Add(this.labelComment1);
             this.groupBoxComment.Location = new System.Drawing.Point(12, 141);
             this.groupBoxComment.Name = "groupBoxComment";
-            this.groupBoxComment.Size = new System.Drawing.Size(418, 170);
+            this.groupBoxComment.Size = new System.Drawing.Size(418, 146);
             this.groupBoxComment.TabIndex = 2;
             this.groupBoxComment.TabStop = false;
             this.groupBoxComment.Text = "기능 제한";
-            // 
-            // labelComment6
-            // 
-            this.labelComment6.AutoSize = true;
-            this.labelComment6.Location = new System.Drawing.Point(36, 136);
-            this.labelComment6.Name = "labelComment6";
-            this.labelComment6.Size = new System.Drawing.Size(171, 12);
-            this.labelComment6.TabIndex = 5;
-            this.labelComment6.Text = "- 구동는 Y 축으로만 한정된다.";
             // 
             // labelComment5
             // 
@@ -173,9 +162,9 @@
             this.labelComment3.AutoSize = true;
             this.labelComment3.Location = new System.Drawing.Point(36, 68);
             this.labelComment3.Name = "labelComment3";
-            this.labelComment3.Size = new System.Drawing.Size(163, 12);
+            this.labelComment3.Size = new System.Drawing.Size(199, 12);
             this.labelComment3.TabIndex = 2;
-            this.labelComment3.Text = "- 원통 코일만 지원가능 하다.";
+            this.labelComment3.Text = "- 원통코일 형태로 전류가 인가된다.";
             // 
             // labelComment2
             // 
@@ -200,7 +189,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(442, 362);
+            this.ClientSize = new System.Drawing.Size(442, 346);
             this.Controls.Add(this.groupBoxComment);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.groupBoxNew);
@@ -232,6 +221,5 @@
         private System.Windows.Forms.Label labelComment1;
         private System.Windows.Forms.Label labelComment5;
         private System.Windows.Forms.Label labelComment4;
-        private System.Windows.Forms.Label labelComment6;
     }
 }

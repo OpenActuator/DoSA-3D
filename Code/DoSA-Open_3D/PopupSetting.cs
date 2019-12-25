@@ -12,6 +12,8 @@ using System.IO;
 using System.Xml.Serialization;
 using gtLibrary;
 
+using Experiments;
+
 namespace DoSA
 {
     public partial class PopupSetting : Form

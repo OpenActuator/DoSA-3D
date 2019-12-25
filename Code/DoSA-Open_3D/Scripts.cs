@@ -277,6 +277,8 @@ Merge ""{{1}}"";
 Geometry.Volumes = 1;
 Geometry.VolumeNumbers = 1;
 
+//Geometry.SurfaceType = 2;
+
 ";
         #endregion
 
@@ -417,6 +419,9 @@ BooleanFragments{ Volume{volInnerAir, STEP_Volumes()}; Delete; }{}
 Characteristic Length { PointsOf{ Volume{volOuterAir}; } } = {{1}} * 8.0;
 Characteristic Length { PointsOf{ Volume{volInnerAir}; } } = {{1}} * 2.0;
 Characteristic Length { PointsOf{ Volume{STEP_Volumes[]}; } } = {{1}} * 1.0;
+
+# 작업 검토 중
+#Characteristic Length { PointsOf{ Volume{volMovingParts}; } } = {{1}} * 0.8;
 
 Physical Surface(SKIN_MOVING) = skinMoving();
 Physical Surface(SKIN_STEEL) = skinSteel();

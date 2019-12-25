@@ -119,12 +119,12 @@ namespace DoSA
             }                
         }
 
-        private void CheckVersion()
+        private void checkVersion()
         {
             try
             {
                 // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
-                string strNewVersion = new WebClient().DownloadString("http://actuator.or.kr/DoSA_3D_Version.txt");
+                string strNewVersion = new WebClient().DownloadString("http://www.actuator.or.kr/DoSA_3D_Version.txt");
                 
                 string strVersionPassFileFullName = Path.Combine(CSettingData.m_strProgramDirName, "VersionPass.txt");
 
@@ -259,7 +259,7 @@ namespace DoSA
             try
             {
                 // 설치버전을 확인 한다.
-                CheckVersion();
+                checkVersion();
 
                 /// Net Framework V4.51 이전버전이 설치 되었는지를 확인한다.
                 bool retFreamework = checkFramework451();
@@ -1159,7 +1159,7 @@ namespace DoSA
             {
                 /// 영구자석이 포함된 VCM 방식인 경우는 자기력의 정확도가 크게 떨어진다.
                 /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
-                if (comboBoxActuatorType.Text == "VCM" )
+                if (forceExperiment.ActuatorType == EMActuatorType.VCM)
                 {
                     /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
                     CForceExperiment forceExperimentZeroCurrent = forceExperiment.Clone();
@@ -1210,7 +1210,8 @@ namespace DoSA
 
             createBHProFile(forceExperiment);
 
-            createDesignGeoFile(forceExperiment);
+            if (false == createDesignGeoFile(forceExperiment))
+                return false;
 
             createImageGeoFile(forceExperiment);
 
@@ -1221,7 +1222,6 @@ namespace DoSA
             addFormulationToDesignProFile(forceExperiment);
 
             addPostToDesignProFile(forceExperiment);
-
 
             string strArguments = " " + strSolveScriptFileFullName;
 
@@ -1658,7 +1658,7 @@ namespace DoSA
             }
         }
 
-        private void createDesignGeoFile(CForceExperiment forceExperiment)
+        private bool createDesignGeoFile(CForceExperiment forceExperiment)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -1735,7 +1735,11 @@ namespace DoSA
                     nIndex = strMovingPartNames.Length - 2;
                     strMovingPartNames = strMovingPartNames.Remove(nIndex);
 
-                    strOrgStriptContents += "Translate {0, " + forceExperiment.MovingStroke.ToString() + "*mm, 0} {  Volume{" + strMovingPartNames + "}; }\n\n";
+// 작업 검토 중
+//                    strOrgStriptContents += "volMovingParts = Volume{ " + strMovingPartNames + " };\n\n";
+
+                    strOrgStriptContents += "Translate { " + forceExperiment.MovingX.ToString() + "*mm , " + forceExperiment.MovingY.ToString() + "*mm, " 
+                                            + forceExperiment.MovingZ.ToString() + "*mm } {  Volume{" + strMovingPartNames + "}; }\n\n";
 
                     strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{" + strMovingPartNames + "}; };\n";
                 }
@@ -1762,9 +1766,19 @@ namespace DoSA
 
                 m_design.calcShapeSize(strMeshFileFullName);
 
+                if (forceExperiment.MeshSizePercent <= 0 || forceExperiment.MeshSizePercent > 100)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("Mesh Size Percent 가 문제가 있습니다.");
+                    else
+                        CNotice.noticeWarning("Mesh Size Percent has a problem.");
+
+                    return false;
+                }
+
                 // 볼륨을 길이단위로 바꾸기 위해서 1/3 승을 했다.
                 // 사용하는 Mesh Size Percent 는 환경설정이 아니고 Force 페이지에 있는 값을 사용한다.
-                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * Convert.ToDouble(textBoxMeshPercent.Text) / 100.0f;
+                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * forceExperiment.MeshSizePercent / 100.0f;
 
                 // mm -> m 로 단위 변환 
                 dMeshSize = dMeshSize / 1000.0f;
@@ -1863,8 +1877,10 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printTrace(ex.Message);
+                return false;
             }
 
+            return true;
         }
 
         private void createBHProFile(CForceExperiment forceExperiment)
@@ -2020,10 +2036,7 @@ namespace DoSA
             {
                 // 커멘드 파라메터로 디자인 파일명이 넘어오지 않은 경우는 바로 리턴한다.
                 if (m_strCommandLineDesignFullName == string.Empty)
-                {
-                    CNotice.printTrace("커멘드 파라메터로 디자인 파일명이 넘어오지 않았다.");
                     return;
-                }
 
                 if (false == m_manageFile.isExistFile(m_strCommandLineDesignFullName))
                 {
@@ -2628,7 +2641,11 @@ namespace DoSA
                         CForceExperiment forceExperiment = new CForceExperiment();
                         forceExperiment.NodeName = strNodeName;
                         forceExperiment.m_kindKey = emKind;
-
+                        
+                        // 생성될 때 환경설정의 조건으로 초기화한다.
+                        forceExperiment.MeshSizePercent = CSettingData.m_dMeshLevelPercent;
+                        forceExperiment.ActuatorType = CSettingData.m_emActuatorType;
+                        
                         bRet = m_design.addNode(forceExperiment);
                         break;
 
@@ -2761,9 +2778,6 @@ namespace DoSA
                             textBoxForceX.Text = "0.0";
                             textBoxForceY.Text = "0.0";
                             textBoxForceZ.Text = "0.0";
-
-                            textBoxMeshPercent.Text = CSettingData.m_dMeshLevelPercent.ToString();
-                            comboBoxActuatorType.Text = CSettingData.m_emActuatorType.ToString();
 
                             break;
 

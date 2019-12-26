@@ -1,0 +1,70 @@
+$begin "DoSA_3D_Project"
+	Writed=2019-12-25 오후 4:18:42
+	DoSA_Version=0.9.6.5
+	File_Version=0.9.6.5
+	$begin "Design"
+		DesignName=LV
+		AllShapeName=Plate,Magnet,Case,Coil,
+		RemainedShapeName=
+		ShapeMinX=-2.25
+		ShapeMaxX=2.25
+		ShapeMinY=-0.67
+		ShapeMaxY=1.6
+		ShapeMinZ=-2.25
+		ShapeMaxZ=2.25
+		$begin "Coil"
+			NodeName=Coil
+			KindKey=COIL
+			MovingParts=MOVING
+			Material=Copper
+			CurrentDirection=IN
+			Turns=126
+			Resistance=15.74769
+			Layers=6
+			TurnsOfOneLayer=21
+			CoilWireGrade=Bonded_IEC_Grade_1B
+			InnerDiameter=3
+			OuterDiameter=3.73
+			Height=1.18
+			CopperDiameter=0.045
+			WireDiameter=0.04953
+			Temperature=20
+			HorizontalCoefficient=0.95
+			VerticalCoefficient=1.13
+			ResistanceCoefficient=1.1
+		$end "Coil"
+		$begin "Steel"
+			NodeName=Plate
+			KindKey=STEEL
+			MovingParts=FIXED
+			Material=SUS_430
+		$end "Steel"
+		$begin "Magnet"
+			NodeName=Magnet
+			KindKey=MAGNET
+			MovingParts=FIXED
+			Material=NdFeB_52
+			Hc=969969
+			Br=1.26497
+			MagnetPlane=XY_Plane_Z
+			MagnetAngle=90
+		$end "Magnet"
+		$begin "Steel"
+			NodeName=Case
+			KindKey=STEEL
+			MovingParts=FIXED
+			Material=1010_Steel
+		$end "Steel"
+		$begin "ForceExperiment"
+			NodeName=Force
+			KindKey=FORCE_EXPERIMENT
+			MeshSizePercent=7
+			ActuatorType=Solenoid
+			Voltage=2.5
+			Current=0.15875
+			MovingY=0
+			MovingX=0
+			MovingZ=0
+		$end "ForceExperiment"
+	$end "Design"
+$end "DoSA_3D_Project"

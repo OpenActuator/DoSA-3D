@@ -481,7 +481,7 @@ namespace DoSA
                 string strShapeModelFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
 
                 // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
-                string strRunScriptFileFullName = Path.Combine(strShapeDirName, "shape.geo");
+                string strRunScriptFileFullName = Path.Combine(strShapeDirName, "Shape.geo");
 
                 #endregion
 
@@ -496,9 +496,7 @@ namespace DoSA
                 {
                     // Process 의 Arguments 에서 스페이스 문제가 발생한다.
                     // 아래와 같이 묶음처리를 사용한다.
-                    //string strRunScriptFileFullName = m_manageFile.solveDirectoryNameInPC(m_strRunScriptFileFullName);
-
-                    string strArguments = " " + strRunScriptFileFullName;
+                    string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
        
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
@@ -626,9 +624,7 @@ namespace DoSA
                 {
                     // Process 의 Arguments 에서 스페이스 문제가 발생한다.
                     // 아래와 같이 묶음처리를 사용한다.
-                    //string strRunScriptFileFullName = m_manageFile.solveDirectoryNameInPC(m_strRunScriptFileFullName);
-
-                    string strArguments = " " + strRunScriptFileFullName;
+                    string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
        
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
@@ -1174,7 +1170,10 @@ namespace DoSA
                 string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
                 string strArguments;
 
-                strArguments = " " + strMagneticDensityVectorFileFullName + " " + strImageScriptFileFullName;
+                // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                // 아래와 같이 묶음처리를 사용한다.
+                strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName) 
+                                   + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
 
                 CScript.runScript(strGmshExeFileFullName, strArguments, true);
 
@@ -1223,7 +1222,9 @@ namespace DoSA
 
             addPostToDesignProFile(forceExperiment);
 
-            string strArguments = " " + strSolveScriptFileFullName;
+            // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+            // 아래와 같이 묶음처리를 사용한다.
+            string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
 
             // Maxwell 종료될 때 가지 툴킷을 기다린다.
             // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.

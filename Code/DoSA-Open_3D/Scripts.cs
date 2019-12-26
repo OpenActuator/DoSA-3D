@@ -144,9 +144,7 @@ namespace Onelab
 
             //// Process 의 Arguments 에서 스페이스 문제가 발생한다.
             //// 아래와 같이 묶음처리를 사용한다.
-            //string strRunScriptFileFullNameMaxwell = m_manageFile.solveSpacePC(m_strRunScriptFileFullName);
-
-            //string strArguments = " " + strRunScriptFileFullNameMaxwell;
+            //string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullNameMaxwell);
 
             //runScript(strMaxwellFileFullName, strArguments, m_strRunScriptFileFullName, true, progressBarMovement);
 

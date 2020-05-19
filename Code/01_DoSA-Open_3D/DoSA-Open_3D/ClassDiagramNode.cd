@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Experiments.CExperiment">
+    <Position X="4.5" Y="3.75" Width="1.75" />
+    <InheritanceLine Type="Nodes.CNode" ManuallyRouted="true">
+      <Path>
+        <Point X="7" Y="2.891" />
+        <Point X="7" Y="3.354" />
+        <Point X="5.375" Y="3.354" />
+        <Point X="5.375" Y="3.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAAAgACAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Experiments.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Experiments.CForceExperiment">
+    <Position X="4.5" Y="6.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Experiments.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Nodes.CNode">
+    <Position X="6.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAAAAAAAAAAAACAAAAAAAAACACAAAAAAAAAAAAAAE=</HashCode>
+      <FileName>Nodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Parts.CCoil">
+    <Position X="9.75" Y="7.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AkAEQAAABoAEAAACAAAAIAAIEiAAJABUAEAAABANAAA=</HashCode>
+      <FileName>Parts.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Parts.CMagnet">
+    <Position X="12.5" Y="7.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AkAAAAAAAAAAAAAAAAAAAAAAACAAAAAAASAAAAAAAAA=</HashCode>
+      <FileName>Parts.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Parts.CParts">
+    <Position X="9.75" Y="3.75" Width="2" />
+    <InheritanceLine Type="Nodes.CNode" ManuallyRouted="true">
+      <Path>
+        <Point X="7" Y="2.891" />
+        <Point X="7" Y="3.354" />
+        <Point X="10.75" Y="3.354" />
+        <Point X="10.75" Y="3.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>QCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAEAA=</HashCode>
+      <FileName>Parts.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Parts.CSteel">
+    <Position X="7.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AkAAAAAAAAAAAAAAAAAAAAAAACAAAAAAACAAAAAAAAA=</HashCode>
+      <FileName>Parts.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Nodes.CDesign">
+    <Position X="0.5" Y="0.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>QIFAAEAEiFgaAAAAeEMIAAAJgGEAABEBAAgAAAAAAAA=</HashCode>
+      <FileName>Nodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Malgun Gothic" Size="9" />
+</ClassDiagram>

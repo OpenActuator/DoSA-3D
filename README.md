@@ -1,4 +1,4 @@
-# DoSA-Open_3D (Ver 0.9.6)
+# DoSA-Open_3D (Ver 0.9.9.1)
 
 This program is an open source software for Solenoid &amp; Actuator design
 

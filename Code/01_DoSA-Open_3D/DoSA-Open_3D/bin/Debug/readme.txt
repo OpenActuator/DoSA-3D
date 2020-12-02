@@ -3,6 +3,8 @@ Gi-Tae Kweon
 zgitae@gmail.com
 
 
+2020-12-02 Ver(0.9.11.0)
+ - Bug Fix : Can't output results.
 
 2020-06-11 Ver(0.9.10.0)
  - Bug Fix : Material issue that can use only one material

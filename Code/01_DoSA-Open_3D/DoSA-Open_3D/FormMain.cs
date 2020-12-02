@@ -2222,7 +2222,7 @@ namespace DoSA
         {
             string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
 
-            string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
+            //string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
             string strForceXFileFullName = Path.Combine(strExperimentDirName, "Fx.dat");
             string strForceYFileFullName = Path.Combine(strExperimentDirName, "Fy.dat");
             string strForceZFileFullName = Path.Combine(strExperimentDirName, "Fz.dat");
@@ -2235,8 +2235,10 @@ namespace DoSA
 
             if (bCheck == true)
             {
-                strReturn = readfile.pickoutString(strForceXFileFullName, "0 ", 3, 30);
-                dForceX = Double.Parse(strReturn);
+                strReturn = readfile.pickoutString(strForceXFileFullName, " 0", 3, 30);
+                
+                if(strReturn != null)
+                    dForceX = Double.Parse(strReturn);
             }
             else
             {
@@ -2248,8 +2250,10 @@ namespace DoSA
 
             if (bCheck == true)
             {
-                strReturn = readfile.pickoutString(strForceYFileFullName, "0 ", 3, 30);
-                dForceY = Double.Parse(strReturn);
+                strReturn = readfile.pickoutString(strForceYFileFullName, " 0", 3, 30);
+
+                if (strReturn != null) 
+                    dForceY = Double.Parse(strReturn);
             }
             else
             {
@@ -2261,8 +2265,10 @@ namespace DoSA
 
             if (bCheck == true)
             {
-                strReturn = readfile.pickoutString(strForceZFileFullName, "0 ", 3, 30);
-                dForceZ = Double.Parse(strReturn);
+                strReturn = readfile.pickoutString(strForceZFileFullName, " 0", 3, 30);
+
+                if (strReturn != null)
+                    dForceZ = Double.Parse(strReturn);
             }
             else
             {

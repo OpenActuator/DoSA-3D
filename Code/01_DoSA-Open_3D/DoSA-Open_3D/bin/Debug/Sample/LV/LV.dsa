@@ -1,7 +1,7 @@
 $begin "DoSA_3D_Project"
-	Writed=2019-12-25 오후 4:18:42
-	DoSA_Version=0.9.6.5
-	File_Version=0.9.6.5
+	Writed=2020-12-03 오전 11:20:09
+	DoSA_Version=0.9.11.0
+	File_Version=0.9.11.0
 	$begin "Design"
 		DesignName=LV
 		AllShapeName=Plate,Magnet,Case,Coil,
@@ -58,8 +58,8 @@ $begin "DoSA_3D_Project"
 		$begin "ForceExperiment"
 			NodeName=Force
 			KindKey=FORCE_EXPERIMENT
-			MeshSizePercent=7
-			ActuatorType=Solenoid
+			MeshSizePercent=5
+			ActuatorType=VCM
 			Voltage=2.5
 			Current=0.15875
 			MovingY=0

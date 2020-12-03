@@ -30,6 +30,8 @@ namespace gtLibrary
         {
             string[] arrayString = new string[listString.Count];
 
+
+
             try
             {
                 if (true == m_manageFile.isExistFile(strFileFullName) && bOverwrite == false)
@@ -583,7 +585,60 @@ namespace gtLibrary
         }
 
         /// <summary>
-        /// 특정 행의 구분자로 나누어지는 데이터들을 얻어온다
+        /// ' ' (space) 로 구분되는 파일에서 특정 행의 데이터 들을 List 에 담아서 리턴한다. 
+        /// </summary>
+        /// <param name="strFileFullName"></param>
+        /// <param name="listLowData">행의 여러 데이터를 담는 리스트</param>
+        /// <param name="iLowNumber">행의 번호 (1부터 ~ , 인덱스 아님)</param>
+        /// <returns></returns>
+        public bool readSpaceRowData2(string strFileFullName, ref List<double> listLowData, int iLowNumber)
+        {
+            string[] arrayAllLine;
+
+            int nLineCount = 0;
+
+            if (iLowNumber < 1)
+            {
+                CNotice.printTrace("Low Number have to be greater than 1.");
+                return false;
+            }
+
+            // 이전에 사용하던 List 데이터를 우선 삭제한다.
+            listLowData.Clear();
+
+            try
+            {
+                if (false == m_manageFile.isExistFile(strFileFullName))
+                {
+                    ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
+
+                    CNotice.printTrace(resManager.GetString("TIAA5") + strFileFullName + resManager.GetString("_TDNE"));
+                    return false;
+                }
+
+                arrayAllLine = File.ReadAllLines(strFileFullName);
+
+                // string Array 를 List 에 담는다.
+                foreach (string strLine in arrayAllLine)
+                {
+                    nLineCount++;
+
+                    //특정 행을 제외한다. 주로 상단 제목줄을 제외할 때 사용한다.
+                    if (nLineCount == iLowNumber)
+                        CParsing.getDataInAllLine(strLine, ref listLowData, ' ');
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printTrace(ex.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// ',' 로 구분되는 CSV 파일에서 특정 행의 데이터 들을 List 에 담아서 리턴한다. 
         /// </summary>
         /// <param name="strCSVFileFullName"></param>
         /// <param name="listLowData">행의 여러 데이터를 담는 리스트</param>
@@ -636,7 +691,7 @@ namespace gtLibrary
         }
 
         /// <summary>
-        /// 특정 행의 구분자로 나누어지는 문자열들을 얻어온다
+        /// ',' 로 구분되는 CSV 파일에서 특정 행의 데이터 들을 List 에 담아서 리턴한다. 
         /// </summary>
         /// <param name="strCSVFileFullName"></param>
         /// <param name="listLowString">행의 여러 문자열을 담는 리스트</param>
@@ -689,7 +744,7 @@ namespace gtLibrary
         }
 
         /// <summary>
-        /// ',' 로 구분되는 CSV 파일에서 특정 열(Row) 의 데이터 들을 List 에 담아서 리턴한다. 
+        /// ',' 로 구분되는 CSV 파일에서 특정 세로열의 데이터 들을 List 에 담아서 리턴한다. 
         /// </summary>
         /// <param name="strCSVFileFullName"></param>
         /// <param name="listColumnData">열의 여러 데이터를 담는 리스트</param>
@@ -760,7 +815,7 @@ namespace gtLibrary
         }
 
         /// <summary>
-        /// ',' 로 구분되는 CSV 파일에서 특정 열(Row) 의 문자열 들을 List 에 담아서 리턴한다. 
+        /// ',' 로 구분되는 CSV 파일에서 특정 세로열의 문자열 들을 List 에 담아서 리턴한다. 
         /// </summary>
         /// <param name="strCSVFileFullName">파일명</param>
         /// <param name="listColumnString">열의 여러 문자열을 담는 리스트</param>
@@ -832,6 +887,8 @@ namespace gtLibrary
 
         // 해당 키워드를 만났을 때 
         // 해당 라인의 startPos 부터 endPos 사이의 문자열을 숫자로 만들어서 리턴한다.
+        //
+        // 키워드를 만나면 바로 리턴하기 때문에 해당 키워드만 읽어낸다.
         public string pickoutString(string strTargetFileFullName, string strKeyword, int startPos, int endPos)
         {
             string strLine, strTemp;
@@ -854,6 +911,7 @@ namespace gtLibrary
                     {
                         strTemp = strLine.Substring(0, strKeyword.Length);
 
+                        // 키워드를 만나면 바로 리턴하기 때문에 해당 키워드만 읽어낸다.
                         if (strTemp == strKeyword)
                         {
                             // 혹시 strLine 의 길이가 endPos 보다 작다면 
@@ -976,7 +1034,6 @@ namespace gtLibrary
         }
 
         #endregion
-
 
         #region -------------------------- 재질파일 읽기용 함수들 ----------------------------
 
@@ -1225,22 +1282,23 @@ namespace gtLibrary
 
             if (strLine.Length == 0)
                 return false;
-
+            
             try
             {
                 strArray = strLine.Split(sperators, StringSplitOptions.None);
 
                 for(int i=0; i<strArray.Length; i++)
                 {
+                    // 양단의 Space 기호는 제외한다.
                     strTemp = strArray[i].Trim();
 
-                    if (false == double.TryParse(strTemp, out dData))
+                    if(strTemp != string.Empty)
                     {
-                        CNotice.printTrace("숫자문자열이 아닌 문자열을 숫자로 변환하려고 한다.");
-                        return false;
-                    }
-
-                    listData.Add(dData);
+                        if (true == double.TryParse(strTemp, out dData))
+                            listData.Add(dData);
+                        else
+                            CNotice.printTrace("숫자 문자열이 아닌 문자열을 숫자로 변환하려고 한다.");
+                    }   
                 }
             }
             catch (Exception ex)

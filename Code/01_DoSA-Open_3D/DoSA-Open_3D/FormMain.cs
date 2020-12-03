@@ -2161,7 +2161,9 @@ namespace DoSA
         private void plotForceResult(CForceExperiment forceExperiment)
         {
             string strExperimentName = forceExperiment.NodeName;
+            string strExperimentZeroName = strExperimentName + "_Zero";
             string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentZeroDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentZeroName);
 
             string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
 
@@ -2176,13 +2178,11 @@ namespace DoSA
             {
                 getForceResult(strExperimentName, ref dForceX, ref dForceY, ref dForceZ);
 
-                string strExperimentZeroDirName = strExperimentDirName + "_Zero";
-                
                 /// 영구자석이 포함된 자기회로의 정확도를 높이기위한 전류 0 시험이 존재하는 지를 확인한다.
                 /// 전류를 인가했을 때와 하지 않았을 때의 자기력 차를 자기력으로 사용한다.
                 if (m_manageFile.isExistDirectory(strExperimentZeroDirName) == true)
                 {
-                    getForceResult(strExperimentZeroDirName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ);
+                    getForceResult(strExperimentZeroName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ);
 
                     dForceX = dForceX - dZeroForceX;
                     dForceY = dForceY - dZeroForceY;
@@ -2228,17 +2228,20 @@ namespace DoSA
             string strForceZFileFullName = Path.Combine(strExperimentDirName, "Fz.dat");
 
             bool bCheck = false;
-            string strReturn;
+            bool bRet = false;
             CReadFile readfile = new CReadFile();
 
-            bCheck = m_manageFile.isExistFile(strForceXFileFullName);
+            List<double> listLowData = new List<double>();
 
+            bCheck = m_manageFile.isExistFile(strForceXFileFullName);
+                
             if (bCheck == true)
             {
-                strReturn = readfile.pickoutString(strForceXFileFullName, " 0", 3, 30);
-                
-                if(strReturn != null)
-                    dForceX = Double.Parse(strReturn);
+                listLowData.Clear();
+                bRet = readfile.readSpaceRowData2(strForceXFileFullName, ref listLowData, 1);
+
+                if(bRet == true)
+                    dForceX = listLowData[1];
             }
             else
             {
@@ -2250,10 +2253,11 @@ namespace DoSA
 
             if (bCheck == true)
             {
-                strReturn = readfile.pickoutString(strForceYFileFullName, " 0", 3, 30);
+                listLowData.Clear();
+                bRet = readfile.readSpaceRowData2(strForceYFileFullName, ref listLowData, 1);
 
-                if (strReturn != null) 
-                    dForceY = Double.Parse(strReturn);
+                if (bRet == true)
+                    dForceY = listLowData[1];
             }
             else
             {
@@ -2265,10 +2269,11 @@ namespace DoSA
 
             if (bCheck == true)
             {
-                strReturn = readfile.pickoutString(strForceZFileFullName, " 0", 3, 30);
+                listLowData.Clear();
+                bRet = readfile.readSpaceRowData2(strForceZFileFullName, ref listLowData, 1);
 
-                if (strReturn != null)
-                    dForceZ = Double.Parse(strReturn);
+                if (bRet == true)
+                    dForceZ = listLowData[1];
             }
             else
             {

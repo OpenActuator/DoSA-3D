@@ -1,7 +1,7 @@
 $begin "DoSA_3D_Project"
-	Writed=2019-12-25 오후 4:18:55
-	DoSA_Version=0.9.6.5
-	File_Version=0.9.6.5
+	Writed=2020-12-03 오전 11:20:44
+	DoSA_Version=0.9.11.0
+	File_Version=0.9.11.0
 	$begin "Design"
 		DesignName=Solenoid
 		AllShapeName=Armature,Core,Coil,Case,
@@ -54,7 +54,7 @@ $begin "DoSA_3D_Project"
 		$begin "ForceExperiment"
 			NodeName=Force
 			KindKey=FORCE_EXPERIMENT
-			MeshSizePercent=7
+			MeshSizePercent=5
 			ActuatorType=Solenoid
 			Voltage=14.5
 			Current=0.95335

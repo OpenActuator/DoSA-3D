@@ -1,0 +1,4 @@
+Plate
+Magnet
+Case
+Coil

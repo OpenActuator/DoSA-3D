@@ -98,6 +98,19 @@ namespace DoSA
                 Environment.Exit(0);            
             }
 
+            int nDoSACount = CManageProcess.getProcessesCount("DoSA-Open_3D");
+
+            if (nDoSACount >= 2)
+            {
+                if(CSettingData.m_emLanguage == EMLanguage.English)
+                    CNotice.noticeWarning("DoSA-Open_3D 의 중복 실행은 허용하지 않습니다.");
+                else
+                    CNotice.noticeWarning("Duplicate execution of DoSA-Open_3D is not allowed.");
+
+                System.Windows.Forms.Application.ExitThread();
+                Environment.Exit(0);
+            }
+
             initializeProgram();
 
             // 환경설정의 기본 작업디렉토리의 해당 프로그램의 디렉토리로 일단 설정한다.

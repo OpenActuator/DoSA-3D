@@ -189,5 +189,10 @@ namespace gtLibrary
         {
             return MessageBox.Show(strMSG, strTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
         }
+
+        public static DialogResult noticeWarningYesNo(string strMSG, string strTitle = "Warning")
+        {
+            return MessageBox.Show(strMSG, strTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+        }
     }
 }

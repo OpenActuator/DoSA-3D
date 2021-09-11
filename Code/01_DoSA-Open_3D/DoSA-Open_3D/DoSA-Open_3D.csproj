@@ -81,6 +81,9 @@
     <Compile Include="..\..\21_DoSA-Open_Library\ManageFile.cs">
       <Link>ManageFile.cs</Link>
     </Compile>
+    <Compile Include="..\..\21_DoSA-Open_Library\ManageProcess.cs">
+      <Link>ManageProcess.cs</Link>
+    </Compile>
     <Compile Include="..\..\21_DoSA-Open_Library\Notice.cs">
       <Link>Notice.cs</Link>
     </Compile>

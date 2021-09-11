@@ -84,7 +84,7 @@ namespace DoSA
 
                 // 디자인을 무조건 프로그램 작업디렉토리에 생성하는 것으로 한다.
                 // 따라서 디자인을 생성할 때의 적용버튼 임으로 작업 디렉토리는 프로그램 작업 디렉토리를 사용하고 있다.
-                List<string> listDirectories = m_manageFile.getDirectoryList(CSettingData.m_strWorkingDirName);
+                List<string> listDirectories = m_manageFile.getDirectoryList(CSettingData.m_strCurrentWorkingDirPath);
 
                 // 소문자로 비교하기 위해서 임시로 사용한다.
                 string strOldTempName, strNewTempName;
@@ -153,7 +153,7 @@ namespace DoSA
             openFileDialog.Title = "Select a STEP File";
             
             // 디렉토리는 프로그램 작업 디렉토리로 하고 있다.
-            openFileDialog.InitialDirectory = CSettingData.m_strWorkingDirName;
+            openFileDialog.InitialDirectory = CSettingData.m_strCurrentWorkingDirPath;
             openFileDialog.FileName = null;
             openFileDialog.Filter = "STEP File (*.step;*.stp)|*.step;*.stp";
             openFileDialog.FilterIndex = 1;

@@ -99,7 +99,12 @@ namespace DoSA
             }
 
             initializeProgram();
-            
+
+            // 환경설정의 기본 작업디렉토리의 해당 프로그램의 디렉토리로 일단 설정한다.
+            // 환경설정을 읽어온 후 에 초기화 해야 한다.
+            // 주의사항 : initializeProgram() 뒤에 호출 해야 한다.
+            CSettingData.m_strCurrentWorkingDirPath = CSettingData.m_strBaseWorkingDirPath;
+
             // FEMM 에서 지원되는 재질을 Loading 한다.
             loadMaterial();
 
@@ -345,7 +350,7 @@ namespace DoSA
 
                     // WorkingDirectory 을 읽어온 후에 
                     // 작업의 편의를 위해 디렉토리를 WorkingDirectory 로 변경한다.
-                    m_manageFile.setCurrentDirectory(CSettingData.m_strWorkingDirName);
+                    m_manageFile.setCurrentDirectory(CSettingData.m_strBaseWorkingDirPath);
                 }
 
                 /// 파일에서 읽어오든 신규파일에서 생성을 하든 Setting 파일안의 프로그램 언어를 설정한다.
@@ -476,12 +481,12 @@ namespace DoSA
                 // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
                 // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
-                string strDesignDirName = Path.Combine(CSettingData.m_strWorkingDirName, m_design.m_strDesignName);
+                string strDesignDirPath = m_design.m_strDesignDirPath;
                 
                 string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
 
                 // 형상 디렉토리 
-                string strShapeDirName = Path.Combine(strDesignDirName, "Shape");
+                string strShapeDirName = Path.Combine(strDesignDirPath, "Shape");
                 // 형상 디렉토리안의 만들어진다.
                 string strShapeModelFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
 
@@ -578,7 +583,7 @@ namespace DoSA
                 // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
                 // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
-                string strDesignDirName = Path.Combine(CSettingData.m_strWorkingDirName, strDesignName);
+                string strDesignDirName = Path.Combine(CSettingData.m_strCurrentWorkingDirPath, strDesignName);
 
                 // 형상 디렉토리 
                 string strShapeDirName = Path.Combine(strDesignDirName, "Shape");
@@ -656,7 +661,7 @@ namespace DoSA
 
                     // 생성할 경우 Design Directory 는 CSettingData.m_strWorkingDirName + strActuatorDesignName 로
                     // 무조건 프로그램 작업디렉토리에 생성되도록 하고 있다. 
-                    m_design.m_strDesignDirName = strDesignDirName;
+                    m_design.m_strDesignDirPath = strDesignDirName;
 
                     if( true == m_manageFile.isExistFile(strPartNamesFileFullName) )
                     {
@@ -664,6 +669,7 @@ namespace DoSA
 
                         string[] arraySplitPartNames;
                         string strTempPartName;
+                        string strFindRet = string.Empty;
 
                         foreach (string strPartName in listTempPartNames)
                         {
@@ -671,9 +677,26 @@ namespace DoSA
                             // 여기서 '/' 로 분리해서 가장 하위의 명칭을 파트명으로 사용한다.
                             arraySplitPartNames = strPartName.Split('/');
 
-                            // 이름에 스페이스가 있으면 '_' 로 변경한다.
+                            // 가장 뒤에 있는 이름을 사용한다
                             strTempPartName = arraySplitPartNames[arraySplitPartNames.Length - 1];
+
+                            // 이름에 스페이스가 있으면 '_' 로 변경한다.
                             strTempPartName = strTempPartName.Replace(' ', '_');
+
+                            strFindRet = listAllPartNames.Find(x => x.Equals(strTempPartName));
+
+                            if (null != strFindRet)
+                            {
+                                
+                                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                                    CNotice.noticeWarning(strTempPartName + "의 파트명에 중복 사용되고 있습니다.");
+                                else
+                                    CNotice.noticeWarning("It is used in duplicate with the part name called " + strTempPartName + ".");
+
+                                // 취소되면 디자인 디렉토리를 삭제한다.
+                                m_manageFile.deleteDirectory(strDesignDirName);
+                                return;
+                            }
 
                             // [주의 사항]
                             //
@@ -759,7 +782,7 @@ namespace DoSA
             // 파일 열기창 설정
             openFileDialog.Title = "Open a Design File";
             // 디자인 파일을 열 때 디렉토리는 프로그램 작업 디렉토리로 하고 있다.
-            openFileDialog.InitialDirectory = CSettingData.m_strWorkingDirName;
+            openFileDialog.InitialDirectory = CSettingData.m_strCurrentWorkingDirPath;
             openFileDialog.FileName = null;
             openFileDialog.Filter = "Toolkit Files (*.dsa)|*.dsa|All files (*.*)|*.*";
             openFileDialog.FilterIndex = 1;
@@ -781,7 +804,10 @@ namespace DoSA
                 // 이전 다지인 작업 디렉토리를 그대로 사용하면 디렉토리 문제가 발생하여 실행이 불가능하게 된다.
                 // 이를 해결하기 위해
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치로 작업파일의 디렉토리를 다시 설정하고 있다.
-                m_design.m_strDesignDirName = Path.GetDirectoryName(strActuatorDesignFileFullName);
+                m_design.m_strDesignDirPath = Path.GetDirectoryName(strActuatorDesignFileFullName);
+
+                // Design 디렉토리에서 Design 명을 제거한 디렉토리를 작업디렉토리로 설정한다.
+                CSettingData.m_strCurrentWorkingDirPath = Path.GetDirectoryName(m_design.m_strDesignDirPath);
 
                 // 프로젝트가 시작 했음을 표시하기 위해서 TreeView 에 기본 가지를 추가한다.
                 TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
@@ -854,7 +880,7 @@ namespace DoSA
             CWriteFile writeFile = new CWriteFile();
 
             string strOrgDesignName = this.m_design.m_strDesignName;
-            strOrgDesignDirName = this.m_design.m_strDesignDirName;
+            strOrgDesignDirName = this.m_design.m_strDesignDirPath;
 
             // 디자인이 없는 경우는 DesignName 없기 때문에 이름으로 작업디자인이 있는지를 판단한다.
             if (strOrgDesignName.Length == 0)
@@ -866,7 +892,7 @@ namespace DoSA
             SaveFileDialog saveFileDialog = new SaveFileDialog();
 
             saveFileDialog.Title = "Write a New Design Name";
-            saveFileDialog.InitialDirectory = CSettingData.m_strWorkingDirName;
+            saveFileDialog.InitialDirectory = CSettingData.m_strCurrentWorkingDirPath;
             saveFileDialog.FileName = strOrgDesignName + "_Modify";
 
             DialogResult result = saveFileDialog.ShowDialog();
@@ -942,7 +968,7 @@ namespace DoSA
 
 
                     // 현 모델을 SaveAs 모델명으로 변경한다.
-                    m_design.m_strDesignDirName = strSaveAsDesignDirName;
+                    m_design.m_strDesignDirPath = strSaveAsDesignDirName;
                     m_design.m_strDesignName = strSaveAsDesignName;
 
                     // 수정모델을 읽어드린 후에 바로 저장한다.
@@ -1118,7 +1144,7 @@ namespace DoSA
             // 현재 시험의 이름을 m_nodeList 에서 찾지 않고
             // 현재 표시되고 있는 PropertyGird 창에서 Experiment 이름을 찾아 낸다
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strImageScriptFileFullName = Path.Combine(strExperimentDirName, "Image.geo");
             string strMagneticDensityVectorFileFullName = Path.Combine(strExperimentDirName, "b_cut.pos");
@@ -1207,7 +1233,7 @@ namespace DoSA
         public bool solveForce(CForceExperiment forceExperiment)
         {
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
 
@@ -1254,7 +1280,7 @@ namespace DoSA
             string strOrgStriptContents;
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
 
@@ -1351,7 +1377,7 @@ namespace DoSA
             string strOrgStriptContents;
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
 
@@ -1413,7 +1439,7 @@ namespace DoSA
             string strOrgStriptContents;
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
 
@@ -1557,7 +1583,7 @@ namespace DoSA
             string strOrgStriptContents;
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
 
@@ -1665,9 +1691,9 @@ namespace DoSA
             string strOrgStriptContents;
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
-            string strShapeDirName = Path.Combine(m_design.m_strDesignDirName, "Shape");
+            string strShapeDirName = Path.Combine(m_design.m_strDesignDirPath, "Shape");
 
             string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
             string strImageScriptFileFullName = Path.Combine(strExperimentDirName, "Image.geo");
@@ -1698,9 +1724,9 @@ namespace DoSA
             string strOrgStriptContents;
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
-            string strShapeDirName = Path.Combine(m_design.m_strDesignDirName, "Shape");
+            string strShapeDirName = Path.Combine(m_design.m_strDesignDirPath, "Shape");
             string strMeshFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".msh");
             string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
 
@@ -1921,7 +1947,7 @@ namespace DoSA
             List<string> listScriptString = new List<string>();
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strBHProFileFullName = Path.Combine(strExperimentDirName, "BH.pro");
 
@@ -2004,7 +2030,7 @@ namespace DoSA
             string strOrgStriptContents;
 
             string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             string strDefineGeoFileFullName = Path.Combine(strExperimentDirName, "Define.geo");
 
@@ -2073,7 +2099,7 @@ namespace DoSA
                 // 이전 다지인 작업 디렉토리를 그대로 사용하면 디렉토리 문제가 발생하여 실행이 불가능하게 된다.
                 // 이를 해결하기 위해
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치로 작업파일의 디렉토리를 다시 설정하고 있다.
-                m_design.m_strDesignDirName = Path.GetDirectoryName(m_strCommandLineDesignFullName);
+                m_design.m_strDesignDirPath = Path.GetDirectoryName(m_strCommandLineDesignFullName);
 
                 // 프로젝트가 시작 했음을 표시하기 위해서 TreeView 에 기본 가지를 추가한다.
                 TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
@@ -2162,8 +2188,8 @@ namespace DoSA
         {
             string strExperimentName = forceExperiment.NodeName;
             string strExperimentZeroName = strExperimentName + "_Zero";
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
-            string strExperimentZeroDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentZeroName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strExperimentZeroDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentZeroName);
 
             string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
 
@@ -2220,7 +2246,7 @@ namespace DoSA
 
         private void getForceResult(string strExperimentName, ref double dForceX, ref double dForceY, ref double dForceZ)
         {
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, strExperimentName);
+            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
 
             //string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
             string strForceXFileFullName = Path.Combine(strExperimentDirName, "Fx.dat");
@@ -2298,15 +2324,15 @@ namespace DoSA
             {
                 /// New 에서 생성할 때 바로 디렉토리를 생성하면 만약, 프로젝트를 저장하지 않으면 디렉토리만 남는다.
                 /// 따라서 저장할 때 없으면 디렉토리를 생성하는 것으로 바꾸었다.
-                string strDesignDirName = Path.Combine(CSettingData.m_strWorkingDirName, m_design.m_strDesignName);
+                string strDesignDirPath = m_design.m_strDesignDirPath;
 
-                if (false == m_manageFile.isExistDirectory(strDesignDirName))
+                if (false == m_manageFile.isExistDirectory(strDesignDirPath))
                 {
                     // 다지인 디렉토리를 생성한다.
-                    m_manageFile.createDirectory(strDesignDirName);
+                    m_manageFile.createDirectory(strDesignDirPath);
                 }
 
-                string strActuatorDesignFileFullName = Path.Combine(m_design.m_strDesignDirName, m_design.m_strDesignName + ".dsa");
+                string strActuatorDesignFileFullName = Path.Combine(strDesignDirPath, m_design.m_strDesignName + ".dsa");
 
                 StreamWriter writeStream = new StreamWriter(strActuatorDesignFileFullName);
                 CWriteFile writeFile = new CWriteFile();
@@ -2569,7 +2595,7 @@ namespace DoSA
                     // 해석 결과 디렉토리가 있는 경우는 해석결과를 삭제할지를 물어보고 같이 삭제한다.
                     if (node.GetType().BaseType.Name == "CExperiment")
                     {
-                        string strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, node.NodeName);
+                        string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
 
                         if (m_manageFile.isExistDirectory(strExperimentDirName) == true)
                         {
@@ -2794,7 +2820,7 @@ namespace DoSA
 
                     splitContainerRight.Panel1.Controls.Clear();
 
-                    strExperimentDirName = Path.Combine(m_design.m_strDesignDirName, node.NodeName);
+                    strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
 
                     switch (node.m_kindKey)
                     {

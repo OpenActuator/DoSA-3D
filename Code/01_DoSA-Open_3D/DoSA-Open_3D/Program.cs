@@ -49,7 +49,10 @@ namespace DoSA
         static CManageFile m_manageFile = new CManageFile();
 
         // 저장 변수들
-        public static string m_strWorkingDirName { get; set; }
+        public static string m_strBaseWorkingDirPath { get; set; }
+
+        public static string m_strCurrentWorkingDirPath { get; set; }
+
         public static string m_strGmshExeFileFullName { get; set; }
 
         // m_dMeshLevelPercent 이름을 변경하지말라. 다시 환경설정을 해야한다.
@@ -97,7 +100,7 @@ namespace DoSA
                 return false;
             }
 
-            bCheck = m_manageFile.isExistDirectory(m_strWorkingDirName);
+            bCheck = m_manageFile.isExistDirectory(m_strBaseWorkingDirPath);
 
             if (bCheck == false)
             {
@@ -150,7 +153,7 @@ namespace DoSA
 
         public void copyCloneToSettingData()
         {
-            CSettingData.m_strWorkingDirName = m_strWorkingDirName;
+            CSettingData.m_strBaseWorkingDirPath = m_strWorkingDirName;
             CSettingData.m_strGmshExeFileFullName = m_strGmshExeFileFullName;
             CSettingData.m_dMeshLevelPercent = m_dMeshLevelPercent;
             CSettingData.m_emLanguage = m_emLanguage;
@@ -159,7 +162,7 @@ namespace DoSA
 
         public void copySettingDataToClone()
         {
-            m_strWorkingDirName = CSettingData.m_strWorkingDirName;
+            m_strWorkingDirName = CSettingData.m_strBaseWorkingDirPath;
             m_strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
             m_dMeshLevelPercent = CSettingData.m_dMeshLevelPercent;
             m_emLanguage = CSettingData.m_emLanguage;

@@ -56,7 +56,7 @@ namespace Nodes
 
         // Design 객체의 객체 디렉토리
         // Design 디렉토리는 복사가 가능하기 때문에 아래의 디렉토리는 저장하지는 않는다
-        public string m_strDesignDirName;
+        public string m_strDesignDirPath;
 
         public bool m_bChanged;
 
@@ -142,7 +142,7 @@ namespace Nodes
         {
             // 꼭 초기화가 되어야 한다.
             m_strDesignName = string.Empty;
-            m_strDesignDirName = string.Empty;
+            m_strDesignDirPath = string.Empty;
 
             m_bChanged = false;
         }
@@ -312,7 +312,7 @@ namespace Nodes
         public void clearDesign()
         {
             m_strDesignName = string.Empty;
-            m_strDesignDirName = string.Empty;
+            m_strDesignDirPath = string.Empty;
 
             m_listAllShapeName.Clear();
             m_listRemainedShapeName.Clear();

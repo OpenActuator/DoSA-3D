@@ -2,6 +2,11 @@ DoSA-Open_3D
 Gi-Tae Kweon
 zgitae@gmail.com
 
+2021-09-11 Ver(0.9.12.0)
+ - Change the working directory if user opens a design file that located other directory
+
+2021-07-23 Ver(0.9.11.1)
+ - Bug Fix : Check for duplicate part names 
 
 2020-12-02 Ver(0.9.11.0)
  - Bug Fix : Can't output results.

@@ -45,7 +45,7 @@ namespace DoSA
         {
             try
             {
-                CSettingData.m_strWorkingDirName = textBoxWorkingDirectory.Text;
+                CSettingData.m_strBaseWorkingDirPath = textBoxWorkingDirectory.Text;
                 CSettingData.m_strGmshExeFileFullName = textBoxGmshPath.Text;
 
                 CSettingData.m_dMeshLevelPercent = Double.Parse(textBoxMeshSizePercent.Text);
@@ -105,7 +105,7 @@ namespace DoSA
         {
             try
             {
-                textBoxWorkingDirectory.Text = CSettingData.m_strWorkingDirName;
+                textBoxWorkingDirectory.Text = CSettingData.m_strBaseWorkingDirPath;
                 textBoxGmshPath.Text = CSettingData.m_strGmshExeFileFullName;
 
                 textBoxMeshSizePercent.Text = CSettingData.m_dMeshLevelPercent.ToString();

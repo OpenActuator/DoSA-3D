@@ -385,7 +385,7 @@ Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
 
 # Message console 을 보이게 한다. 
 # 창크기는 조절이 되지만, 자동으로 Message window 를 보이는 것은 실패했다.
-General.MessageHeight = 300;
+General.MessageHeight = 500;
 General.ShowMessagesOnStartup = 1;
 
 ";

@@ -201,11 +201,11 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                target = "http://www.solenoid.or.kr/index_dosa_qna_kor.html";
+                target = "http://www.solenoid.or.kr/direct/index_dosa_qna_kor.html";
             }
             else
             {
-                target = "http://www.solenoid.or.kr/index_dosa_qna_eng.html";
+                target = "http://www.solenoid.or.kr/direct/index_dosa_qna_eng.html";
             }
 
             try
@@ -248,11 +248,11 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                target = "http://www.solenoid.or.kr/index_dosa_donation_kor.html";
+                target = "http://www.solenoid.or.kr/direct/index_dosa_donation_kor.html";
             }
             else
             {
-                target = "http://www.solenoid.or.kr/index_dosa_donation_eng.html";
+                target = "http://www.solenoid.or.kr/direct/index_dosa_donation_eng.html";
             }
 
             try

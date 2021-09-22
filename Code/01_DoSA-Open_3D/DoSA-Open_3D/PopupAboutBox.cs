@@ -28,7 +28,7 @@ namespace DoSA
 
             if(CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                strDonation = "후원하기";
+                strDonation = "기여하기";
                 strQnaBoard = "QnA 게시판";
 
                 strDescription = @"DoSA-Open 은 

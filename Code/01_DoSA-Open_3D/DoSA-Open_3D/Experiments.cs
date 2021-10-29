@@ -76,6 +76,7 @@ namespace Experiments
         public CForceExperiment()
         {
             m_kindKey = EMKind.FORCE_EXPERIMENT;
+            Voltage = 5.0;
         }
 
         // 파일스트림 객체에 코일 정보를 기록한다.

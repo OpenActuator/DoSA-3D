@@ -2874,6 +2874,9 @@ namespace DoSA
                             textBoxForceY.Text = "0.0";
                             textBoxForceZ.Text = "0.0";
 
+                            // 트리로 선택할 때도 가상실험 내부 전류를 재계산한다.
+                            setCurrentInExperiment(node);
+
                             break;
 
                         default:
@@ -3005,25 +3008,9 @@ namespace DoSA
 
                     case EMKind.FORCE_EXPERIMENT:
 
-                        CForceExperiment forceExperiment = (CForceExperiment)node;
-
                         if (e.ChangedItem.Label == "Voltage [V]")
                         {
-                            // 총 저항은 합산이 필요함으로 0.0f 로 초기화 한다.
-                            double total_resistance = 0.0f;
-
-                            // 총 저항
-                            foreach (CNode nodeTemp in m_design.NodeList)
-                                if (nodeTemp.m_kindKey == EMKind.COIL)
-                                {
-                                    total_resistance += ((CCoil)nodeTemp).Resistance;
-                                }
-
-                            // 전류
-                            if (total_resistance != 0.0f)
-                                forceExperiment.Current = (forceExperiment.Voltage / total_resistance);
-                            else
-                                forceExperiment.Current = 0.0f;
+                            setCurrentInExperiment(node);
                         }
                         break;
 
@@ -3042,6 +3029,38 @@ namespace DoSA
             propertyGridMain.Refresh();
         }
 
+
+        private void setCurrentInExperiment(CNode node)
+        {
+            // 총 저항은 합산이 필요함으로 0.0f 로 초기화 한다.
+            double total_resistance = 0.0f;
+
+            // 총 저항
+            foreach (CNode nodeTemp in m_design.NodeList)
+                if (nodeTemp.m_kindKey == EMKind.COIL)
+                {
+                    total_resistance += ((CCoil)nodeTemp).Resistance;
+                }
+
+            switch (node.m_kindKey)
+            {
+                case EMKind.FORCE_EXPERIMENT:
+
+                    CForceExperiment forceExperiment = (CForceExperiment)node;
+
+                    // 전류
+                    if (total_resistance != 0.0f)
+                        forceExperiment.Current = (forceExperiment.Voltage / total_resistance);
+                    else
+                        forceExperiment.Current = 0.0f;
+
+                    break;
+
+                default:
+                    break;
+            }
+
+        }
         //property Category구성
         private void CollapseOrExpandCategory(PropertyGrid propertyGrid, string categoryName, bool bExpand = false)
         {

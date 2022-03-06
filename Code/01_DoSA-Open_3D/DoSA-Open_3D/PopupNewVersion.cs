@@ -14,12 +14,13 @@ namespace DoSA
     {
         public int m_iStatus;
 
-        public PopupNewVersion(string strNewVersion, string strProductVersion)
+        public PopupNewVersion(string strNewVersion, string strProductVersion, string strMainUpdateContents)
         {
             InitializeComponent();
 
             this.labelNewVersionDisplay.Text = strNewVersion;
             this.labelProductVersionDisplay.Text = strProductVersion;
+            this.labelMainUpdateContents.Text = strMainUpdateContents;
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {

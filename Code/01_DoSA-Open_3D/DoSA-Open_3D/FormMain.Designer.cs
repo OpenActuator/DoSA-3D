@@ -55,11 +55,10 @@
             this.ribbonButtonSteel = new System.Windows.Forms.RibbonButton();
             this.ribbonPanelExperiment = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonForce = new System.Windows.Forms.RibbonButton();
-            this.ribbonButtonStroke = new System.Windows.Forms.RibbonButton();
-            this.ribbonButtonCurrent = new System.Windows.Forms.RibbonButton();
-            this.ribbonPanelSetting = new System.Windows.Forms.RibbonPanel();
+            this.ribbonPanelHelp = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonSetting = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonHelp = new System.Windows.Forms.RibbonButton();
+            this.ribbonButtonHomepage = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonAbout = new System.Windows.Forms.RibbonButton();
             this.splitContainerLeft = new System.Windows.Forms.SplitContainer();
             this.treeViewMain = new System.Windows.Forms.TreeView();
@@ -67,6 +66,9 @@
             this.propertyGridMain = new System.Windows.Forms.PropertyGrid();
             this.splitterHorizontal = new System.Windows.Forms.Splitter();
             this.splitContainerRight = new System.Windows.Forms.SplitContainer();
+            this.panelEmpty = new System.Windows.Forms.Panel();
+            this.messageListView = new gtLibrary.MessageListView();
+            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panelForce = new System.Windows.Forms.Panel();
             this.labelN_Z = new System.Windows.Forms.Label();
             this.labelN_Y = new System.Windows.Forms.Label();
@@ -80,9 +82,6 @@
             this.textBoxForceX = new System.Windows.Forms.TextBox();
             this.pictureBoxForce = new System.Windows.Forms.PictureBox();
             this.buttonExperimentForce = new System.Windows.Forms.Button();
-            this.messageListView = new gtLibrary.MessageListView();
-            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.panelEmpty = new System.Windows.Forms.Panel();
             this.panelSteel = new System.Windows.Forms.Panel();
             this.chartBHCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.panelMagnet = new System.Windows.Forms.Panel();
@@ -219,7 +218,7 @@
             this.ribbonTabMenu.Panels.Add(this.ribbonPanelFile);
             this.ribbonTabMenu.Panels.Add(this.ribbonPanelDesign);
             this.ribbonTabMenu.Panels.Add(this.ribbonPanelExperiment);
-            this.ribbonTabMenu.Panels.Add(this.ribbonPanelSetting);
+            this.ribbonTabMenu.Panels.Add(this.ribbonPanelHelp);
             this.ribbonTabMenu.Text = "Menu";
             // 
             // ribbonPanelFile
@@ -305,8 +304,6 @@
             // ribbonPanelExperiment
             // 
             this.ribbonPanelExperiment.Items.Add(this.ribbonButtonForce);
-            this.ribbonPanelExperiment.Items.Add(this.ribbonButtonStroke);
-            this.ribbonPanelExperiment.Items.Add(this.ribbonButtonCurrent);
             this.ribbonPanelExperiment.Text = "EXPERIMENT";
             // 
             // ribbonButtonForce
@@ -317,28 +314,13 @@
             this.ribbonButtonForce.Text = "Force";
             this.ribbonButtonForce.Click += new System.EventHandler(this.ribbonButtonForce_Click);
             // 
-            // ribbonButtonStroke
+            // ribbonPanelHelp
             // 
-            this.ribbonButtonStroke.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonStroke.Image")));
-            this.ribbonButtonStroke.MinimumSize = new System.Drawing.Size(60, 0);
-            this.ribbonButtonStroke.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonStroke.SmallImage")));
-            this.ribbonButtonStroke.Text = "Stroke";
-            this.ribbonButtonStroke.Visible = false;
-            // 
-            // ribbonButtonCurrent
-            // 
-            this.ribbonButtonCurrent.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonCurrent.Image")));
-            this.ribbonButtonCurrent.MinimumSize = new System.Drawing.Size(60, 0);
-            this.ribbonButtonCurrent.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonCurrent.SmallImage")));
-            this.ribbonButtonCurrent.Text = "Current";
-            this.ribbonButtonCurrent.Visible = false;
-            // 
-            // ribbonPanelSetting
-            // 
-            this.ribbonPanelSetting.Items.Add(this.ribbonButtonSetting);
-            this.ribbonPanelSetting.Items.Add(this.ribbonButtonHelp);
-            this.ribbonPanelSetting.Items.Add(this.ribbonButtonAbout);
-            this.ribbonPanelSetting.Text = "SETTING";
+            this.ribbonPanelHelp.Items.Add(this.ribbonButtonSetting);
+            this.ribbonPanelHelp.Items.Add(this.ribbonButtonHelp);
+            this.ribbonPanelHelp.Items.Add(this.ribbonButtonHomepage);
+            this.ribbonPanelHelp.Items.Add(this.ribbonButtonAbout);
+            this.ribbonPanelHelp.Text = "HELP";
             // 
             // ribbonButtonSetting
             // 
@@ -355,6 +337,13 @@
             this.ribbonButtonHelp.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonHelp.SmallImage")));
             this.ribbonButtonHelp.Text = "Help";
             this.ribbonButtonHelp.Click += new System.EventHandler(this.ribbonButtonHelp_Click);
+            // 
+            // ribbonButtonHomepage
+            // 
+            this.ribbonButtonHomepage.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonHomepage.Image")));
+            this.ribbonButtonHomepage.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonHomepage.SmallImage")));
+            this.ribbonButtonHomepage.Text = "Homepage";
+            this.ribbonButtonHomepage.Click += new System.EventHandler(this.ribbonButtonHomepage_Click);
             // 
             // ribbonButtonAbout
             // 
@@ -447,6 +436,33 @@
             this.splitContainerRight.Size = new System.Drawing.Size(746, 744);
             this.splitContainerRight.SplitterDistance = 558;
             this.splitContainerRight.TabIndex = 3;
+            // 
+            // panelEmpty
+            // 
+            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
+            this.panelEmpty.Name = "panelEmpty";
+            this.panelEmpty.Size = new System.Drawing.Size(742, 554);
+            this.panelEmpty.TabIndex = 0;
+            // 
+            // messageListView
+            // 
+            this.messageListView.BackColor = System.Drawing.Color.Ivory;
+            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderMessage});
+            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.messageListView.HideSelection = false;
+            this.messageListView.Location = new System.Drawing.Point(0, 0);
+            this.messageListView.Name = "messageListView";
+            this.messageListView.Size = new System.Drawing.Size(742, 178);
+            this.messageListView.TabIndex = 1;
+            this.messageListView.UseCompatibleStateImageBehavior = false;
+            this.messageListView.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeaderMessage
+            // 
+            this.columnHeaderMessage.Width = 732;
             // 
             // panelForce
             // 
@@ -574,32 +590,6 @@
             this.buttonExperimentForce.Text = "Force Test";
             this.buttonExperimentForce.UseVisualStyleBackColor = true;
             this.buttonExperimentForce.Click += new System.EventHandler(this.buttonExperimentForce_Click);
-            // 
-            // messageListView
-            // 
-            this.messageListView.BackColor = System.Drawing.Color.Ivory;
-            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderMessage});
-            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.messageListView.Location = new System.Drawing.Point(0, 0);
-            this.messageListView.Name = "messageListView";
-            this.messageListView.Size = new System.Drawing.Size(742, 178);
-            this.messageListView.TabIndex = 1;
-            this.messageListView.UseCompatibleStateImageBehavior = false;
-            this.messageListView.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeaderMessage
-            // 
-            this.columnHeaderMessage.Width = 732;
-            // 
-            // panelEmpty
-            // 
-            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
-            this.panelEmpty.Name = "panelEmpty";
-            this.panelEmpty.Size = new System.Drawing.Size(742, 554);
-            this.panelEmpty.TabIndex = 0;
             // 
             // panelSteel
             // 
@@ -921,8 +911,7 @@
         private System.Windows.Forms.RibbonButton ribbonButtonSteel;
         private System.Windows.Forms.RibbonPanel ribbonPanelExperiment;
         private System.Windows.Forms.RibbonButton ribbonButtonForce;
-        private System.Windows.Forms.RibbonButton ribbonButtonStroke;
-        private System.Windows.Forms.RibbonPanel ribbonPanelSetting;
+        private System.Windows.Forms.RibbonPanel ribbonPanelHelp;
         private System.Windows.Forms.RibbonButton ribbonButtonSetting;
         private System.Windows.Forms.RibbonButton ribbonButtonHelp;
         private System.Windows.Forms.RibbonButton ribbonButtonAbout;
@@ -966,7 +955,6 @@
         private System.Windows.Forms.RibbonOrbMenuItem ribbonOrbMenuItemSaveAs;
         private System.Windows.Forms.RibbonSeparator ribbonSeparator2;
         private System.Windows.Forms.RibbonOrbMenuItem ribbonOrbMenuItemExit;
-        private System.Windows.Forms.RibbonButton ribbonButtonCurrent;
         private System.Windows.Forms.Panel panelCurrent;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartCurrentResult;
         private System.Windows.Forms.Button buttonLoadCurrentResult;
@@ -983,6 +971,7 @@
         private System.Windows.Forms.Label labelN_Z;
         private System.Windows.Forms.Label labelN_Y;
         private System.Windows.Forms.RibbonButton ribbonButtonShape;
-	}
+        private System.Windows.Forms.RibbonButton ribbonButtonHomepage;
+    }
 }
 

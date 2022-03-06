@@ -111,6 +111,9 @@ namespace DoSA
                 Environment.Exit(0);
             }
 
+            // 설치버전을 확인 한다.
+            checkDoSAVersion();
+
             initializeProgram();
 
             // 환경설정의 기본 작업디렉토리의 해당 프로그램의 디렉토리로 일단 설정한다.
@@ -137,14 +140,22 @@ namespace DoSA
             }                
         }
 
-        private void checkVersion()
+        //----------- Update Dialog Test --------------
+        // - WiFi 를 연결하고, AssemblyInfo 에서 버전을 임의로 낮춘다.
+        private void checkDoSAVersion()
         {
             try
             {
                 // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
                 string strNewVersion = new WebClient().DownloadString("http://www.actuator.or.kr/DoSA_3D_Version.txt");
-                
-                string strVersionPassFileFullName = Path.Combine(CSettingData.m_strProgramDirName, "VersionPass.txt");
+
+                string strAppDataPath = Environment.GetEnvironmentVariable("APPDATA");
+                string strSettingFilePath = Path.Combine(strAppDataPath, "DoSA-Open_3D");
+
+                if (m_manageFile.isExistDirectory(strSettingFilePath) == false)
+                    m_manageFile.createDirectory(strSettingFilePath);
+
+                string strVersionPassFileFullName = Path.Combine(strSettingFilePath, "VersionPass.txt");
 
                 /// 버전관리 유의사항
                 /// 
@@ -155,6 +166,21 @@ namespace DoSA
                 /// AssemblyFileVersion 는 직접 읽어오지 못해서 여기서도 DoSA 실행파일의 버전을 읽어서 ProductVersion 을 읽어낸다.
                 string strEXE_FileName = System.Reflection.Assembly.GetExecutingAssembly().Location;
                 string strProductVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(strEXE_FileName).ProductVersion;
+
+                // Version 뒤에 Update 내용을 붙히려다가 하위호환 문제로 포기했다.
+                //
+                //string[] arrayUpdateInform = strUpdateInform.Split('.');
+
+                //string strNewVersion = string.Empty;
+                //string strMainUpdateContents = string.Empty;
+
+                //if (arrayUpdateInform.Length == 5)
+                //{
+                //    int index = strUpdateInform.LastIndexOf(".");
+
+                //    strNewVersion = strUpdateInform.Remove(index);
+                //    strMainUpdateContents = arrayUpdateInform[4];
+                //}
 
                 string[] arrayNewVersion = strNewVersion.Split('.');
                 string[] arrayProductVersion = strProductVersion.Split('.');
@@ -198,7 +224,7 @@ namespace DoSA
 
                         iPassVersion = 0;
 
-                        // 3 자리만 사용한다. 마지막 자리는 너무 자주 버전업이 되어서 사용자들에 불편을 준다
+                        // 업그레이드 확인은 셋째 자리수로 결정된다. (마지막 자리수는 사용되지 않는다.)
                         for (int i = 0; i < 3; i++)
                             iPassVersion += (int)(Convert.ToInt32(arrayPassVersion[i]) * Math.Pow(10.0, (double)(2 - i)));
 
@@ -217,7 +243,10 @@ namespace DoSA
                 // 신규버전을 알리는 창을 띄운다.
                 if(bVersionCheckDialog == true)
                 {
-                    PopupNewVersion formNewVersion = new PopupNewVersion(strNewVersion, strProductVersion);
+                    // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
+                    string strMainUpdateContents = new WebClient().DownloadString("http://www.actuator.or.kr/DoSA_3D_Update_Contents.txt");
+
+                    PopupNewVersion formNewVersion = new PopupNewVersion(strNewVersion, strProductVersion, strMainUpdateContents);
                     formNewVersion.StartPosition = FormStartPosition.CenterParent;
 
                     formNewVersion.ShowDialog();
@@ -233,9 +262,19 @@ namespace DoSA
                         string target;
 
                         if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                            target = "http://solenoid.or.kr/index_dosa_open_3d_kor.html";
+                        {
+                            target = "https://solenoid.or.kr/direct_kor.php?address=https://solenoid.or.kr/openactuator/dosa_open_3d_kor.htm";
+
+                            // DoSA 이전 버전의 주소 설정이 아래와 같아서 해당 html 을 삭제하고 못하고 있다.
+                            //target = "http://solenoid.or.kr/index_dosa_open_3d_kor.html";
+                        }
                         else
-                            target = "http://solenoid.or.kr/index_dosa_open_3d_eng.html";
+                        {
+                            target = "https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/openactuator/dosa_open_3d_eng.htm";
+
+                            // DoSA 이전 버전의 주소 설정이 아래와 같아서 해당 html 을 삭제하고 못하고 있다.
+                            //target = "http://solenoid.or.kr/index_dosa_open_3d_eng.html";
+                        }
 
                         try
                         {
@@ -276,9 +315,6 @@ namespace DoSA
         {
             try
             {
-                // 설치버전을 확인 한다.
-                checkVersion();
-
                 /// Net Framework V4.51 이전버전이 설치 되었는지를 확인한다.
                 bool retFreamework = checkFramework451();
 
@@ -1065,12 +1101,41 @@ namespace DoSA
             frmHelp.ShowDialog();
         }
 
+        private void ribbonButtonHomepage_Click(object sender, EventArgs e)
+        {
+            string target;
+
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                target = "https://solenoid.or.kr/index_kor.html";
+            }
+            else
+            {
+                target = "https://solenoid.or.kr/index_eng.html";
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(target);
+            }
+            catch (System.ComponentModel.Win32Exception noBrowser)
+            {
+                if (noBrowser.ErrorCode == -2147467259)
+                    CNotice.printTrace(noBrowser.Message);
+            }
+            catch (System.Exception other)
+            {
+                CNotice.printTrace(other.Message);
+            }
+        }
+
         private void ribbonButtonAbout_Click(object sender, EventArgs e)
         {
             PopupAboutBox frmAbout = new PopupAboutBox();
 
             frmAbout.ShowDialog();
         }
+
 
         #endregion
 

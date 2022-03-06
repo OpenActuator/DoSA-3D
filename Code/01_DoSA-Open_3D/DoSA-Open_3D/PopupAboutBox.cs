@@ -29,7 +29,7 @@ namespace DoSA
             if(CSettingData.m_emLanguage == EMLanguage.Korean)
             {
                 strDonation = "기여하기";
-                strQnaBoard = "QnA 게시판";
+                strQnaBoard = "홈페이지";
 
                 strDescription = @"DoSA-Open 은 
 정보통신산업진흥원 (NIPA) 의 지원사업으로 개발이 시작된 프로그램입니다.
@@ -46,7 +46,7 @@ namespace DoSA
             else
             {
                 strDonation = "Donation";
-                strQnaBoard = "QnA Board";
+                strQnaBoard = "Homepage";
 
                 strDescription = @"DoSA-Open is open source actuator design software. 
 Anyone can use it free of charge in the company.
@@ -111,7 +111,7 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
             this.textBoxOpenLicense.Text = strOpenLicense;
 
             this.buttonDonation.Text = strDonation;
-            this.buttonQnA.Text = strQnaBoard;
+            this.buttonHomepage.Text = strQnaBoard;
         }
 
         #region Assembly Attribute Accessors
@@ -195,17 +195,17 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
         #endregion
 
 
-        private void buttonQnA_Click(object sender, EventArgs e)
+        private void buttonHomepage_Click(object sender, EventArgs e)
         {
             string target;
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                target = "http://www.solenoid.or.kr/direct/index_dosa_qna_kor.html";
+                target = "https://solenoid.or.kr/index_kor.html";
             }
             else
             {
-                target = "http://www.solenoid.or.kr/direct/index_dosa_qna_eng.html";
+                target = "https://solenoid.or.kr/index_eng.html";
             }
 
             try
@@ -248,11 +248,11 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                target = "http://www.solenoid.or.kr/direct/index_dosa_donation_kor.html";
+                target = "https://solenoid.or.kr/direct_kor.php?address=https://solenoid.or.kr/openactuator/dosa_donation_kor.htm";
             }
             else
             {
-                target = "http://www.solenoid.or.kr/direct/index_dosa_donation_eng.html";
+                target = "https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/openactuator/dosa_donation_eng.htm";
             }
 
             try

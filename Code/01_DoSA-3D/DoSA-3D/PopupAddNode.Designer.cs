@@ -59,6 +59,7 @@
             this.columnHeaderPart});
             this.listViewNodeName.FullRowSelect = true;
             this.listViewNodeName.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.listViewNodeName.HideSelection = false;
             this.listViewNodeName.Location = new System.Drawing.Point(18, 36);
             this.listViewNodeName.MultiSelect = false;
             this.listViewNodeName.Name = "listViewNodeName";
@@ -107,7 +108,7 @@
             this.groupBoxExperiments.Size = new System.Drawing.Size(238, 80);
             this.groupBoxExperiments.TabIndex = 3;
             this.groupBoxExperiments.TabStop = false;
-            this.groupBoxExperiments.Text = "Experiments";
+            this.groupBoxExperiments.Text = "Test Name";
             // 
             // groupBoxCheckPartsName
             // 

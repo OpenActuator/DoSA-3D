@@ -1,9 +1,9 @@
 $begin "DoSA_3D_Project"
-	Writed=2020-12-03 오전 11:20:09
-	DoSA_Version=0.9.11.0
-	File_Version=0.9.11.0
+	Writed=3/19/2022 11:36:31 PM
+	DoSA_Version=0.9.13.0
+	File_Version=0.9.13.0
 	$begin "Design"
-		DesignName=LV
+		DesignName=VCM
 		AllShapeName=Plate,Magnet,Case,Coil,
 		RemainedShapeName=
 		ShapeMinX=-2.25
@@ -33,27 +33,27 @@ $begin "DoSA_3D_Project"
 			VerticalCoefficient=1.13
 			ResistanceCoefficient=1.1
 		$end "Coil"
-		$begin "Steel"
-			NodeName=Plate
-			KindKey=STEEL
-			MovingParts=FIXED
-			Material=SUS_430
-		$end "Steel"
 		$begin "Magnet"
 			NodeName=Magnet
 			KindKey=MAGNET
 			MovingParts=FIXED
-			Material=NdFeB_52
+			Material=NdFeB_40
 			Hc=969969
 			Br=1.26497
 			MagnetPlane=XY_Plane_Z
 			MagnetAngle=90
 		$end "Magnet"
 		$begin "Steel"
+			NodeName=Plate
+			KindKey=STEEL
+			MovingParts=FIXED
+			Material=SUS_430
+		$end "Steel"
+		$begin "Steel"
 			NodeName=Case
 			KindKey=STEEL
 			MovingParts=FIXED
-			Material=1010_Steel
+			Material=SUS_430
 		$end "Steel"
 		$begin "ForceExperiment"
 			NodeName=Force

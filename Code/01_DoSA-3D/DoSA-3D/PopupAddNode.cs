@@ -48,7 +48,7 @@ namespace DoSA
                     break;
 
                 case EMKind.FORCE_EXPERIMENT:
-                    this.Text = "Input a Force Experiment Name";
+                    this.Text = "Input a Force Test Name";
                     break;
 
                 case EMKind.SHOW_LIST:

@@ -269,14 +269,14 @@ namespace DoSA
 
                         if (CSettingData.m_emLanguage == EMLanguage.Korean)
                         {
-                            target = "https://solenoid.or.kr/direct_kor.php?address=https://solenoid.or.kr/openactuator/dosa_open_3d_kor.htm";
+                            target = "https://solenoid.or.kr/direct_kor.php?address=https://solenoid.or.kr/openactuator/dosa_3d_kor.htm";
 
                             // DoSA 이전 버전의 주소 설정이 아래와 같아서 해당 html 을 삭제하고 못하고 있다.
                             //target = "http://solenoid.or.kr/index_dosa_open_3d_kor.html";
                         }
                         else
                         {
-                            target = "https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/openactuator/dosa_open_3d_eng.htm";
+                            target = "https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/openactuator/dosa_3d_eng.htm";
 
                             // DoSA 이전 버전의 주소 설정이 아래와 같아서 해당 html 을 삭제하고 못하고 있다.
                             //target = "http://solenoid.or.kr/index_dosa_open_3d_eng.html";
@@ -321,8 +321,11 @@ namespace DoSA
         /// 2023-03-18일 까지 코드를 유지하고 이후는 삭제한다.
         /// 
         /// 2022-03-18 의 DoSA-3D Ver0.9.12.7 에서 
-        /// 프로그램 명칭을 DoSA-Open_2D --> DoSA-2D 로 변경함에 의해 발생한
+        /// 프로그램 명칭을 DoSA-Open_2D --> DoSA-2D 로 변경되어서 남게된 
         /// 기존 설치 프로그램과 작업환경 디렉토리를 삭제한다.
+        /// 
+        /// 2022-03-19 의 DoSA-3D Ver0.9.13.0 에서
+        /// 샘플 명칭이 LV --> VCM 으로 변경되어서 필요없는 기존 설치 예제 디렉토리를 삭제한다.
         /// </summary>
         private void deleteOldDirectories()
         {
@@ -332,6 +335,9 @@ namespace DoSA
 
             string strParentDirPath = Path.GetDirectoryName(CSettingData.m_strProgramDirPath);
             string strOldInstallDirPath = Path.Combine(strParentDirPath, "DoSA-Open_3D");
+
+            string[] arrayDirName = { strParentDirPath, "DoSA-3D", "Samples", "LV" };
+            string strOldExampleDirPath = Path.Combine(arrayDirName);
 
             // 기존 작업환경 디렉토리가 있으면 디렉토리을 바꾸어 복사하고 기존 디렉토리는 삭제한다.
             if (m_manageFile.isExistDirectory(strOldSettingDirPath) == true)
@@ -344,6 +350,12 @@ namespace DoSA
             if (m_manageFile.isExistDirectory(strOldInstallDirPath) == true)
             {
                 m_manageFile.deleteDirectory(strOldInstallDirPath);
+            }
+
+            // 기존 사용 Example 디렉토리가 있으면 삭제한다.
+            if (m_manageFile.isExistDirectory(strOldExampleDirPath) == true)
+            {
+                m_manageFile.deleteDirectory(strOldExampleDirPath);
             }
 
         }

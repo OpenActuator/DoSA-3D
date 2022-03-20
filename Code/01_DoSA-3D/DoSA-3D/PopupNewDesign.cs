@@ -31,7 +31,7 @@ namespace DoSA
                 groupBoxComment.Text = "기능 제한";
                 labelComment1.Text = "1. 코일 형상";
                 labelComment2.Text = "- 코일 중심축은 Y 축이어야 한다.";
-                labelComment3.Text = "- 원통코일 형태로 전류가 인가된다.";
+                labelComment3.Text = "- 전류는 원통코일 형태로 인가된다.";
                 labelComment4.Text = "2. 구동부 제한";
                 labelComment5.Text = "- 구동부는 하나의 부품만을 지원하고 있다.";
             }

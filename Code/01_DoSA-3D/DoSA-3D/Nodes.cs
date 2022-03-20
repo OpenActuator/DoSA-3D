@@ -37,7 +37,7 @@ namespace Nodes
         private string m_nodeName;
 
         ///  \t\t\t 갯수가 많을수록 해당 카테고리가 상측으로 올라간다.
-        [DisplayNameAttribute("Node Name"), CategoryAttribute("\t\t\tCommon Fields"), DescriptionAttribute("Part or Experiment name")]
+        [DisplayNameAttribute("Node Name"), CategoryAttribute("\t\t\tCommon Fields"), DescriptionAttribute("Part or Test name")]
         public string NodeName
         {
             get { return m_nodeName; }
@@ -252,7 +252,7 @@ namespace Nodes
                         if (CSettingData.m_emLanguage == EMLanguage.Korean)
                             CNotice.noticeWarning("동일한 이름의 가상실험이 이미 존재 합니다.");
                         else
-                            CNotice.noticeWarning("There is the same name experiment already.");
+                            CNotice.noticeWarning("There is the same name test already.");
 
                         return false;
                     }                        

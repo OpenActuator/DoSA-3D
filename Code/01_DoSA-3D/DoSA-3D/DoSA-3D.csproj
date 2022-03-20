@@ -174,8 +174,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="ClassDiagramNode.cd" />
-    <None Include="ClassDiagramScript.cd" />
     <None Include="Help\Install_Guide_ENG.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -212,13 +210,13 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="Samples\LV\LV.dsa">
+    <None Include="Samples\VCM\VCM.dsa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Samples\LV\Shape\LV.msh">
+    <None Include="Samples\VCM\Shape\VCM.msh">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Samples\LV\Shape\LV.step">
+    <None Include="Samples\VCM\Shape\VCM.step">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Samples\Solenoid\Shape\Solenoid.msh">
@@ -256,7 +254,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="DoSA.ico" />
-    <Content Include="Samples\LV\Shape\LV.txt">
+    <Content Include="Samples\VCM\Shape\VCM.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Samples\Solenoid\Shape\Solenoid.txt">

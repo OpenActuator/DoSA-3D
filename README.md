@@ -1,6 +1,6 @@
 # DoSA-3D (Ver 0.9.13.0)
 
-This program is an open source software for Solenoid &amp; Actuator design
+This program is an open source software for solenoids &amp; actuators
 
 1. Introduction Video : https://youtu.be/8x-lU3Ya1F4 <br>
 2. Installation Video : https://youtu.be/7CGu60M-r9Y <br>

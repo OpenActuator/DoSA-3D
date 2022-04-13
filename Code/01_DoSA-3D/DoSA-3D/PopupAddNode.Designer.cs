@@ -34,12 +34,12 @@
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.textBoxNodeName = new System.Windows.Forms.TextBox();
-            this.groupBoxExperiments = new System.Windows.Forms.GroupBox();
+            this.groupBoxTests = new System.Windows.Forms.GroupBox();
             this.groupBoxCheckPartsName = new System.Windows.Forms.GroupBox();
             this.labelCheckPartsName2 = new System.Windows.Forms.Label();
             this.labelCheckPartsName1 = new System.Windows.Forms.Label();
             this.groupBoxParts.SuspendLayout();
-            this.groupBoxExperiments.SuspendLayout();
+            this.groupBoxTests.SuspendLayout();
             this.groupBoxCheckPartsName.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -100,15 +100,15 @@
             this.textBoxNodeName.TabIndex = 1;
             this.textBoxNodeName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxNodeName_KeyPress);
             // 
-            // groupBoxExperiments
+            // groupBoxTests
             // 
-            this.groupBoxExperiments.Controls.Add(this.textBoxNodeName);
-            this.groupBoxExperiments.Location = new System.Drawing.Point(239, 12);
-            this.groupBoxExperiments.Name = "groupBoxExperiments";
-            this.groupBoxExperiments.Size = new System.Drawing.Size(238, 80);
-            this.groupBoxExperiments.TabIndex = 3;
-            this.groupBoxExperiments.TabStop = false;
-            this.groupBoxExperiments.Text = "Test Name";
+            this.groupBoxTests.Controls.Add(this.textBoxNodeName);
+            this.groupBoxTests.Location = new System.Drawing.Point(239, 12);
+            this.groupBoxTests.Name = "groupBoxTests";
+            this.groupBoxTests.Size = new System.Drawing.Size(238, 80);
+            this.groupBoxTests.TabIndex = 3;
+            this.groupBoxTests.TabStop = false;
+            this.groupBoxTests.Text = "Test Name";
             // 
             // groupBoxCheckPartsName
             // 
@@ -145,7 +145,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(489, 302);
             this.Controls.Add(this.groupBoxCheckPartsName);
-            this.Controls.Add(this.groupBoxExperiments);
+            this.Controls.Add(this.groupBoxTests);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.groupBoxParts);
@@ -154,8 +154,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Add Node";
             this.groupBoxParts.ResumeLayout(false);
-            this.groupBoxExperiments.ResumeLayout(false);
-            this.groupBoxExperiments.PerformLayout();
+            this.groupBoxTests.ResumeLayout(false);
+            this.groupBoxTests.PerformLayout();
             this.groupBoxCheckPartsName.ResumeLayout(false);
             this.groupBoxCheckPartsName.PerformLayout();
             this.ResumeLayout(false);
@@ -169,7 +169,7 @@
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.ListView listViewNodeName;
         private System.Windows.Forms.TextBox textBoxNodeName;
-        private System.Windows.Forms.GroupBox groupBoxExperiments;
+        private System.Windows.Forms.GroupBox groupBoxTests;
         private System.Windows.Forms.ColumnHeader columnHeaderPart;
         private System.Windows.Forms.GroupBox groupBoxCheckPartsName;
         private System.Windows.Forms.Label labelCheckPartsName2;

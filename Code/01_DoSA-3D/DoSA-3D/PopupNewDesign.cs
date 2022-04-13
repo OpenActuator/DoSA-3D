@@ -37,7 +37,7 @@ namespace DoSA
             }
             else
             {
-                groupBoxComment.Text = "Limited functionality";
+                groupBoxComment.Text = "Functional limitations";
                 labelComment1.Text = " 1. Coil Shape";
                 labelComment2.Text = "- Coil center axis should be Y axis.";
                 labelComment3.Text = "- The current is applied like a cylindrical coil.";

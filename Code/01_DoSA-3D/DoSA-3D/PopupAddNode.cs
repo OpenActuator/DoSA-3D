@@ -15,7 +15,7 @@ using System.IO;
 using System.Diagnostics;
 
 using Parts;
-using Experiments;
+using Tests;
 using Nodes;
 
 using gtLibrary;
@@ -47,7 +47,7 @@ namespace DoSA
                     this.Text = "Select a Steel Part";
                     break;
 
-                case EMKind.FORCE_EXPERIMENT:
+                case EMKind.FORCE_TEST:
                     this.Text = "Input a Force Test Name";
                     break;
 
@@ -69,7 +69,7 @@ namespace DoSA
             // 형상 Node 이면 콤보박스를 활성 시킨다.
             if (kind == EMKind.COIL || kind == EMKind.MAGNET || kind == EMKind.STEEL || kind == EMKind.SHOW_LIST)
             {
-                groupBoxExperiments.Enabled = false;
+                groupBoxTests.Enabled = false;
                 textBoxNodeName.Enabled = false;
 
                 listViewNodeName.Enabled = true;
@@ -105,7 +105,7 @@ namespace DoSA
 
                 switch (kind)
                 {
-                    case EMKind.FORCE_EXPERIMENT:
+                    case EMKind.FORCE_TEST:
                         textBoxNodeName.Text = "Force";
                         break;
 

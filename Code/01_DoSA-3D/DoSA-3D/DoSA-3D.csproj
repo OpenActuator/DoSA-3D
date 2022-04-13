@@ -106,7 +106,7 @@
     <Compile Include="PopupAddNode.designer.cs">
       <DependentUpon>PopupAddNode.cs</DependentUpon>
     </Compile>
-    <Compile Include="Experiments.cs" />
+    <Compile Include="Tests.cs" />
     <Compile Include="FormMain.cs">
       <SubType>Form</SubType>
     </Compile>

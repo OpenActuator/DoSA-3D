@@ -12,7 +12,7 @@ using System.IO;
 using System.Xml.Serialization;
 using gtLibrary;
 
-using Experiments;
+using Tests;
 
 namespace DoSA
 {

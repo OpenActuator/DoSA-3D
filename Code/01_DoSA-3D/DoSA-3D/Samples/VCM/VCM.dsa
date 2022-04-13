@@ -1,7 +1,7 @@
 $begin "DoSA_3D_Project"
-	Writed=3/19/2022 11:36:31 PM
-	DoSA_Version=0.9.13.0
-	File_Version=0.9.13.0
+	Writed=4/13/2022 10:10:37 PM
+	DoSA_Version=0.9.13.3
+	File_Version=0.9.13.3
 	$begin "Design"
 		DesignName=VCM
 		AllShapeName=Plate,Magnet,Case,Coil,
@@ -55,9 +55,9 @@ $begin "DoSA_3D_Project"
 			MovingParts=FIXED
 			Material=SUS_430
 		$end "Steel"
-		$begin "ForceExperiment"
+		$begin "ForceTest"
 			NodeName=Force
-			KindKey=FORCE_EXPERIMENT
+			KindKey=FORCE_TEST
 			MeshSizePercent=5
 			ActuatorType=VCM
 			Voltage=2.5
@@ -65,6 +65,6 @@ $begin "DoSA_3D_Project"
 			MovingY=0
 			MovingX=0
 			MovingZ=0
-		$end "ForceExperiment"
+		$end "ForceTest"
 	$end "Design"
 $end "DoSA_3D_Project"

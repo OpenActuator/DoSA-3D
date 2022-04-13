@@ -17,7 +17,7 @@ using System.Threading;
 using System.Runtime.InteropServices;
 
 using Parts;
-using Experiments;
+using Tests;
 using Nodes;
 
 using gtLibrary;
@@ -27,12 +27,12 @@ using System.Resources;
 
 namespace Onelab
 {
-    public enum EMExperimentType
+    public enum EMTestType
     {
-        FORCE_EXPERIMENT,
-        STROKE_EXPERIMENT,
-        CURRENT_EXPERIMENT,
-        MOVEMENT_EXPERIMENT
+        FORCE_TEST,
+        STROKE_TEST,
+        CURRENT_TEST,
+        MOVEMENT_TEST
     }
 
     public class COnelab

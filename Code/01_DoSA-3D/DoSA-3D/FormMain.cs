@@ -25,7 +25,7 @@ using System.Globalization;
 // DoSA 생성 클래스들을 오픈한다
 // 같은 namespace 를 사용해도 가능하나 ClassView 에서 보기가 어려워서 구분해서 사용한다.
 using Parts;
-using Experiments;
+using Tests;
 using Nodes;
 using gtLibrary;
 using Onelab;
@@ -50,7 +50,7 @@ namespace DoSA
 
         public CDesign m_design = new CDesign();
 
-        public ResourceManager m_resManager = null;        
+        public ResourceManager m_resManager = null;
 
         #endregion
 
@@ -173,20 +173,6 @@ namespace DoSA
                 string strEXE_FileName = System.Reflection.Assembly.GetExecutingAssembly().Location;
                 string strProductVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(strEXE_FileName).ProductVersion;
 
-                // Version 뒤에 Update 내용을 붙히려다가 하위호환 문제로 포기했다.
-                //
-                //string[] arrayUpdateInform = strUpdateInform.Split('.');
-
-                //string strNewVersion = string.Empty;
-                //string strMainUpdateContents = string.Empty;
-
-                //if (arrayUpdateInform.Length == 5)
-                //{
-                //    int index = strUpdateInform.LastIndexOf(".");
-
-                //    strNewVersion = strUpdateInform.Remove(index);
-                //    strMainUpdateContents = arrayUpdateInform[4];
-                //}
 
                 string[] arrayNewVersion = strNewVersion.Split('.');
                 string[] arrayProductVersion = strProductVersion.Split('.');
@@ -269,17 +255,17 @@ namespace DoSA
 
                         if (CSettingData.m_emLanguage == EMLanguage.Korean)
                         {
-                            target = "https://solenoid.or.kr/direct_kor.php?address=https://solenoid.or.kr/openactuator/dosa_3d_kor.htm";
+                            //target = "https://solenoid.or.kr/direct_kor.php?address=https://solenoid.or.kr/openactuator/dosa_3d_kor.htm";
 
-                            // DoSA 이전 버전의 주소 설정이 아래와 같아서 해당 html 을 삭제하고 못하고 있다.
-                            //target = "http://solenoid.or.kr/index_dosa_open_3d_kor.html";
+                            // DoSA 이전 버전의 주소 설정이 아래와 같아서 html 을 삭제하지 않고 그대로 사용하고 있다.
+                            target = "https://solenoid.or.kr/index_dosa_open_3d_kor.html";
                         }
                         else
                         {
-                            target = "https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/openactuator/dosa_3d_eng.htm";
+                            //target = "https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/openactuator/dosa_3d_eng.htm";
 
-                            // DoSA 이전 버전의 주소 설정이 아래와 같아서 해당 html 을 삭제하고 못하고 있다.
-                            //target = "http://solenoid.or.kr/index_dosa_open_3d_eng.html";
+                            // DoSA 이전 버전의 주소 설정이 아래와 같아서 html 을 삭제하지 않고 그대로 사용하고 있다.
+                            target = "https://solenoid.or.kr/index_dosa_open_3d_eng.html";
                         }
 
                         try
@@ -847,7 +833,7 @@ namespace DoSA
                 TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
                 treeViewMain.Nodes.Add(treeNode);
 
-                treeNode = new TreeNode("Experiments", (int)EMKind.EXPERIMENTS, (int)EMKind.EXPERIMENTS);
+                treeNode = new TreeNode("Tests", (int)EMKind.TESTS, (int)EMKind.TESTS);
                 treeViewMain.Nodes.Add(treeNode);
 
                 // 수정 되었음을 기록한다.
@@ -911,7 +897,7 @@ namespace DoSA
                 TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
                 treeViewMain.Nodes.Add(treeNode);
 
-                treeNode = new TreeNode("Experiments", (int)EMKind.EXPERIMENTS, (int)EMKind.EXPERIMENTS);
+                treeNode = new TreeNode("Tests", (int)EMKind.TESTS, (int)EMKind.TESTS);
                 treeViewMain.Nodes.Add(treeNode);
 
                 foreach (CNode node in m_design.NodeList)
@@ -1124,7 +1110,7 @@ namespace DoSA
 
         private void ribbonButtonForce_Click(object sender, EventArgs e)
         {
-            addRawNode(EMKind.FORCE_EXPERIMENT);
+            addRawNode(EMKind.FORCE_TEST);
         }
         
         private void ribbonButtonSetting_Click(object sender, EventArgs e)
@@ -1148,34 +1134,6 @@ namespace DoSA
             frmHelp.StartPosition = FormStartPosition.CenterParent;
 
             frmHelp.ShowDialog();
-        }
-
-        private void ribbonButtonHomepage_Click(object sender, EventArgs e)
-        {
-            string target;
-
-            if (CSettingData.m_emLanguage == EMLanguage.Korean)
-            {
-                target = "https://solenoid.or.kr/index_kor.html";
-            }
-            else
-            {
-                target = "https://solenoid.or.kr/index_eng.html";
-            }
-
-            try
-            {
-                System.Diagnostics.Process.Start(target);
-            }
-            catch (System.ComponentModel.Win32Exception noBrowser)
-            {
-                if (noBrowser.ErrorCode == -2147467259)
-                    CNotice.printTrace(noBrowser.Message);
-            }
-            catch (System.Exception other)
-            {
-                CNotice.printTrace(other.Message);
-            }
         }
 
         private void ribbonButtonAbout_Click(object sender, EventArgs e)
@@ -1259,73 +1217,73 @@ namespace DoSA
 
         private void buttonForceResult_Click(object sender, EventArgs e)
         {
-            CForceExperiment forceExperiment = (CForceExperiment)propertyGridMain.SelectedObject;
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
 
-            plotForceResult(forceExperiment);
+            plotForceResult(forceTest);
         }
                 
-        private void buttonExperimentForce_Click(object sender, EventArgs e)
+        private void buttonTestForce_Click(object sender, EventArgs e)
         {
-            CForceExperiment forceExperiment = (CForceExperiment)propertyGridMain.SelectedObject;
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
 
             // 현재 시험의 이름을 m_nodeList 에서 찾지 않고
-            // 현재 표시되고 있는 PropertyGird 창에서 Experiment 이름을 찾아 낸다
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            // 현재 표시되고 있는 PropertyGird 창에서 Test 이름을 찾아 낸다
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strImageScriptFileFullName = Path.Combine(strExperimentDirName, "Image.geo");
-            string strMagneticDensityVectorFileFullName = Path.Combine(strExperimentDirName, "b_cut.pos");
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
 
             // 해석 전에 전처리 조건을 확인한다.
-            if (false == isForceExperimentOK(forceExperiment))
+            if (false == isForceTestOK(forceTest))
                 return;
 
             // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
-            if (m_manageFile.isExistDirectory(strExperimentDirName) == true)
+            if (m_manageFile.isExistDirectory(strTestDirName) == true)
             {
                 DialogResult ret = CNotice.noticeWarningOKCancelID("TIAP", "NE");
 
                 if (ret == DialogResult.Cancel)
                     return;
 
-                m_manageFile.deleteDirectory(strExperimentDirName);
+                m_manageFile.deleteDirectory(strTestDirName);
 
                 // 삭제되는 시간이 필요한 듯 한다.
                 Thread.Sleep(1000);
 
                 /// VCM Type 으로 해석이 되어 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
-                string strExperimentZeroDirName = strExperimentDirName + "_Zero";
+                string strTestZeroDirName = strTestDirName + "_Zero";
 
-                if (m_manageFile.isExistDirectory(strExperimentZeroDirName ) == true)
-                    m_manageFile.deleteDirectory(strExperimentZeroDirName);
+                if (m_manageFile.isExistDirectory(strTestZeroDirName ) == true)
+                    m_manageFile.deleteDirectory(strTestZeroDirName);
                 
                 // 삭제되는 시간이 필요한 듯 한다.
                 Thread.Sleep(1000);
             }
 
             // 시험 디렉토리를 생성한다.
-            m_manageFile.createDirectory(strExperimentDirName);
+            m_manageFile.createDirectory(strTestDirName);
 
             // 해석전 현 설정을 저장한다.
             saveDesignFile();
 
-            solveForce(forceExperiment);
+            solveForce(forceTest);
 
             // 해석 결과 이미지가 있다면 후처리를 진행한다.
             if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == true)
             {
                 /// 영구자석이 포함된 VCM 방식인 경우는 자기력의 정확도가 크게 떨어진다.
                 /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
-                if (forceExperiment.ActuatorType == EMActuatorType.VCM)
+                if (forceTest.ActuatorType == EMActuatorType.VCM)
                 {
                     /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
-                    CForceExperiment forceExperimentZeroCurrent = forceExperiment.Clone();
+                    CForceTest forceTestZeroCurrent = forceTest.Clone();
 
-                    forceExperimentZeroCurrent.NodeName = forceExperiment.NodeName + "_Zero";
+                    forceTestZeroCurrent.NodeName = forceTest.NodeName + "_Zero";
                     // 해석에 사용되는 전류값은 전압과 저항으로 다시 계산되기 때문에 전류 값을 0으로 하지않고 전압 값을 0으로 설정한다.
-                    forceExperimentZeroCurrent.Voltage = 0.0f;
+                    forceTestZeroCurrent.Voltage = 0.0f;
 
-                    solveForce(forceExperimentZeroCurrent);
+                    solveForce(forceTestZeroCurrent);
                 }
 
                 string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
@@ -1343,7 +1301,7 @@ namespace DoSA
                 // Maxwell 의 종료시간을 기다려준다.
                 Thread.Sleep(500);
 
-                plotForceResult(forceExperiment);
+                plotForceResult(forceTest);
 
                 // Result 버튼이 동작하게 한다.
                 buttonLoadForceResult.Enabled = true;
@@ -1357,31 +1315,31 @@ namespace DoSA
 
         #region------------------------- Script 작업 함수 ---------------------------
 
-        public bool solveForce(CForceExperiment forceExperiment)
+        public bool solveForce(CForceTest forceTest)
         {
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+            string strSolveScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".pro");
 
             string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
 
-            createDefineGeoFile(forceExperiment);
+            createDefineGeoFile(forceTest);
 
-            createBHProFile(forceExperiment);
+            createBHProFile(forceTest);
 
-            if (false == createDesignGeoFile(forceExperiment))
+            if (false == createDesignGeoFile(forceTest))
                 return false;
 
-            createImageGeoFile(forceExperiment);
+            createImageGeoFile(forceTest);
 
-            createDesignProFile(forceExperiment);
+            createDesignProFile(forceTest);
 
-            addFuncitonToDesignProFile(forceExperiment);
+            addFuncitonToDesignProFile(forceTest);
 
-            addFormulationToDesignProFile(forceExperiment);
+            addFormulationToDesignProFile(forceTest);
 
-            addPostToDesignProFile(forceExperiment);
+            addPostToDesignProFile(forceTest);
 
             // Process 의 Arguments 에서 스페이스 문제가 발생한다.
             // 아래와 같이 묶음처리를 사용한다.
@@ -1397,7 +1355,7 @@ namespace DoSA
             return true;
         }
 
-        private void addPostToDesignProFile(CForceExperiment forceExperiment)
+        private void addPostToDesignProFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -1406,10 +1364,10 @@ namespace DoSA
 
             string strOrgStriptContents;
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+            string strSolveScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".pro");
 
             int nCount = 0;
 
@@ -1494,7 +1452,7 @@ namespace DoSA
             }
         }
 
-        private void addFormulationToDesignProFile(CForceExperiment forceExperiment)
+        private void addFormulationToDesignProFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -1503,10 +1461,10 @@ namespace DoSA
 
             string strOrgStriptContents;
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+            string strSolveScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".pro");
 
 
             try
@@ -1556,7 +1514,7 @@ namespace DoSA
             }
         }
 
-        private void addFuncitonToDesignProFile(CForceExperiment forceExperiment)
+        private void addFuncitonToDesignProFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -1565,10 +1523,10 @@ namespace DoSA
 
             string strOrgStriptContents;
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+            string strSolveScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".pro");
 
             string strNodeName;
             string strTemp = string.Empty;
@@ -1596,7 +1554,7 @@ namespace DoSA
                             strOrgStriptContents += String.Format("    mu[vol{0}] = mu0;\n", strNodeName);
                             strOrgStriptContents += String.Format("    nu[vol{0}] = 1.0/mu0;\n\n", strNodeName, strTemp);
 
-                            dCurrent = forceExperiment.Voltage / ((CCoil)node).Resistance;
+                            dCurrent = forceTest.Voltage / ((CCoil)node).Resistance;
 
                             strOrgStriptContents += "    current = " + dCurrent.ToString() + ";\n";
                             strOrgStriptContents += "    coilTurns = " + ((CCoil)node).Turns.ToString() + ";\n\n";
@@ -1700,7 +1658,7 @@ namespace DoSA
             }
         }
 
-        private void createDesignProFile(CForceExperiment forceExperiment)
+        private void createDesignProFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -1709,10 +1667,10 @@ namespace DoSA
 
             string strOrgStriptContents;
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strSolveScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".pro");
+            string strSolveScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".pro");
 
             try
             {
@@ -1808,7 +1766,7 @@ namespace DoSA
             }
         }
 
-        private void createImageGeoFile(CForceExperiment forceExperiment)
+        private void createImageGeoFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -1817,13 +1775,13 @@ namespace DoSA
 
             string strOrgStriptContents;
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
             string strShapeDirName = Path.Combine(m_design.m_strDesignDirPath, "Shape");
 
             string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
-            string strImageScriptFileFullName = Path.Combine(strExperimentDirName, "Image.geo");
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
 
             try
             {
@@ -1841,7 +1799,7 @@ namespace DoSA
             }
         }
 
-        private bool createDesignGeoFile(CForceExperiment forceExperiment)
+        private bool createDesignGeoFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -1850,14 +1808,14 @@ namespace DoSA
 
             string strOrgStriptContents;
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
             string strShapeDirName = Path.Combine(m_design.m_strDesignDirPath, "Shape");
             string strMeshFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".msh");
             string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
 
-            string strGeometryScriptFileFullName = Path.Combine(strExperimentDirName, strExperimentName + ".geo");
+            string strGeometryScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".geo");
 
             try
             {
@@ -1921,8 +1879,8 @@ namespace DoSA
 // 작업 검토 중
 //                    strOrgStriptContents += "volMovingParts = Volume{ " + strMovingPartNames + " };\n\n";
 
-                    strOrgStriptContents += "Translate { " + forceExperiment.MovingX.ToString() + "*mm , " + forceExperiment.MovingY.ToString() + "*mm, " 
-                                            + forceExperiment.MovingZ.ToString() + "*mm } {  Volume{" + strMovingPartNames + "}; }\n\n";
+                    strOrgStriptContents += "Translate { " + forceTest.MovingX.ToString() + "*mm , " + forceTest.MovingY.ToString() + "*mm, " 
+                                            + forceTest.MovingZ.ToString() + "*mm } {  Volume{" + strMovingPartNames + "}; }\n\n";
 
                     strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{" + strMovingPartNames + "}; };\n";
                 }
@@ -1949,7 +1907,7 @@ namespace DoSA
 
                 m_design.calcShapeSize(strMeshFileFullName);
 
-                if (forceExperiment.MeshSizePercent <= 0 || forceExperiment.MeshSizePercent > 100)
+                if (forceTest.MeshSizePercent <= 0 || forceTest.MeshSizePercent > 100)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
                         CNotice.noticeWarning("Mesh Size Percent 가 문제가 있습니다.");
@@ -1961,7 +1919,7 @@ namespace DoSA
 
                 // 볼륨을 길이단위로 바꾸기 위해서 1/3 승을 했다.
                 // 사용하는 Mesh Size Percent 는 환경설정이 아니고 Force 페이지에 있는 값을 사용한다.
-                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * forceExperiment.MeshSizePercent / 100.0f;
+                dMeshSize = Math.Pow(m_design.ShapeVolumeSize, 1.0f / 3.0f) * forceTest.MeshSizePercent / 100.0f;
 
                 // mm -> m 로 단위 변환 
                 dMeshSize = dMeshSize / 1000.0f;
@@ -2066,17 +2024,17 @@ namespace DoSA
             return true;
         }
 
-        private void createBHProFile(CForceExperiment forceExperiment)
+        private void createBHProFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
             CWriteFile writeFile = new CWriteFile();
             List<string> listScriptString = new List<string>();
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strBHProFileFullName = Path.Combine(strExperimentDirName, "BH.pro");
+            string strBHProFileFullName = Path.Combine(strTestDirName, "BH.pro");
 
             string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirPath, "Materials");
             string strSteelMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
@@ -2147,7 +2105,7 @@ namespace DoSA
 
         }
 
-        private void createDefineGeoFile(CForceExperiment forceExperiment)
+        private void createDefineGeoFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -2156,10 +2114,10 @@ namespace DoSA
 
             string strOrgStriptContents;
 
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestName = forceTest.NodeName;
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strDefineGeoFileFullName = Path.Combine(strExperimentDirName, "Define.geo");
+            string strDefineGeoFileFullName = Path.Combine(strTestDirName, "Define.geo");
 
             try
             {
@@ -2232,7 +2190,7 @@ namespace DoSA
                 TreeNode treeNode = new TreeNode("Parts", (int)EMKind.PARTS, (int)EMKind.PARTS);
                 treeViewMain.Nodes.Add(treeNode);
 
-                treeNode = new TreeNode("Experiments", (int)EMKind.EXPERIMENTS, (int)EMKind.EXPERIMENTS);
+                treeNode = new TreeNode("Tests", (int)EMKind.TESTS, (int)EMKind.TESTS);
                 treeViewMain.Nodes.Add(treeNode);
 
                 foreach (CNode node in m_design.NodeList)
@@ -2255,7 +2213,7 @@ namespace DoSA
 
         #region----------------------- 가상시험 관련 -------------------------------
 
-        private bool isForceExperimentOK(CForceExperiment forceExperiment)
+        private bool isForceTestOK(CForceTest forceTest)
         {
             // 1. Moving Part 는 하나만 지원한다.
             //
@@ -2311,14 +2269,14 @@ namespace DoSA
             return true;
         }
 
-        private void plotForceResult(CForceExperiment forceExperiment)
+        private void plotForceResult(CForceTest forceTest)
         {
-            string strExperimentName = forceExperiment.NodeName;
-            string strExperimentZeroName = strExperimentName + "_Zero";
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
-            string strExperimentZeroDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentZeroName);
+            string strTestName = forceTest.NodeName;
+            string strTestZeroName = strTestName + "_Zero";
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
+            string strTestZeroDirName = Path.Combine(m_design.m_strDesignDirPath, strTestZeroName);
 
-            string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
+            string strDensityImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
 
             double dForceX = 0;
             double dForceY = 0;
@@ -2329,13 +2287,13 @@ namespace DoSA
 
             try
             {
-                getForceResult(strExperimentName, ref dForceX, ref dForceY, ref dForceZ);
+                getForceResult(strTestName, ref dForceX, ref dForceY, ref dForceZ);
 
                 /// 영구자석이 포함된 자기회로의 정확도를 높이기위한 전류 0 시험이 존재하는 지를 확인한다.
                 /// 전류를 인가했을 때와 하지 않았을 때의 자기력 차를 자기력으로 사용한다.
-                if (m_manageFile.isExistDirectory(strExperimentZeroDirName) == true)
+                if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
                 {
-                    getForceResult(strExperimentZeroName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ);
+                    getForceResult(strTestZeroName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ);
 
                     dForceX = dForceX - dZeroForceX;
                     dForceY = dForceY - dZeroForceY;
@@ -2371,14 +2329,14 @@ namespace DoSA
             }
         }
 
-        private void getForceResult(string strExperimentName, ref double dForceX, ref double dForceY, ref double dForceZ)
+        private void getForceResult(string strTestName, ref double dForceX, ref double dForceY, ref double dForceZ)
         {
-            string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, strExperimentName);
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            //string strDensityImageFileFullName = Path.Combine(strExperimentDirName, "Image.gif");
-            string strForceXFileFullName = Path.Combine(strExperimentDirName, "Fx.dat");
-            string strForceYFileFullName = Path.Combine(strExperimentDirName, "Fy.dat");
-            string strForceZFileFullName = Path.Combine(strExperimentDirName, "Fz.dat");
+            //string strDensityImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
+            string strForceXFileFullName = Path.Combine(strTestDirName, "Fx.dat");
+            string strForceYFileFullName = Path.Combine(strTestDirName, "Fy.dat");
+            string strForceZFileFullName = Path.Combine(strTestDirName, "Fz.dat");
 
             bool bCheck = false;
             bool bRet = false;
@@ -2588,10 +2546,11 @@ namespace DoSA
                                 break;
 
                             // CExpriment 하위 객체
-                            case "ForceExperiment":
-                                CForceExperiment forceExperiment = new CForceExperiment();
-                                if (true == forceExperiment.readObject(listStringNode))
-                                    m_design.NodeList.Add(forceExperiment);
+                            case "ForceExperiment":     // 하위 버전 호환 유지 ver(0.9.13.3)
+                            case "ForceTest":
+                                CForceTest forceTest = new CForceTest();
+                                if (true == forceTest.readObject(listStringNode))
+                                    m_design.NodeList.Add(forceTest);
                                 break;
 
                             default:
@@ -2705,7 +2664,7 @@ namespace DoSA
                     // Node Name 이 SelectedNode.Name 아니라 SelectedNode.Text 에 들어 있다
                     string selectedNodeText = this.treeViewMain.SelectedNode.Text;
 
-                    if (selectedNodeText == "Parts" || selectedNodeText == "Experiments")
+                    if (selectedNodeText == "Parts" || selectedNodeText == "Tests")
                     {
                         return;
                     }
@@ -2720,18 +2679,18 @@ namespace DoSA
 
                     // 가상 시험 Node 의 경우는 결과 디렉토리와 연결이 되기 때문에
                     // 해석 결과 디렉토리가 있는 경우는 해석결과를 삭제할지를 물어보고 같이 삭제한다.
-                    if (node.GetType().BaseType.Name == "CExperiment")
+                    if (node.GetType().BaseType.Name == "CTest")
                     {
-                        string strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
+                        string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
 
-                        if (m_manageFile.isExistDirectory(strExperimentDirName) == true)
+                        if (m_manageFile.isExistDirectory(strTestDirName) == true)
                         {
                             DialogResult ret = CNotice.noticeWarningOKCancelID("TTHR", "W");
 
                             if (ret == DialogResult.Cancel)
                                 return;
 
-                            m_manageFile.deleteDirectory(strExperimentDirName);
+                            m_manageFile.deleteDirectory(strTestDirName);
 
                             // 삭제되는 시간이 필요한 듯 한다.
                             Thread.Sleep(1000);
@@ -2759,7 +2718,7 @@ namespace DoSA
         {
             string selectedNodeText = this.treeViewMain.SelectedNode.Text;
 
-            if (selectedNodeText == "Parts" || selectedNodeText == "Experiments")
+            if (selectedNodeText == "Parts" || selectedNodeText == "Tests")
             {
                 return;
             }
@@ -2823,16 +2782,16 @@ namespace DoSA
                         bRet = m_design.addNode(steel);
                         break;
 
-                    case EMKind.FORCE_EXPERIMENT:
-                        CForceExperiment forceExperiment = new CForceExperiment();
-                        forceExperiment.NodeName = strNodeName;
-                        forceExperiment.m_kindKey = emKind;
+                    case EMKind.FORCE_TEST:
+                        CForceTest forceTest = new CForceTest();
+                        forceTest.NodeName = strNodeName;
+                        forceTest.m_kindKey = emKind;
                         
                         // 생성될 때 환경설정의 조건으로 초기화한다.
-                        forceExperiment.MeshSizePercent = CSettingData.m_dMeshLevelPercent;
-                        forceExperiment.ActuatorType = CSettingData.m_emActuatorType;
+                        forceTest.MeshSizePercent = CSettingData.m_dMeshLevelPercent;
+                        forceTest.ActuatorType = CSettingData.m_emActuatorType;
                         
-                        bRet = m_design.addNode(forceExperiment);
+                        bRet = m_design.addNode(forceTest);
                         break;
 
                     default:
@@ -2883,7 +2842,7 @@ namespace DoSA
                         treeViewMain.Nodes[FIRST_PARTS_INDEX].Nodes.Add(treeNode);
                         break;
 
-                    case EMKind.FORCE_EXPERIMENT:
+                    case EMKind.FORCE_TEST:
                         treeViewMain.Nodes[FIRST_ANALYSIS_INDEX].Nodes.Add(treeNode);
                         break;
 
@@ -2925,7 +2884,7 @@ namespace DoSA
         {
             CNode node = m_design.getNode(nodeName);
 
-            string strExperimentDirName = string.Empty;
+            string strTestDirName = string.Empty;
 
             try
             {
@@ -2947,7 +2906,7 @@ namespace DoSA
 
                     splitContainerRight.Panel1.Controls.Clear();
 
-                    strExperimentDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
+                    strTestDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
 
                     switch (node.m_kindKey)
                     {
@@ -2966,9 +2925,9 @@ namespace DoSA
                             drawBHCurve(steel.Material);
                             break;
 
-                        case EMKind.FORCE_EXPERIMENT:
+                        case EMKind.FORCE_TEST:
 
-                            string strFieldImageFullName = Path.Combine(strExperimentDirName, "Image.gif");
+                            string strFieldImageFullName = Path.Combine(strTestDirName, "Image.gif");
 
                             // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
                             if (m_manageFile.isExistFile(strFieldImageFullName) == true)
@@ -2983,13 +2942,13 @@ namespace DoSA
                             splitContainerRight.Panel1.Controls.Add(this.panelForce);
 
                             // 초기이미지가 없어서 이미지를 비우고 있다.
-                            loadDefaultImage(EMKind.FORCE_EXPERIMENT);
+                            loadDefaultImage(EMKind.FORCE_TEST);
                             textBoxForceX.Text = "0.0";
                             textBoxForceY.Text = "0.0";
                             textBoxForceZ.Text = "0.0";
 
                             // 트리로 선택할 때도 가상실험 내부 전류를 재계산한다.
-                            setCurrentInExperiment(node);
+                            setCurrentInTest(node);
 
                             break;
 
@@ -3120,11 +3079,11 @@ namespace DoSA
 
                         break;
 
-                    case EMKind.FORCE_EXPERIMENT:
+                    case EMKind.FORCE_TEST:
 
                         if (e.ChangedItem.Label == "Voltage [V]")
                         {
-                            setCurrentInExperiment(node);
+                            setCurrentInTest(node);
                         }
                         break;
 
@@ -3144,7 +3103,7 @@ namespace DoSA
         }
 
 
-        private void setCurrentInExperiment(CNode node)
+        private void setCurrentInTest(CNode node)
         {
             // 총 저항은 합산이 필요함으로 0.0f 로 초기화 한다.
             double total_resistance = 0.0f;
@@ -3158,15 +3117,15 @@ namespace DoSA
 
             switch (node.m_kindKey)
             {
-                case EMKind.FORCE_EXPERIMENT:
+                case EMKind.FORCE_TEST:
 
-                    CForceExperiment forceExperiment = (CForceExperiment)node;
+                    CForceTest forceTest = (CForceTest)node;
 
                     // 전류
                     if (total_resistance != 0.0f)
-                        forceExperiment.Current = (forceExperiment.Voltage / total_resistance);
+                        forceTest.Current = (forceTest.Voltage / total_resistance);
                     else
-                        forceExperiment.Current = 0.0f;
+                        forceTest.Current = 0.0f;
 
                     break;
 
@@ -3278,7 +3237,7 @@ namespace DoSA
             { 
                 switch (kind)
                 {
-                    case EMKind.FORCE_EXPERIMENT:
+                    case EMKind.FORCE_TEST:
                         // 이미지를 비운다
                         pictureBoxForce.Image = null;
                         break;
@@ -3387,7 +3346,78 @@ namespace DoSA
         {
             System.Diagnostics.Process.Start(strWebAddress);
         }
-        
-        #endregion                        
+
+        #endregion
+
+        private void ribbonButtonShare_Click(object sender, EventArgs e)
+        {
+            string strTarget;
+            string strSubject;
+            string strBody;
+
+
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                strSubject = @"DoSA-3D 추천 (3차원 액추에이터 자기력해석 프로그램)";
+                strBody = @"
+%0D%0A%0D%0A
+%0D%0A%0D%0A
+[ DoSA-3D 소개글 ] %0D%0A
+%0D%0A
+DoSA-3D 는 액추에이터나 솔레노이드의 자기력을 해석할 수 있는 2차원 오픈소스 소프트웨어입니다. %0D%0A
+오픈소스 프로젝트로 개발되어 개인 뿐만아니라 회사에서도 무료로 사용할 수 있습니다. %0D%0A
+%0D%0A
+프로그램 작업 환경을 제품개발 과정과 유사하도록 개발 되었습니다. %0D%0A
+따라서 해석을 전공하지 않은 제품개발자도 쉽게 액추에이터나 솔레노이드의 자기력을 해석할 수 있습니다. %0D%0A
+%0D%0A
+설치는 아래의 설치 가이드 동영상과 설치 도움말 파일을 참조 하세요.%0D%0A
+%0D%0A
+- 설치 가이드 동영상 : https://youtu.be/7CGu60M-r9Y %0D%0A
+- 설치 도움말 파일 : https://solenoid.or.kr/data/DoSA-3D_Install_Guide_KOR.pdf %0D%0A
+- DoSA-3D 무료 다운로드 : https://solenoid.or.kr/index_dosa_open_3d_kor.html %0D%0A
+%0D%0A
+감사합니다.
+";
+            }
+            else
+            {
+                strSubject = @"DoSA-3D recommendation (3D actuator simulation software)";
+                strBody = @"
+%0D%0A%0D%0A
+%0D%0A%0D%0A
+[ DoSA-3D Indroduction ] %0D%0A
+%0D%0A
+DoSA-3D is a three-dimensional open source software for magnetic force analysis of actuators and solenoids. %0D%0A
+%0D%0A
+Because it is an open source project, not only individuals but also companies can use the program for free. %0D%0A
+The program environment is developed to be similar to that of product development, %0D%0A
+so even product developers who have not majored in analysis can easily analyze the magnetic force of actuators or solenoids. %0D%0A
+%0D%0A
+Please refer to the installation guide video and installation help file below for installation. %0D%0A
+%0D%0A
+- Installation guide video: https://youtu.be/7CGu60M-r9Y %0D%0A
+- Installation help file: https://solenoid.or.kr/data/DoSA-3D_Install_Guide_ENG.pdf %0D%0A
+- DoSA-3D Free Download : https://solenoid.or.kr/index_dosa_open_3d_eng.html %0D%0A
+%0D%0A
+Thank you.
+";
+            }
+
+            strTarget = "mailto:" + "?subject=" + strSubject + "&body=" + strBody;
+
+            try
+            {
+                System.Diagnostics.Process.Start(strTarget);
+            }
+            catch (System.ComponentModel.Win32Exception noBrowser)
+            {
+                if (noBrowser.ErrorCode == -2147467259)
+                    CNotice.printTrace(noBrowser.Message);
+            }
+            catch (System.Exception other)
+            {
+                CNotice.printTrace(other.Message);
+            }
+        }
     }
 }

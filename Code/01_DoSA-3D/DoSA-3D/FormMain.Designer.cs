@@ -53,12 +53,12 @@
             this.ribbonButtonCoil = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonMagnet = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonSteel = new System.Windows.Forms.RibbonButton();
-            this.ribbonPanelExperiment = new System.Windows.Forms.RibbonPanel();
+            this.ribbonPanelTest = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonForce = new System.Windows.Forms.RibbonButton();
             this.ribbonPanelHelp = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonSetting = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonHelp = new System.Windows.Forms.RibbonButton();
-            this.ribbonButtonHomepage = new System.Windows.Forms.RibbonButton();
+            this.ribbonButtonShare = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonAbout = new System.Windows.Forms.RibbonButton();
             this.splitContainerLeft = new System.Windows.Forms.SplitContainer();
             this.treeViewMain = new System.Windows.Forms.TreeView();
@@ -81,7 +81,7 @@
             this.labelForceX = new System.Windows.Forms.Label();
             this.textBoxForceX = new System.Windows.Forms.TextBox();
             this.pictureBoxForce = new System.Windows.Forms.PictureBox();
-            this.buttonExperimentForce = new System.Windows.Forms.Button();
+            this.buttonTestForce = new System.Windows.Forms.Button();
             this.panelSteel = new System.Windows.Forms.Panel();
             this.chartBHCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.panelMagnet = new System.Windows.Forms.Panel();
@@ -99,14 +99,14 @@
             this.chartStrokeResult = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.buttonLoadStrokeResult = new System.Windows.Forms.Button();
             this.pictureBoxStroke = new System.Windows.Forms.PictureBox();
-            this.buttonExperimentStroke = new System.Windows.Forms.Button();
+            this.buttonTestStroke = new System.Windows.Forms.Button();
             this.panelCurrent = new System.Windows.Forms.Panel();
             this.labelProgressCurrent = new System.Windows.Forms.Label();
             this.progressBarCurrent = new System.Windows.Forms.ProgressBar();
             this.chartCurrentResult = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.buttonLoadCurrentResult = new System.Windows.Forms.Button();
             this.pictureBoxCurrent = new System.Windows.Forms.PictureBox();
-            this.buttonExperimentCurrent = new System.Windows.Forms.Button();
+            this.buttonTestCurrent = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerLeft)).BeginInit();
             this.splitContainerLeft.Panel1.SuspendLayout();
             this.splitContainerLeft.Panel2.SuspendLayout();
@@ -217,7 +217,7 @@
             // 
             this.ribbonTabMenu.Panels.Add(this.ribbonPanelFile);
             this.ribbonTabMenu.Panels.Add(this.ribbonPanelDesign);
-            this.ribbonTabMenu.Panels.Add(this.ribbonPanelExperiment);
+            this.ribbonTabMenu.Panels.Add(this.ribbonPanelTest);
             this.ribbonTabMenu.Panels.Add(this.ribbonPanelHelp);
             this.ribbonTabMenu.Text = "Menu";
             // 
@@ -301,10 +301,10 @@
             this.ribbonButtonSteel.Text = "Steel";
             this.ribbonButtonSteel.Click += new System.EventHandler(this.ribbonButtonSteel_Click);
             // 
-            // ribbonPanelExperiment
+            // ribbonPanelTest
             // 
-            this.ribbonPanelExperiment.Items.Add(this.ribbonButtonForce);
-            this.ribbonPanelExperiment.Text = "EXPERIMENT";
+            this.ribbonPanelTest.Items.Add(this.ribbonButtonForce);
+            this.ribbonPanelTest.Text = "TEST";
             // 
             // ribbonButtonForce
             // 
@@ -318,8 +318,8 @@
             // 
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonSetting);
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonHelp);
-            this.ribbonPanelHelp.Items.Add(this.ribbonButtonHomepage);
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonAbout);
+            this.ribbonPanelHelp.Items.Add(this.ribbonButtonShare);
             this.ribbonPanelHelp.Text = "HELP";
             // 
             // ribbonButtonSetting
@@ -338,12 +338,12 @@
             this.ribbonButtonHelp.Text = "Help";
             this.ribbonButtonHelp.Click += new System.EventHandler(this.ribbonButtonHelp_Click);
             // 
-            // ribbonButtonHomepage
+            // ribbonButtonShare
             // 
-            this.ribbonButtonHomepage.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonHomepage.Image")));
-            this.ribbonButtonHomepage.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonHomepage.SmallImage")));
-            this.ribbonButtonHomepage.Text = "Homepage";
-            this.ribbonButtonHomepage.Click += new System.EventHandler(this.ribbonButtonHomepage_Click);
+            this.ribbonButtonShare.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonShare.Image")));
+            this.ribbonButtonShare.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonShare.SmallImage")));
+            this.ribbonButtonShare.Text = "Recommend";
+            this.ribbonButtonShare.Click += new System.EventHandler(this.ribbonButtonShare_Click);
             // 
             // ribbonButtonAbout
             // 
@@ -477,7 +477,7 @@
             this.panelForce.Controls.Add(this.labelForceX);
             this.panelForce.Controls.Add(this.textBoxForceX);
             this.panelForce.Controls.Add(this.pictureBoxForce);
-            this.panelForce.Controls.Add(this.buttonExperimentForce);
+            this.panelForce.Controls.Add(this.buttonTestForce);
             this.panelForce.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelForce.Location = new System.Drawing.Point(0, 0);
             this.panelForce.Name = "panelForce";
@@ -581,15 +581,15 @@
             this.pictureBoxForce.TabIndex = 2;
             this.pictureBoxForce.TabStop = false;
             // 
-            // buttonExperimentForce
+            // buttonTestForce
             // 
-            this.buttonExperimentForce.Location = new System.Drawing.Point(25, 60);
-            this.buttonExperimentForce.Name = "buttonExperimentForce";
-            this.buttonExperimentForce.Size = new System.Drawing.Size(130, 50);
-            this.buttonExperimentForce.TabIndex = 1;
-            this.buttonExperimentForce.Text = "Force Test";
-            this.buttonExperimentForce.UseVisualStyleBackColor = true;
-            this.buttonExperimentForce.Click += new System.EventHandler(this.buttonExperimentForce_Click);
+            this.buttonTestForce.Location = new System.Drawing.Point(25, 60);
+            this.buttonTestForce.Name = "buttonTestForce";
+            this.buttonTestForce.Size = new System.Drawing.Size(130, 50);
+            this.buttonTestForce.TabIndex = 1;
+            this.buttonTestForce.Text = "Force Test";
+            this.buttonTestForce.UseVisualStyleBackColor = true;
+            this.buttonTestForce.Click += new System.EventHandler(this.buttonTestForce_Click);
             // 
             // panelSteel
             // 
@@ -713,7 +713,7 @@
             this.panelStroke.Controls.Add(this.chartStrokeResult);
             this.panelStroke.Controls.Add(this.buttonLoadStrokeResult);
             this.panelStroke.Controls.Add(this.pictureBoxStroke);
-            this.panelStroke.Controls.Add(this.buttonExperimentStroke);
+            this.panelStroke.Controls.Add(this.buttonTestStroke);
             this.panelStroke.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelStroke.Location = new System.Drawing.Point(0, 0);
             this.panelStroke.Name = "panelStroke";
@@ -767,14 +767,14 @@
             this.pictureBoxStroke.TabIndex = 1;
             this.pictureBoxStroke.TabStop = false;
             // 
-            // buttonExperimentStroke
+            // buttonTestStroke
             // 
-            this.buttonExperimentStroke.Location = new System.Drawing.Point(25, 60);
-            this.buttonExperimentStroke.Name = "buttonExperimentStroke";
-            this.buttonExperimentStroke.Size = new System.Drawing.Size(130, 50);
-            this.buttonExperimentStroke.TabIndex = 0;
-            this.buttonExperimentStroke.Text = "Stroke Test";
-            this.buttonExperimentStroke.UseVisualStyleBackColor = true;
+            this.buttonTestStroke.Location = new System.Drawing.Point(25, 60);
+            this.buttonTestStroke.Name = "buttonTestStroke";
+            this.buttonTestStroke.Size = new System.Drawing.Size(130, 50);
+            this.buttonTestStroke.TabIndex = 0;
+            this.buttonTestStroke.Text = "Stroke Test";
+            this.buttonTestStroke.UseVisualStyleBackColor = true;
             // 
             // panelCurrent
             // 
@@ -783,7 +783,7 @@
             this.panelCurrent.Controls.Add(this.chartCurrentResult);
             this.panelCurrent.Controls.Add(this.buttonLoadCurrentResult);
             this.panelCurrent.Controls.Add(this.pictureBoxCurrent);
-            this.panelCurrent.Controls.Add(this.buttonExperimentCurrent);
+            this.panelCurrent.Controls.Add(this.buttonTestCurrent);
             this.panelCurrent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelCurrent.Location = new System.Drawing.Point(0, 0);
             this.panelCurrent.Name = "panelCurrent";
@@ -837,14 +837,14 @@
             this.pictureBoxCurrent.TabIndex = 12;
             this.pictureBoxCurrent.TabStop = false;
             // 
-            // buttonExperimentCurrent
+            // buttonTestCurrent
             // 
-            this.buttonExperimentCurrent.Location = new System.Drawing.Point(25, 60);
-            this.buttonExperimentCurrent.Name = "buttonExperimentCurrent";
-            this.buttonExperimentCurrent.Size = new System.Drawing.Size(130, 50);
-            this.buttonExperimentCurrent.TabIndex = 11;
-            this.buttonExperimentCurrent.Text = "Current Test";
-            this.buttonExperimentCurrent.UseVisualStyleBackColor = true;
+            this.buttonTestCurrent.Location = new System.Drawing.Point(25, 60);
+            this.buttonTestCurrent.Name = "buttonTestCurrent";
+            this.buttonTestCurrent.Size = new System.Drawing.Size(130, 50);
+            this.buttonTestCurrent.TabIndex = 11;
+            this.buttonTestCurrent.Text = "Current Test";
+            this.buttonTestCurrent.UseVisualStyleBackColor = true;
             // 
             // FormMain
             // 
@@ -909,7 +909,7 @@
         private System.Windows.Forms.RibbonButton ribbonButtonCoil;
         private System.Windows.Forms.RibbonButton ribbonButtonMagnet;
         private System.Windows.Forms.RibbonButton ribbonButtonSteel;
-        private System.Windows.Forms.RibbonPanel ribbonPanelExperiment;
+        private System.Windows.Forms.RibbonPanel ribbonPanelTest;
         private System.Windows.Forms.RibbonButton ribbonButtonForce;
         private System.Windows.Forms.RibbonPanel ribbonPanelHelp;
         private System.Windows.Forms.RibbonButton ribbonButtonSetting;
@@ -938,13 +938,13 @@
         private System.Windows.Forms.Label labelN_X;
         private System.Windows.Forms.Label labelForceX;
         private System.Windows.Forms.TextBox textBoxForceX;
-        private System.Windows.Forms.Button buttonExperimentForce;
+        private System.Windows.Forms.Button buttonTestForce;
 
         private System.Windows.Forms.Panel panelStroke;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartStrokeResult;
         private System.Windows.Forms.Button buttonLoadStrokeResult;
         private System.Windows.Forms.PictureBox pictureBoxStroke;
-        private System.Windows.Forms.Button buttonExperimentStroke;
+        private System.Windows.Forms.Button buttonTestStroke;
 
         private System.Windows.Forms.DataVisualization.Charting.Chart chartBHCurve;
         private System.Windows.Forms.RibbonOrbMenuItem ribbonOrbMenuItemNew;
@@ -959,7 +959,7 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chartCurrentResult;
         private System.Windows.Forms.Button buttonLoadCurrentResult;
         private System.Windows.Forms.PictureBox pictureBoxCurrent;
-        private System.Windows.Forms.Button buttonExperimentCurrent;
+        private System.Windows.Forms.Button buttonTestCurrent;
         private System.Windows.Forms.Label labelProgressCurrent;
         private System.Windows.Forms.ProgressBar progressBarCurrent;
         private System.Windows.Forms.Label labelProgressStroke;
@@ -971,7 +971,7 @@
         private System.Windows.Forms.Label labelN_Z;
         private System.Windows.Forms.Label labelN_Y;
         private System.Windows.Forms.RibbonButton ribbonButtonShape;
-        private System.Windows.Forms.RibbonButton ribbonButtonHomepage;
+        private System.Windows.Forms.RibbonButton ribbonButtonShare;
     }
 }
 

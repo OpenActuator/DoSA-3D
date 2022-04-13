@@ -12,7 +12,7 @@ using System.IO;
 using Nodes;
 using gtLibrary;
 
-namespace Experiments
+namespace Tests
 {
     public enum EMForceDirection
     {
@@ -31,7 +31,7 @@ namespace Experiments
     //------------------------------------------------------------------------------------------
     // 측정조건에 대해 Node 들을 만들고 성능결과를 얻고 싶을 때 개발자에게 측정 조건의 입력을 요청한다 
     //------------------------------------------------------------------------------------------
-    public class CExperiment : CNode
+    public class CTest : CNode
     {
         [DisplayNameAttribute("Mesh Size [%]"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Mesh Size / Shape Length * 100")]
         public double MeshSizePercent { get; set; }
@@ -39,7 +39,7 @@ namespace Experiments
         [DisplayNameAttribute("Actuator Type"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Actuator Type")]
         public EMActuatorType ActuatorType { get; set; }
 
-        public CExperiment()
+        public CTest()
         {
             // MeshSizePercent 와 Type 이 없는 이전 파일버전 인 경우는 아래의 값으로 초기화된다.
             MeshSizePercent = 7;
@@ -48,7 +48,7 @@ namespace Experiments
 
     }
 
-    public class CForceExperiment : CExperiment
+    public class CForceTest : CTest
     {
         private double m_dCurrent;
 
@@ -73,9 +73,9 @@ namespace Experiments
         [DisplayNameAttribute("Z Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Z Displacement")]
         public double MovingZ { get; set; }
 
-        public CForceExperiment()
+        public CForceTest()
         {
-            m_kindKey = EMKind.FORCE_EXPERIMENT;
+            m_kindKey = EMKind.FORCE_TEST;
             Voltage = 5.0;
         }
 
@@ -87,24 +87,24 @@ namespace Experiments
             {
                 CWriteFile writeFile = new CWriteFile();
 
-                writeFile.writeBeginLine(writeStream, "ForceExperiment", 2);
+                writeFile.writeBeginLine(writeStream, "ForceTest", 2);
 
                 // CNode
                 writeFile.writeDataLine(writeStream, "NodeName", NodeName, 3);
                 writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, 3);
 
-                // CExperiment
+                // CTest
                 writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, 3);
                 writeFile.writeDataLine(writeStream, "ActuatorType", ActuatorType, 3);
 
-                // CForceExperiment
+                // CForceTest
                 writeFile.writeDataLine(writeStream, "Voltage", Voltage, 3);
                 writeFile.writeDataLine(writeStream, "Current", Current, 3); 
                 writeFile.writeDataLine(writeStream, "MovingY", MovingY, 3);
                 writeFile.writeDataLine(writeStream, "MovingX", MovingX, 3);
                 writeFile.writeDataLine(writeStream, "MovingZ", MovingZ, 3);
 
-                writeFile.writeEndLine(writeStream, "ForceExperiment", 2);
+                writeFile.writeEndLine(writeStream, "ForceTest", 2);
             }
             catch (Exception ex)
             {
@@ -143,10 +143,14 @@ namespace Experiments
                             break;
                             
                         case "KindKey":
+                            // 하위 버전 호환 유지 ver(0.9.13.3)
+                            if (arrayString[1] == "FORCE_EXPERIMENT")
+                                arrayString[1] = "FORCE_TEST";
+
                             m_kindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
                             break;
 
-                        // CExperiment
+                        // CTest
                         case "MeshSizePercent":
                             MeshSizePercent = Convert.ToDouble(arrayString[1]);
                             break;
@@ -155,7 +159,7 @@ namespace Experiments
                             ActuatorType = (EMActuatorType)Enum.Parse(typeof(EMActuatorType), arrayString[1]);
                             break;
 
-                        // CForceExperiment
+                        // CForceTest
                         case "Voltage":
                             Voltage = Convert.ToDouble(arrayString[1]);
                             break;
@@ -190,21 +194,21 @@ namespace Experiments
             return true;
         }
 
-        public CForceExperiment Clone()
+        public CForceTest Clone()
         {
-            CForceExperiment forceExperiment = new CForceExperiment();
+            CForceTest forceTest = new CForceTest();
 
-            forceExperiment.m_kindKey = this.m_kindKey;
-            forceExperiment.Current = this.Current;
-            forceExperiment.MovingY = this.MovingY;
-            forceExperiment.MovingX = this.MovingX;
-            forceExperiment.MovingZ = this.MovingZ;
-            forceExperiment.NodeName = this.NodeName;
-            forceExperiment.Voltage = this.Voltage;
-            forceExperiment.MeshSizePercent = this.MeshSizePercent;
-            forceExperiment.ActuatorType = this.ActuatorType;
+            forceTest.m_kindKey = this.m_kindKey;
+            forceTest.Current = this.Current;
+            forceTest.MovingY = this.MovingY;
+            forceTest.MovingX = this.MovingX;
+            forceTest.MovingZ = this.MovingZ;
+            forceTest.NodeName = this.NodeName;
+            forceTest.Voltage = this.Voltage;
+            forceTest.MeshSizePercent = this.MeshSizePercent;
+            forceTest.ActuatorType = this.ActuatorType;
 
-            return forceExperiment;
+            return forceTest;
         }
     }
 }

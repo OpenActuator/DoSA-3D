@@ -25,8 +25,8 @@ namespace Nodes
         COIL,
         MAGNET,
         STEEL,
-        EXPERIMENTS,
-        FORCE_EXPERIMENT,
+        TESTS,
+        FORCE_TEST,
         SHOW_LIST
     };
 

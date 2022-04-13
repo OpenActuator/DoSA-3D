@@ -24,39 +24,42 @@ namespace DoSA
 
             string strDescription;
             string strDonation;
+            string strLicense;
+            string strHomepage;
 
             if(CSettingData.m_emLanguage == EMLanguage.Korean)
             {
                 strDonation = "기여하기";
+                strLicense = "라이선스";
+                strHomepage = "홈페이지";
 
                 strDescription = @"DoSA-3D 는 
-정보통신산업진흥원 (NIPA) 의 지원사업으로 개발이 시작된 프로그램입니다.
-따라서 누구나 회사에서도 무료로 사용할 수 있는 
-오픈소스 액추에이터(솔레노이드) 자기력 전산해석 프로그램입니다.
+액추에이터나 솔레노이드의 자기력을 해석할 수 있는 3차원 오픈소스 프로그램 입니다.
 
-그리고 DoSA-3D 의 사용 환경은 액추에이터 제품개발과 유사해서
-전산해석 담당자보다도 액추에이터 개발자들이 오히려 쉽게 사용할 수 있는 
-전산해석 프로그램입니다.
+오픈소스 프로젝트로 개발되어 
+개인 뿐만아니라 회사에서도 무료로 프로그램을 사용할 수 있습니다.
 
-모든 액추에이터 개발자들이 액추에이터의 제품개발에 전산해석을 사용하여
-자기력을 예측할 수 있도록 도움이 되었으면 합니다.";
+프로그램 작업 환경을 제품개발 과정과 유사하도록 개발 되었습니다.
+따라서 해석을 전공하지 않은 개발자도 쉽게 액추에이터의 자기력을 해석할 수 있습니다.";
             }
             else
             {
                 strDonation = "Donation";
+                strLicense = "License";
+                strHomepage = "Homepage";
 
-                strDescription = @"DoSA-3D is open source actuator design software. 
+                strDescription = @"DoSA-3D is an open source actuator software. 
 Anyone can use it free of charge in the company.
 
 DoSA-3D's user environment is similar to actuator product development. 
 This allows actuator developers to easily use it rather than computational analysts.
 
-We hope that all actuator developers will be able to use magnetic analysis 
-to predict magnetic forces in product development of actuators..
+The program environment is developed to be similar to that of product development.
+so even product developers who have not majored in analysis can easily analyze the magnetic force of actuators or solenoids.
 ";
             }
 
-            string strOpenLicense = @"DoSA-3D is open source actuator design software using Onelab.
+            string strOpenLicense = @"DoSA-3D is an open source software using Onelab (GetDP + Gmsh).
 
 This application uses open source software below.
 
@@ -108,6 +111,8 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
             this.textBoxOpenLicense.Text = strOpenLicense;
 
             this.buttonDonation.Text = strDonation;
+            this.buttonLicense.Text = strLicense;
+            this.buttonHomepage.Text = strHomepage;
         }
 
         #region Assembly Attribute Accessors
@@ -249,6 +254,34 @@ Nuvola 1.0 (KDE 3.x icon set) (nuvola)
             else
             {
                 target = "https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/openactuator/dosa_donation_eng.htm";
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(target);
+            }
+            catch (System.ComponentModel.Win32Exception noBrowser)
+            {
+                if (noBrowser.ErrorCode == -2147467259)
+                    CNotice.printTrace(noBrowser.Message);
+            }
+            catch (System.Exception other)
+            {
+                CNotice.printTrace(other.Message);
+            }
+        }
+
+        private void buttonHomepage_Click(object sender, EventArgs e)
+        {
+            string target;
+
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                target = "https://solenoid.or.kr/index_dosa_open_3d_kor.html";
+            }
+            else
+            {
+                target = "https://solenoid.or.kr/index_dosa_open_3d_eng.html";
             }
 
             try

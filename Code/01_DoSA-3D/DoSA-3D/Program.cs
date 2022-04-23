@@ -66,7 +66,7 @@ namespace DoSA
 		// - 프로그램이 실행될때 초기화하여 내부에서 사용한다.
 		public static string m_strProgramDirPath { get; set; }
 
-        public static void updataLanguge()
+        public static void updataLanguage()
         {
             if (m_emLanguage == EMLanguage.English)
             {

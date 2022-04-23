@@ -29,7 +29,7 @@ namespace DoSA
 
             if(CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                strDonation = "기여하기";
+                strDonation = "참여하기";
                 strLicense = "라이선스";
                 strHomepage = "홈페이지";
 
@@ -44,7 +44,7 @@ namespace DoSA
             }
             else
             {
-                strDonation = "Donation";
+                strDonation = "Contribution";
                 strLicense = "License";
                 strHomepage = "Homepage";
 

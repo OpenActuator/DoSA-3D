@@ -2,6 +2,12 @@ DoSA-Open_3D
 Gi-Tae Kweon
 zgitae@gmail.com
 
+2022-04-23 Ver(0.9.14.0)
+ - Update on version check and initializeProgram()
+
+2022-03-19 Ver(0.9.13.0)
+ - Update on help file
+
 2021-09-11 Ver(0.9.12.0)
  - Change the working directory if user opens a design file that located other directory
 

@@ -1,4 +1,4 @@
-# DoSA-3D (Ver 0.9.14.1)
+# DoSA-3D (Ver 0.9.14.2)
 
 This program is an open source software for solenoids &amp; actuators
 

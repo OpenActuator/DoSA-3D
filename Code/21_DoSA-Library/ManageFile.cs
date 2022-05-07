@@ -28,7 +28,7 @@ namespace gtLibrary
             {
                 if (false == isExistDirectory(dirPath))
                 {
-                    CNotice.printTrace("존재하지 않는 " + dirPath + " 의 내부 파일정보를 얻으려고 합니다.");
+                    CNotice.printLog("존재하지 않는 " + dirPath + " 의 내부 파일정보를 얻으려고 합니다.");
                     return null;
                 }
 
@@ -39,7 +39,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return null;
             }
         }
@@ -52,7 +52,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA2") + strFileFullPathName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA2") + strFileFullPathName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -62,7 +62,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
         }
@@ -75,7 +75,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
         }
@@ -90,7 +90,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA") + sourceFileFullPathName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA") + sourceFileFullPathName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -102,7 +102,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA4") + destFileFullPathName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA4") + destFileFullPathName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -112,7 +112,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
         }
@@ -139,7 +139,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA3") + dirPath + resManager.GetString("_DITD"));
+                    CNotice.printLog(resManager.GetString("TIAA3") + dirPath + resManager.GetString("_DITD"));
                     return null;
                 }
 
@@ -150,7 +150,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return null;
             }
         }
@@ -163,7 +163,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
         }
@@ -177,7 +177,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
         }
@@ -190,7 +190,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA1") + dirPath + resManager.GetString("_TAE"));
+                    CNotice.printLog(resManager.GetString("TIAA1") + dirPath + resManager.GetString("_TAE"));
                     return false;
                 }
 
@@ -200,7 +200,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
         }
@@ -213,7 +213,7 @@ namespace gtLibrary
 				{
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA2") + dirPath + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA2") + dirPath + resManager.GetString("_TDNE"));
 					return false;
 				}
 
@@ -222,7 +222,7 @@ namespace gtLibrary
 			}
 			catch (Exception ex)
 			{
-				CNotice.printTrace(ex.Message);
+				CNotice.printLog(ex.Message);
 				return false;
 			}
         }
@@ -233,7 +233,7 @@ namespace gtLibrary
             {
                 if (false == isExistDirectory(sourDirPath))
                 {
-                    CNotice.printTrace("존재하지 않는 " + sourDirPath + " 를 복사하려고 합니다.");
+                    CNotice.printLog("존재하지 않는 " + sourDirPath + " 를 복사하려고 합니다.");
                     return false;
                 }
 
@@ -262,7 +262,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
 
             }

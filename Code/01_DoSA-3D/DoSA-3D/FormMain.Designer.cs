@@ -58,8 +58,8 @@
             this.ribbonPanelHelp = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonSetting = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonHelp = new System.Windows.Forms.RibbonButton();
-            this.ribbonButtonAbout = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonDonation = new System.Windows.Forms.RibbonButton();
+            this.ribbonButtonAbout = new System.Windows.Forms.RibbonButton();
             this.splitContainerLeft = new System.Windows.Forms.SplitContainer();
             this.treeViewMain = new System.Windows.Forms.TreeView();
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
@@ -318,8 +318,8 @@
             // 
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonSetting);
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonHelp);
-            this.ribbonPanelHelp.Items.Add(this.ribbonButtonAbout);
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonDonation);
+            this.ribbonPanelHelp.Items.Add(this.ribbonButtonAbout);
             this.ribbonPanelHelp.Text = "HELP";
             // 
             // ribbonButtonSetting
@@ -338,6 +338,13 @@
             this.ribbonButtonHelp.Text = "Help";
             this.ribbonButtonHelp.Click += new System.EventHandler(this.ribbonButtonHelp_Click);
             // 
+            // ribbonButtonDonation
+            // 
+            this.ribbonButtonDonation.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonDonation.Image")));
+            this.ribbonButtonDonation.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonDonation.SmallImage")));
+            this.ribbonButtonDonation.Text = "Donation";
+            this.ribbonButtonDonation.Click += new System.EventHandler(this.ribbonButtonDonation_Click);
+            // 
             // ribbonButtonAbout
             // 
             this.ribbonButtonAbout.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonAbout.Image")));
@@ -345,13 +352,6 @@
             this.ribbonButtonAbout.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonAbout.SmallImage")));
             this.ribbonButtonAbout.Text = "About";
             this.ribbonButtonAbout.Click += new System.EventHandler(this.ribbonButtonAbout_Click);
-            // 
-            // ribbonButtonDonation
-            // 
-            this.ribbonButtonDonation.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonDonation.Image")));
-            this.ribbonButtonDonation.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonDonation.SmallImage")));
-            this.ribbonButtonDonation.Text = "Donation";
-            this.ribbonButtonDonation.Click += new System.EventHandler(this.ribbonButtonDonation_Click);
             // 
             // splitContainerLeft
             // 

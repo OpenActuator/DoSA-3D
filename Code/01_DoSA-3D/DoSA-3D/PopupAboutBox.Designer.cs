@@ -54,7 +54,7 @@
             this.textBoxDescription.Name = "textBoxDescription";
             this.textBoxDescription.ReadOnly = true;
             this.textBoxDescription.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxDescription.Size = new System.Drawing.Size(473, 180);
+            this.textBoxDescription.Size = new System.Drawing.Size(479, 160);
             this.textBoxDescription.TabIndex = 23;
             this.textBoxDescription.TabStop = false;
             // 
@@ -65,7 +65,7 @@
             this.labelContributor.Margin = new System.Windows.Forms.Padding(7, 0, 3, 0);
             this.labelContributor.MaximumSize = new System.Drawing.Size(0, 16);
             this.labelContributor.Name = "labelContributor";
-            this.labelContributor.Size = new System.Drawing.Size(473, 16);
+            this.labelContributor.Size = new System.Drawing.Size(479, 16);
             this.labelContributor.TabIndex = 22;
             this.labelContributor.Text = "Contributor";
             this.labelContributor.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
@@ -89,7 +89,7 @@
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel.Size = new System.Drawing.Size(483, 420);
+            this.tableLayoutPanel.Size = new System.Drawing.Size(489, 420);
             this.tableLayoutPanel.TabIndex = 0;
             // 
             // textBoxOpenLicense
@@ -98,13 +98,13 @@
             this.textBoxOpenLicense.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tableLayoutPanel.SetColumnSpan(this.textBoxOpenLicense, 2);
             this.textBoxOpenLicense.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxOpenLicense.Location = new System.Drawing.Point(7, 274);
+            this.textBoxOpenLicense.Location = new System.Drawing.Point(7, 254);
             this.textBoxOpenLicense.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
             this.textBoxOpenLicense.Multiline = true;
             this.textBoxOpenLicense.Name = "textBoxOpenLicense";
             this.textBoxOpenLicense.ReadOnly = true;
             this.textBoxOpenLicense.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxOpenLicense.Size = new System.Drawing.Size(473, 143);
+            this.textBoxOpenLicense.Size = new System.Drawing.Size(479, 163);
             this.textBoxOpenLicense.TabIndex = 24;
             this.textBoxOpenLicense.TabStop = false;
             // 
@@ -116,7 +116,7 @@
             this.labelProductName.Margin = new System.Windows.Forms.Padding(7, 0, 3, 0);
             this.labelProductName.MaximumSize = new System.Drawing.Size(0, 16);
             this.labelProductName.Name = "labelProductName";
-            this.labelProductName.Size = new System.Drawing.Size(473, 16);
+            this.labelProductName.Size = new System.Drawing.Size(479, 16);
             this.labelProductName.TabIndex = 19;
             this.labelProductName.Text = "Product Name";
             this.labelProductName.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
@@ -128,7 +128,7 @@
             this.labelVersion.Margin = new System.Windows.Forms.Padding(7, 0, 3, 0);
             this.labelVersion.MaximumSize = new System.Drawing.Size(0, 16);
             this.labelVersion.Name = "labelVersion";
-            this.labelVersion.Size = new System.Drawing.Size(473, 16);
+            this.labelVersion.Size = new System.Drawing.Size(479, 16);
             this.labelVersion.TabIndex = 0;
             this.labelVersion.Text = "Version";
             this.labelVersion.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
@@ -136,11 +136,11 @@
             // labelCopyright
             // 
             this.labelCopyright.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelCopyright.Location = new System.Drawing.Point(7, 251);
+            this.labelCopyright.Location = new System.Drawing.Point(7, 231);
             this.labelCopyright.Margin = new System.Windows.Forms.Padding(7, 0, 3, 0);
             this.labelCopyright.MaximumSize = new System.Drawing.Size(0, 16);
             this.labelCopyright.Name = "labelCopyright";
-            this.labelCopyright.Size = new System.Drawing.Size(473, 16);
+            this.labelCopyright.Size = new System.Drawing.Size(479, 16);
             this.labelCopyright.TabIndex = 21;
             this.labelCopyright.Text = "License";
             this.labelCopyright.TextAlign = System.Drawing.ContentAlignment.BottomLeft;

@@ -38,7 +38,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA6") + strFileFullName + resManager.GetString("_TAE"));
+                    CNotice.printLog(resManager.GetString("TIAA6") + strFileFullName + resManager.GetString("_TAE"));
                     return false;
                 }
 
@@ -65,7 +65,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -111,14 +111,14 @@ namespace gtLibrary
             // 오류 방지
             if (writeStream == null)
             {
-                CNotice.printTraceID("TSWI");
+                CNotice.printLogID("TSWI");
                 return;
             }
 
             // 오류 방지
             if (strData == null)
             {
-                CNotice.printTraceID("TODI");
+                CNotice.printLogID("TODI");
                 return;
             }
 
@@ -204,7 +204,7 @@ namespace gtLibrary
                             // "{{" 은 있지만 "}}" 가 일치하지 않으면 경고를 하고 리턴을 한다.
                             if (listStartIndex.Count != listEndIndex.Count)
                             {
-                                CNotice.printTrace("스크립트 치환에서 {{ 와 }} 의 갯수가 다릅니다.");
+                                CNotice.printLog("스크립트 치환에서 {{ 와 }} 의 갯수가 다릅니다.");
                                 writeFile.Close();
                                 return false;
                             }
@@ -241,7 +241,7 @@ namespace gtLibrary
                                     }
                                     else
                                     {
-                                        CNotice.printTrace("스크립트 치환에서 배열크기보다 큰 인덱스가 존재합니다.");
+                                        CNotice.printLog("스크립트 치환에서 배열크기보다 큰 인덱스가 존재합니다.");
                                         writeFile.Close();
                                         return false;
                                     }
@@ -277,8 +277,8 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
-                CNotice.printTrace("Script 파일 생성에서 예외가 발생하였다.");
+                CNotice.printLog(ex.Message);
+                CNotice.printLog("Script 파일 생성에서 예외가 발생하였다.");
             }
 
             return true;
@@ -365,7 +365,7 @@ namespace gtLibrary
                             // "{{" 은 있지만 "}}" 가 일치하지 않으면 경고를 하고 리턴을 한다.
                             if (listStartIndex.Count != listEndIndex.Count)
                             {
-                                CNotice.printTrace("스크립트 치환에서 {{ 와 }} 의 갯수가 다릅니다.");
+                                CNotice.printLog("스크립트 치환에서 {{ 와 }} 의 갯수가 다릅니다.");
                                 writeFile.Close();
                                 return false;
                             }
@@ -402,7 +402,7 @@ namespace gtLibrary
                                     }
                                     else
                                     {
-                                        CNotice.printTrace("스크립트 치환에서 배열크기보다 큰 인덱스가 존재합니다.");
+                                        CNotice.printLog("스크립트 치환에서 배열크기보다 큰 인덱스가 존재합니다.");
                                         writeFile.Close();
                                         return false;
                                     }
@@ -438,8 +438,8 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
-                CNotice.printTrace("Script 파일 추가에서 예외가 발생하였다.");
+                CNotice.printLog(ex.Message);
+                CNotice.printLog("Script 파일 추가에서 예외가 발생하였다.");
             }
 
             return true;
@@ -466,7 +466,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strTargetFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strTargetFileFullName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -480,7 +480,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -499,7 +499,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strTargetFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strTargetFileFullName + resManager.GetString("_TDNE"));
                     return "";
                 }
 
@@ -516,7 +516,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
             // 원하는 라인보다 파일의 길이가 짧은 경우 "" 이 리턴된다.
@@ -545,7 +545,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strTargetFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strTargetFileFullName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -577,7 +577,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -599,7 +599,7 @@ namespace gtLibrary
 
             if (iLowNumber < 1)
             {
-                CNotice.printTrace("Low Number have to be greater than 1.");
+                CNotice.printLog("Low Number have to be greater than 1.");
                 return false;
             }
 
@@ -612,7 +612,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strFileFullName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -630,7 +630,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -652,7 +652,7 @@ namespace gtLibrary
 
             if(iLowNumber < 1)
             {
-                CNotice.printTrace("Low Number have to be greater than 1.");
+                CNotice.printLog("Low Number have to be greater than 1.");
                 return false;
             }
 
@@ -665,7 +665,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -683,7 +683,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -705,7 +705,7 @@ namespace gtLibrary
 
             if (iLowNumber < 1)
             {
-                CNotice.printTrace("Low Number have to be greater than 1.");
+                CNotice.printLog("Low Number have to be greater than 1.");
                 return false;
             }
 
@@ -718,7 +718,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -736,7 +736,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -760,7 +760,7 @@ namespace gtLibrary
 
             if (iColumnNumber < 1)
             {
-                CNotice.printTrace("Column Number have to be greater than 1.");
+                CNotice.printLog("Column Number have to be greater than 1.");
                 return false;
             }
 
@@ -773,7 +773,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -795,8 +795,8 @@ namespace gtLibrary
                             //==========================================================
                             // 추후 Resource 파일을 수정하라. (index -> number)
                             //==========================================================
-                            CNotice.printTrace("Column Number is greater than column data size.");
-                            //CNotice.printTraceID("TCII");
+                            CNotice.printLog("Column Number is greater than column data size.");
+                            //CNotice.printLogID("TCII");
                             return false;
                         }
 
@@ -807,7 +807,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -831,7 +831,7 @@ namespace gtLibrary
 
             if (iColumnNumber < 1)
             {
-                CNotice.printTrace("Column Number have to be greater than 1.");
+                CNotice.printLog("Column Number have to be greater than 1.");
                 return false;
             }
 
@@ -844,7 +844,7 @@ namespace gtLibrary
                 {
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
-                    CNotice.printTrace(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
+                    CNotice.printLog(resManager.GetString("TIAA5") + strCSVFileFullName + resManager.GetString("_TDNE"));
                     return false;
                 }
 
@@ -866,8 +866,8 @@ namespace gtLibrary
                             //==========================================================
                             // 추후 Resource 파일을 수정하라. (index -> number)
                             //==========================================================
-                            CNotice.printTrace("Column Number is greater than column data size.");
-                            //CNotice.printTraceID("TCII");
+                            CNotice.printLog("Column Number is greater than column data size.");
+                            //CNotice.printLogID("TCII");
                             return false;
                         }
 
@@ -878,7 +878,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -900,7 +900,7 @@ namespace gtLibrary
                     return null;
 
                 if (startPos >= endPos)
-                    CNotice.printTrace("The StartPos is greater then the EndPos in the GetData");
+                    CNotice.printLog("The StartPos is greater then the EndPos in the GetData");
 
                 System.IO.StreamReader readFile = new System.IO.StreamReader(strTargetFileFullName);
 
@@ -934,7 +934,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
             return null;
@@ -1050,7 +1050,7 @@ namespace gtLibrary
             {
                 if (false == m_manageFile.isExistFile(strFileFullName))
                 {
-                    CNotice.printTraceID("TMFD");
+                    CNotice.printLogID("TMFD");
                     return false;
                 }
 
@@ -1061,7 +1061,7 @@ namespace gtLibrary
 
                 if (listMaterialNames.Contains(strMaterialName) == false)
                 {
-                    CNotice.printTrace("존재하지 않은 영구자석의 특성값을 얻으려고 하고 있다.");
+                    CNotice.printLog("존재하지 않은 영구자석의 특성값을 얻으려고 하고 있다.");
                     return false;
                 }
 
@@ -1101,8 +1101,8 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
-                CNotice.printTraceID("AETT");
+                CNotice.printLog(ex.Message);
+                CNotice.printLogID("AETT");
                 return false;
             }
 
@@ -1127,7 +1127,7 @@ namespace gtLibrary
             {
                 if (false == m_manageFile.isExistFile(strFileFullName))
                 {
-                    CNotice.printTraceID("TMFD");
+                    CNotice.printLogID("TMFD");
                     return false;
                 }
 
@@ -1137,7 +1137,7 @@ namespace gtLibrary
 
                 if (listMaterialNames.Contains(strMaterialName) == false)
                 {
-                    CNotice.printTrace("존재하지 않은 연자성체의 BH 값을 얻으려고 하고 있다.");
+                    CNotice.printLog("존재하지 않은 연자성체의 BH 값을 얻으려고 하고 있다.");
                     return false;
                 }
 
@@ -1194,8 +1194,8 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
-                CNotice.printTraceID("AETT");
+                CNotice.printLog(ex.Message);
+                CNotice.printLogID("AETT");
                 return false;
             }
 
@@ -1215,7 +1215,7 @@ namespace gtLibrary
 
             if (false == m_manageFile.isExistFile(strFileFullName))
             {
-                CNotice.printTraceID("TMFD");
+                CNotice.printLogID("TMFD");
                 return false;
             }
 
@@ -1249,8 +1249,8 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
-                CNotice.printTraceID("AETT");
+                CNotice.printLog(ex.Message);
+                CNotice.printLogID("AETT");
                 return false;
             }
 
@@ -1297,13 +1297,13 @@ namespace gtLibrary
                         if (true == double.TryParse(strTemp, out dData))
                             listData.Add(dData);
                         else
-                            CNotice.printTrace("숫자 문자열이 아닌 문자열을 숫자로 변환하려고 한다.");
+                            CNotice.printLog("숫자 문자열이 아닌 문자열을 숫자로 변환하려고 한다.");
                     }   
                 }
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -1330,13 +1330,13 @@ namespace gtLibrary
 
                 if (false == double.TryParse(strData, out dData))
                 {
-                    CNotice.printTrace("숫자 문자열이 아닌 문자열을 숫자로 변환하려고 한다.");
+                    CNotice.printLog("숫자 문자열이 아닌 문자열을 숫자로 변환하려고 한다.");
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -1372,7 +1372,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -1406,7 +1406,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 

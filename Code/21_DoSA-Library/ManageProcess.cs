@@ -31,7 +31,7 @@ namespace gtLibrary
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return 0;
             }
         }

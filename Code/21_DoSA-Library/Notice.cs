@@ -17,7 +17,7 @@ namespace gtLibrary
 {
     public enum EMOutputTarget
     {
-        TRACE,
+        LOG_FILE,
         MESSAGE_VIEW
     }
 
@@ -26,7 +26,7 @@ namespace gtLibrary
         public delegate void LogEventHandler(EMOutputTarget target, string strMSG);
         public static event LogEventHandler Notice;
 
-        public static void printTraceID(string strID,
+        public static void printLogID(string strID,
                 [CallerMemberName] string functionName = "",
                 [CallerFilePath] string sourceFilePath = "",
                 [CallerLineNumber] int lineNumber = 0)
@@ -41,18 +41,18 @@ namespace gtLibrary
                     string fileName = Path.GetFileName(sourceFilePath);
                     strMSG = fileName + ", " + lineNumber + ", " + functionName + " : " + strMSG;
 
-                    Notice(EMOutputTarget.TRACE, strMSG);
+                    Notice(EMOutputTarget.LOG_FILE, strMSG);
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                    CNotice.printTrace(ex.Message);
+                    CNotice.printLog(ex.Message);
                 }
             }
         }
 
-        public static void printTrace(string strMSG,
+        public static void printLog(string strMSG,
                 [CallerMemberName] string functionName = "",
                 [CallerFilePath] string sourceFilePath = "",
                 [CallerLineNumber] int lineNumber = 0)
@@ -62,7 +62,7 @@ namespace gtLibrary
                 string fileName = Path.GetFileName(sourceFilePath);
                 strMSG = fileName + ", " + lineNumber + ", " + functionName + " : " + strMSG;
 
-                Notice(EMOutputTarget.TRACE, strMSG);
+                Notice(EMOutputTarget.LOG_FILE, strMSG);
             }
         }
 
@@ -72,11 +72,6 @@ namespace gtLibrary
             {
                 Notice(EMOutputTarget.MESSAGE_VIEW, strMSG);
             }
-        }
-
-        public static void noticeInfomation(string strMSG, string strTitle)
-        {
-            MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         public static void noticeWarningID(string strID)
@@ -96,42 +91,44 @@ namespace gtLibrary
             {
                 MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
-        public static void noticeWarning(string strMSG)
+        public static void noticeWarning(string strMSG, string strTitle = "Warning Notice")
+        {
+            MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        public static void noticeInfomationID(string strID, string strTitleID)
         {
             try
             {
                 ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
-                string strTitle = resManager.GetString("W");
+                string strTitle = resManager.GetString(strTitleID);
+                string strMSG = resManager.GetString(strID);
 
-                MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // DataSet 에 \n 이 들어가서 \\n 이 되기 때문에 다시 복원해야 개행이 된다.
+                strMSG = strMSG.Replace("\\n", "\n");
+
+                MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                
-                CNotice.printTrace(ex.Message);
+
+                CNotice.printLog(ex.Message);
             }
         }
 
-        public static void noticeError(string strMSG)
+        public static void noticeInfomation(string strMSG, string strTitle)
         {
-            try
-            {
-                ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
-                string strTitle = resManager.GetString("E");
+            MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
-                MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                
-                CNotice.printTrace(ex.Message);
-            }
+        public static void noticeError(string strMSG, string strTitle)
+        {
+            MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         public static DialogResult noticeWarningOKCancelID(string strID, string strTitleID)
@@ -151,15 +148,43 @@ namespace gtLibrary
             {
                 MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
 
                 return DialogResult.Cancel;
             }
         }
 
-        public static DialogResult noticeWarningOKCancel(string strMSG, string strTitle)
+        public static DialogResult noticeWarningOKCancel(string strMSG, string strTitle = "Warning Notice")
         {
             return MessageBox.Show(strMSG, strTitle, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+        }
+
+        public static DialogResult noticeWarningYesNoID(string strID, string strTitleID)
+        {
+            try
+            {
+                ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
+                string strTitle = resManager.GetString(strTitleID);
+                string strMSG = resManager.GetString(strID);
+
+                // DataSet 에 \n 이 들어가서 \\n 이 되기 때문에 다시 복원해야 개행이 된다.
+                strMSG = strMSG.Replace("\\n", "\n");
+
+                return MessageBox.Show(strMSG, strTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                CNotice.printLog(ex.Message);
+
+                return DialogResult.Cancel;
+            }
+        }
+
+        public static DialogResult noticeWarningYesNo(string strMSG, string strTitle = "Warning Notice")
+        {
+            return MessageBox.Show(strMSG, strTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
         }
 
         public static DialogResult noticeWarningYesNoCancelID(string strID, string strTitleID)
@@ -179,7 +204,7 @@ namespace gtLibrary
             {
                 MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
 
                 return DialogResult.Cancel;
             }
@@ -190,9 +215,5 @@ namespace gtLibrary
             return MessageBox.Show(strMSG, strTitle, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
         }
 
-        public static DialogResult noticeWarningYesNo(string strMSG, string strTitle = "Warning")
-        {
-            return MessageBox.Show(strMSG, strTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-        }
     }
 }

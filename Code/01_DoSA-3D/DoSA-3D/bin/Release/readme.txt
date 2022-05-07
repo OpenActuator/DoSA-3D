@@ -1,6 +1,8 @@
-DoSA-Open_3D
+DoSA-3D
+https://solenoid.or.kr/index_dosa_open_3d_kor.html
 Gi-Tae Kweon
 zgitae@gmail.com
+
 
 2022-04-23 Ver(0.9.14.0)
  - Update on version check and initializeProgram()

@@ -54,7 +54,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -114,7 +114,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -139,7 +139,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
             return true;
@@ -177,8 +177,8 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
-                CNotice.printTraceID("AEOW");
+                CNotice.printLog(ex.Message);
+                CNotice.printLogID("AEOW");
             }
             
             return true;

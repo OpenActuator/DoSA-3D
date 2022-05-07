@@ -371,7 +371,7 @@ namespace Parts
                 }
                 else
                 {
-                    CNotice.printTraceID("TIAP1");
+                    CNotice.printLogID("TIAP1");
                     return;
                 }
 
@@ -385,7 +385,7 @@ namespace Parts
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
        
         }
@@ -436,7 +436,7 @@ namespace Parts
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -457,7 +457,7 @@ namespace Parts
 
             if (m_kindKey != EMKind.COIL)
             {
-                CNotice.printTraceID("YATT7");
+                CNotice.printLogID("YATT7");
                 return false;
             }      
     
@@ -561,7 +561,7 @@ namespace Parts
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }  
 
@@ -637,7 +637,7 @@ namespace Parts
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -658,7 +658,7 @@ namespace Parts
 
             if (m_kindKey != EMKind.MAGNET)
             {
-                CNotice.printTraceID("YATT5");
+                CNotice.printLogID("YATT5");
                 return false;
             }
 
@@ -738,7 +738,7 @@ namespace Parts
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -793,7 +793,7 @@ namespace Parts
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -814,7 +814,7 @@ namespace Parts
 
             if (m_kindKey != EMKind.STEEL)
             {
-                CNotice.printTraceID("YATT6");
+                CNotice.printLogID("YATT6");
                 return false;
             }
 
@@ -878,7 +878,7 @@ namespace Parts
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 

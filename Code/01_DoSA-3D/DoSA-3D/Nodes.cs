@@ -236,7 +236,7 @@ namespace Nodes
                     // 남아있는 이름 리스트에 없으면 추가작업을 하지 않는다
                     if (m_listRemainedShapeName.Contains(nodeName) == false)
                     {
-                        CNotice.printTrace("형상이 아닌 node 을 형상 객체처리를 하려고 합니다.");
+                        CNotice.printLog("형상이 아닌 node 을 형상 객체처리를 하려고 합니다.");
                         return false;
                     }
 

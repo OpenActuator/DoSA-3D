@@ -72,7 +72,8 @@ namespace DoSA
             ///------------------------------------------------------------------------
             /// 환경설정전 언어의 초기 설정
             /// 
-            /// 환경설정의 언어 설정값을 읽어드리기 전에 혹시 언어를 사용하는 경우를 대비하여
+            /// 첫 설치 때와 같이
+            /// 환경설정의 언어 설정값을 읽어드리기 전이나 설정 전에 언어를 사용하는 경우를 대비하여
             /// 환경설정의 언어 설정과 상관없이 무조건 시스템언어를 읽어서 프로그램 언어를 설정해 둔다.
             /// 
             /// 환경설정값으로 언어 설정은 이후에 바로 이어지는 CSettingData.updataLanguge() 에서 이루어진다.
@@ -244,11 +245,11 @@ namespace DoSA
                         catch (System.ComponentModel.Win32Exception noBrowser)
                         {
                             if (noBrowser.ErrorCode == -2147467259)
-                                CNotice.printTrace(noBrowser.Message);
+                                CNotice.printLog(noBrowser.Message);
                         }
                         catch (System.Exception other)
                         {
-                            CNotice.printTrace(other.Message);
+                            CNotice.printLog(other.Message);
                         }
                         
                         System.Windows.Forms.Application.ExitThread();
@@ -267,7 +268,7 @@ namespace DoSA
             // 인터넷이 연결되지 않았으면 예외 처리가 되면서 함수를 빠져 나간다.
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
         }
@@ -354,7 +355,7 @@ namespace DoSA
 
                 if (nDoSACount >= 2)
                 {
-                    if (CSettingData.m_emLanguage == EMLanguage.English)
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
                         CNotice.noticeWarning("DoSA-3D 의 중복 실행은 허용하지 않습니다.");
                     else
                         CNotice.noticeWarning("Duplicate execution of DoSA-3D is not allowed.");
@@ -378,9 +379,9 @@ namespace DoSA
 
                 if (retFreamework == false)
                 {
-                    DialogResult result = CNotice.noticeWarningOKCancelID("DRIO1", "W");
+                    DialogResult result = CNotice.noticeWarningYesNoID("DRIO1", "W");
                     
-                    if(result == DialogResult.OK )
+                    if(result == DialogResult.Yes )
                         openWebsite(@"https://www.microsoft.com/ko-kr/download/details.aspx?id=30653");
 
                     System.Windows.Forms.Application.ExitThread();
@@ -405,6 +406,10 @@ namespace DoSA
 
                 if (false == m_manageFile.isExistFile(strSettingFileFullName))
                 {
+                    // 첫 실행때 환경 설정파일이 존재하지 않는 경우라도
+                    // FromMain() 상단에서 시스템 언어를 확인해서CSettingData.m_emLanguage 을 설정 했기 때문에
+                    // 사용자가 선택 전에도 사용 언어는 지정되어 있고 공지글 언어에도 문제가 없다.
+
                     // 현 상태에서의 언어설정은 FormMain() 에서 시스템 언어로 설정되어 있다.
                     CNotice.noticeWarningID("TCFC");
                     
@@ -452,7 +457,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -463,7 +468,7 @@ namespace DoSA
         // 이벤트 발생 때 호출되는 함수
         void printLogEvent(EMOutputTarget emTarget, string strMSG)
         {
-            if (emTarget == EMOutputTarget.TRACE)
+            if (emTarget == EMOutputTarget.LOG_FILE)
             {
                 Trace.WriteLine(DateTime.Now.ToString() + ", " + strMSG);
                 Trace.Flush();
@@ -523,7 +528,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
         }
@@ -604,7 +609,7 @@ namespace DoSA
        
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
-                        CNotice.printTrace("형상 파일을 찾지 못했다.");
+                        CNotice.printLog("형상 파일을 찾지 못했다.");
                         return;
                     }
 
@@ -613,7 +618,7 @@ namespace DoSA
                 }
                 else
                 {
-                    CNotice.printTrace("Shape Script 파일 생성에 문제가 발생했다.");
+                    CNotice.printLog("Shape Script 파일 생성에 문제가 발생했다.");
                     return;
                 }
                 
@@ -624,7 +629,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return;
             }
 
@@ -636,7 +641,7 @@ namespace DoSA
             {
                 if (m_design.m_bChanged == true)
                 {
-                    if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT", "W"))
+                    if (DialogResult.Yes == CNotice.noticeWarningYesNoID("DYWT", "W"))
                     {
                         saveDesignFile();
                     }
@@ -668,7 +673,7 @@ namespace DoSA
                 // - .Length == 0 나 "" 를 사용하라
                 if (strDesignName.Length == 0)
                 {
-                    CNotice.printTraceID("DNIN");
+                    CNotice.printLogID("DNIN");
                     return;
                 }
 
@@ -732,7 +737,7 @@ namespace DoSA
        
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
-                        CNotice.printTrace("형상 파일을 찾지 못했다.");
+                        CNotice.printLog("형상 파일을 찾지 못했다.");
                         return;
                     }
 
@@ -820,7 +825,7 @@ namespace DoSA
                     }
                     else
                     {
-                        CNotice.printTrace("Part Names 파일이 존재하지 않는다.");
+                        CNotice.printLog("Part Names 파일이 존재하지 않는다.");
 
                         // 생성된 Design 디렉토리를 내부파일과 같이 한꺼번에 삭제한다.
                         m_manageFile.deleteDirectory(strDesignDirName);
@@ -835,7 +840,7 @@ namespace DoSA
                 }
                 else
                 {
-                    CNotice.printTrace("Part Names Script 파일 생성에 문제가 발생했습니다.");
+                    CNotice.printLog("Part Names Script 파일 생성에 문제가 발생했습니다.");
                     return;
                 }
 
@@ -856,7 +861,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return;
             }
         }
@@ -865,7 +870,7 @@ namespace DoSA
         {
             if (m_design.m_bChanged == true)
             {
-                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT", "W"))
+                if (DialogResult.Yes == CNotice.noticeWarningYesNoID("DYWT", "W"))
                 {
                     saveDesignFile();
                 }
@@ -930,7 +935,7 @@ namespace DoSA
         {
             if (m_design.m_bChanged == true)
             {
-                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT1", "W"))
+                if (DialogResult.Yes == CNotice.noticeWarningYesNoID("DYWT1", "W"))
                 {
                     saveDesignFile();
                 }
@@ -1084,7 +1089,7 @@ namespace DoSA
                 }
                 catch (Exception ex)
                 {
-                    CNotice.printTrace(ex.Message);
+                    CNotice.printLog(ex.Message);
                     return;
                 }
             }
@@ -1094,7 +1099,7 @@ namespace DoSA
         {
             if (m_design.m_bChanged == true)
             {
-                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT", "W"))
+                if (DialogResult.Yes == CNotice.noticeWarningYesNoID("DYWT", "W"))
                 {
                     saveDesignFile();
                 }
@@ -1251,9 +1256,9 @@ namespace DoSA
             // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
             if (m_manageFile.isExistDirectory(strTestDirName) == true)
             {
-                DialogResult ret = CNotice.noticeWarningOKCancelID("TIAP", "NE");
+                DialogResult ret = CNotice.noticeWarningYesNoID("TIAP", "NE");
 
-                if (ret == DialogResult.Cancel)
+                if (ret == DialogResult.No)
                     return;
 
                 m_manageFile.deleteDirectory(strTestDirName);
@@ -1390,7 +1395,7 @@ namespace DoSA
                     {
                         if (nCount != 0)
                         {
-                            CNotice.printTrace("코일 수가 하나 이상이다.");
+                            CNotice.printLog("코일 수가 하나 이상이다.");
                             return;
                         }
 
@@ -1458,7 +1463,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -1490,7 +1495,7 @@ namespace DoSA
                     {
                         if (nCount != 0)
                         {
-                            CNotice.printTrace("코일 수가 하나 이상이다.");
+                            CNotice.printLog("코일 수가 하나 이상이다.");
                             return;
                         }
 
@@ -1520,7 +1525,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -1664,7 +1669,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -1772,7 +1777,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -1805,7 +1810,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -2027,7 +2032,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -2110,7 +2115,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
         }
@@ -2153,7 +2158,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -2166,7 +2171,7 @@ namespace DoSA
             // 이름이 지정된 Design 만 저장을 확인한다.
             if (m_design.m_bChanged == true)
             {
-                if (DialogResult.OK == CNotice.noticeWarningOKCancelID("DYWT1", "W"))
+                if (DialogResult.Yes == CNotice.noticeWarningYesNoID("DYWT1", "W"))
                 {
                     saveDesignFile();
                 }
@@ -2183,7 +2188,7 @@ namespace DoSA
 
                 if (false == m_manageFile.isExistFile(m_strCommandLineDesignFullName))
                 {
-                    CNotice.printTrace("커멘드라인으로 입력한 디자인 파일이 존재하지 않는다.");
+                    CNotice.printLog("커멘드라인으로 입력한 디자인 파일이 존재하지 않는다.");
                     return;
                 }
 
@@ -2215,7 +2220,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -2272,7 +2277,7 @@ namespace DoSA
             
             //if (m_design.isDesignShapeOK() == false)
             //{
-            //    CNotice.printTraceID("AEOI");
+            //    CNotice.printLogID("AEOI");
             //    return false;
             //}
 
@@ -2335,7 +2340,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -2411,7 +2416,7 @@ namespace DoSA
         {
             if (m_design.m_strDesignName.Length == 0)
             {
-                CNotice.printTraceID("YATT9");
+                CNotice.printLogID("YATT9");
                 return false;
             }
 
@@ -2452,7 +2457,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
             return true;
@@ -2497,7 +2502,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return false;
             }
 
@@ -2653,7 +2658,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -2683,7 +2688,7 @@ namespace DoSA
 
                     if (node == null)
                     {
-                        CNotice.printTraceID("TDNI");
+                        CNotice.printLogID("TDNI");
                         return;
                     }
 
@@ -2695,9 +2700,9 @@ namespace DoSA
 
                         if (m_manageFile.isExistDirectory(strTestDirName) == true)
                         {
-                            DialogResult ret = CNotice.noticeWarningOKCancelID("TTHR", "W");
+                            DialogResult ret = CNotice.noticeWarningYesNoID("TTHR", "W");
 
-                            if (ret == DialogResult.Cancel)
+                            if (ret == DialogResult.No)
                                 return;
 
                             m_manageFile.deleteDirectory(strTestDirName);
@@ -2718,7 +2723,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
         }
@@ -2805,7 +2810,7 @@ namespace DoSA
                         break;
 
                     default:
-                        CNotice.printTraceID("YATT4");
+                        CNotice.printLogID("YATT4");
                         return;
                 }
 
@@ -2826,7 +2831,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
         }
@@ -2865,7 +2870,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -2969,7 +2974,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -3103,7 +3108,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
 
             // 수정 되었음을 기록한다.
@@ -3213,13 +3218,13 @@ namespace DoSA
                     {
                         if (listH.Count == 0)
                         {
-                            CNotice.printTraceID("TDFT");
+                            CNotice.printLogID("TDFT");
                             return;
                         }
 
                         if (listH.Count != listB.Count)
                         {
-                            CNotice.printTraceID("TSOT");
+                            CNotice.printLogID("TSOT");
                             return;
                         }
 
@@ -3227,13 +3232,13 @@ namespace DoSA
                     }
                     else
                     {
-                        CNotice.printTrace("There is no DoSA_MS.dmat file.\nPlease check Material directory.");
+                        CNotice.printLog("There is no DoSA_MS.dmat file.\nPlease check Material directory.");
                     }
                 }
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
             }
         }
 
@@ -3263,7 +3268,7 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
+                CNotice.printLog(ex.Message);
                 return;
             }           
         }
@@ -3294,7 +3299,7 @@ namespace DoSA
 
                 if (dMinX >= dMaxX || dMinY >= dMaxY)
                 {
-                    CNotice.printTraceID("TMVI");
+                    CNotice.printLogID("TMVI");
                     return;
                 }
 
@@ -3322,8 +3327,8 @@ namespace DoSA
             }
             catch (Exception ex)
             {
-                CNotice.printTrace(ex.Message);
-                CNotice.printTraceID("AEOI1");
+                CNotice.printLog(ex.Message);
+                CNotice.printLogID("AEOI1");
                 return;
             }
         }
@@ -3361,7 +3366,16 @@ namespace DoSA
 
         private void ribbonButtonDonation_Click(object sender, EventArgs e)
         {
-            string target = "https://www.buymeacoffee.com/openactuator";
+            string target;
+
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                target = "https://solenoid.or.kr/index_donation.html";
+            }
+            else
+            {
+                target = "https://www.buymeacoffee.com/openactuator";
+            }
 
             try
             {
@@ -3370,11 +3384,11 @@ namespace DoSA
             catch (System.ComponentModel.Win32Exception noBrowser)
             {
                 if (noBrowser.ErrorCode == -2147467259)
-                    CNotice.printTrace(noBrowser.Message);
+                    CNotice.printLog(noBrowser.Message);
             }
             catch (System.Exception other)
             {
-                CNotice.printTrace(other.Message);
+                CNotice.printLog(other.Message);
             }
         }
     }

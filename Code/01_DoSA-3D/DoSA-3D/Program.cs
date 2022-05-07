@@ -95,7 +95,7 @@ namespace DoSA
                 if (bOpenNoticeDialog == true)
                     CNotice.noticeWarningID("TEFD");
                 else
-                    CNotice.printTraceID("TEFD");
+                    CNotice.printLogID("TEFD");
 
                 return false;
             }
@@ -107,7 +107,7 @@ namespace DoSA
                 if (bOpenNoticeDialog == true)
                     CNotice.noticeWarningID("TDWD");
                 else
-                    CNotice.printTraceID("TDWD");
+                    CNotice.printLogID("TDWD");
 
                 return false;
             }
@@ -119,7 +119,7 @@ namespace DoSA
                 if (bOpenNoticeDialog == true)
                     CNotice.noticeWarningID("TIAP2");
                 else
-                    CNotice.printTraceID("TIAP2");
+                    CNotice.printLogID("TIAP2");
 
                 return false;
             }
@@ -129,7 +129,7 @@ namespace DoSA
                 if (bOpenNoticeDialog == true)
                     CNotice.noticeWarningID("TMSL");
                 else
-                    CNotice.printTraceID("TMSL");
+                    CNotice.printLogID("TMSL");
 
                 return false;
             }

@@ -158,8 +158,8 @@ namespace DoSA
                 // ex) 0.9.4.2 -> 마지막 2가 버려지고 94 가 된다.
                 for(int i=0; i < 3; i++)
                 {
-                    iNewVersion += (int)(Convert.ToInt32(arrayNewVersion[i]) * Math.Pow(10.0, (double)(2 - i)));
-                    iProductVersion += (int)(Convert.ToInt32(arrayProductVersion[i]) * Math.Pow(10.0, (double)(2 - i)));
+                    iNewVersion += (int)(Convert.ToInt32(arrayNewVersion[i]) * Math.Pow(100.0, (double)(2 - i)));
+                    iProductVersion += (int)(Convert.ToInt32(arrayProductVersion[i]) * Math.Pow(100.0, (double)(2 - i)));
                 }
 
                 bool bVersionCheckDialog = false;

@@ -26,15 +26,17 @@ namespace DoSA
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                buttonDoSAUserGuide.Text = "DoSA 사용 설명서";
+                buttonDoSAUserGuide.Text = "DoSA-3D 사용 설명서";
                 buttonVCMGuide.Text = "VCM 예제 따라하기";
                 buttonSolenoidGuide.Text = "Solenoid 예제 따라하기";
+                buttonDrawingGuide.Text = "해석 전 형상작업 가이드";
             }
             else
             {
-                buttonDoSAUserGuide.Text = "DoSA User Manual";
+                buttonDoSAUserGuide.Text = "DoSA-3D User Manual";
                 buttonVCMGuide.Text = "VCM Example";
                 buttonSolenoidGuide.Text = "Solenoid Example";
+                buttonDrawingGuide.Text = "Drawing Guide before Simulation";
             }
         }
 
@@ -100,6 +102,32 @@ namespace DoSA
             if (m_manageFile.isExistFile(strHelpFileFullName) == false)
             {
                 CNotice.noticeWarningID("HFDN1");
+                return;
+            }
+
+            System.Diagnostics.Process.Start(strHelpFileFullName);
+        }
+
+        private void buttonDrawingGuide_Click(object sender, EventArgs e)
+        {
+            string strHelpFileFullName;
+            CultureInfo ctInfo = Thread.CurrentThread.CurrentCulture;
+
+            if (ctInfo.Name == "en-US")
+                strHelpFileFullName = Path.Combine(CSettingData.m_strProgramDirPath, "Help", "Drawing_Guide_ENG.pdf");
+            else if (ctInfo.Name == "ko-KR")
+                strHelpFileFullName = Path.Combine(CSettingData.m_strProgramDirPath, "Help", "Drawing_Guide_KOR.pdf");
+            else
+                return;
+
+            if (m_manageFile.isExistFile(strHelpFileFullName) == false)
+            {
+
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.noticeWarning("도움말 파일이 존재하지 않습니다.\nDoSA 디렉토리 > Help > Drawing_Guide_KOR.pdf 를 확인하세요.");
+                else
+                    CNotice.noticeWarning("Help file does not exist.\nPlease check DoSA Directory > Help > Drawing_Guide_ENG.pdf.");
+
                 return;
             }
 

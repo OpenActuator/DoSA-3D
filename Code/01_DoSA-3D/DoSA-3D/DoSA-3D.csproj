@@ -174,10 +174,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="Help\Install_Guide_ENG.pdf">
+    <None Include="Help\Drawing_Guide_ENG.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Help\Install_Guide_KOR.pdf">
+    <None Include="Help\Drawing_Guide_KOR.pdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Help\Solenoid_Sample_ENG.pdf">

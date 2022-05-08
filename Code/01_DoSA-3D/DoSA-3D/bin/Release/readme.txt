@@ -3,6 +3,8 @@ https://solenoid.or.kr/index_dosa_open_3d_kor.html
 Gi-Tae Kweon
 zgitae@gmail.com
 
+2022-05-08 Ver(0.9.15.0)
+ - Added Drawing Guides before simulation
 
 2022-04-23 Ver(0.9.14.0)
  - Update on version check and initializeProgram()

@@ -868,6 +868,7 @@ namespace DoSA
 
         private void ribbonButtonOpen_Click(object sender, EventArgs e)
         {
+
             if (m_design.m_bChanged == true)
             {
                 if (DialogResult.Yes == CNotice.noticeWarningYesNoID("DYWT", "W"))
@@ -879,11 +880,11 @@ namespace DoSA
             OpenFileDialog openFileDialog = new OpenFileDialog();
 
             // 파일 열기창 설정
-            openFileDialog.Title = "Open a Design File";
+            openFileDialog.Title = "Open a DoSA-3D File";
             // 디자인 파일을 열 때 디렉토리는 프로그램 작업 디렉토리로 하고 있다.
             openFileDialog.InitialDirectory = CSettingData.m_strCurrentWorkingDirPath;
             openFileDialog.FileName = null;
-            openFileDialog.Filter = "Toolkit Files (*.dsa)|*.dsa|All files (*.*)|*.*";
+            openFileDialog.Filter = "DoSA-3D Files (*.dsa)|*.dsa|All files (*.*)|*.*";
             openFileDialog.FilterIndex = 1;
             openFileDialog.RestoreDirectory = true;
 
@@ -891,19 +892,76 @@ namespace DoSA
 
             if (result == DialogResult.OK)
             {
+                string strDesignFileFullName = openFileDialog.FileName;
+
+                string strDesignName = Path.GetFileNameWithoutExtension(strDesignFileFullName);
+                string strDesignDirectory = Path.GetDirectoryName(strDesignFileFullName);
+
+                if (false == isShapeDirectoryOK(strDesignDirectory, strDesignName))
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("DoSA-3D 의 Shape 디렉토리에 문제가 있습니다.");
+                    else
+                        CNotice.noticeWarning("There is a problem with DoSA-3D's Shape directory.");
+
+                    return;
+                }
+
+                string[] arrayString = strDesignDirectory.Split(Path.DirectorySeparatorChar);
+
+                // 디자인명과 디자인파일이 포함된 디렉토리명이 일치하는지 확인한다.
+                if(strDesignName != arrayString[arrayString.Length - 1])
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        result = CNotice.noticeWarningYesNo("DoSA-3D 파일의 디렉토리 구조에 문제가 있습니다.\n디렉토리 구조를 자동 생성 하겠습니까?");
+                    else
+                        result = CNotice.noticeWarningYesNo("There is a problem with the directory structure of the DoSA-3D file.\nDo you want to automatically create the directory structure?");
+
+
+                    if (result == DialogResult.Yes)
+                    {
+                        string strNewDesignFileFullName = Path.Combine(strDesignDirectory, strDesignName, strDesignName + ".dsa");
+
+                        if (true == m_manageFile.isExistDirectory(Path.Combine(strDesignDirectory, strDesignName)))
+                        {
+                            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                                CNotice.noticeWarning("디자인 명의 디렉토리가 이미 존재합니다.");
+                            else
+                                CNotice.noticeWarning("A directory named design already exists.");
+
+                            return;
+                        }
+
+                        if (false == m_manageFile.createDirectory(Path.Combine(strDesignDirectory, strDesignName)))
+                            return;
+
+                        m_manageFile.copyFile(strDesignFileFullName, strNewDesignFileFullName);
+                        m_manageFile.deleteFile(strDesignFileFullName);
+
+                        m_manageFile.copyDirectory(Path.Combine(strDesignDirectory, "Shape"), Path.Combine(Path.Combine(strDesignDirectory, strDesignName, "Shape")));
+                        m_manageFile.deleteDirectory(Path.Combine(strDesignDirectory, "Shape"));
+
+                        // 수정된 디렉토리로 Design 파일의 풀 패스를 변경한다.
+                        strDesignFileFullName = strNewDesignFileFullName;
+                    }
+                    else
+                        return;
+
+                }
+
                 // 기존 디자인 데이터를 모두 삭제한다.
                 closeDesign();
 
-                string strActuatorDesignFileFullName = openFileDialog.FileName;
 
-                loadDesignFile(strActuatorDesignFileFullName);
+                if(false == loadDesignFile(strDesignFileFullName))
+                    return;
 
                 // 디자인 파일이 생성될 때의 디자인 작업 디렉토리는 프로그램 기본 디렉토리 강제 설정하고 있다.
                 // 만약 디렉토리를 옮긴 디자인 디렉토리를 오픈 할 경우라면 
                 // 이전 다지인 작업 디렉토리를 그대로 사용하면 디렉토리 문제가 발생하여 실행이 불가능하게 된다.
                 // 이를 해결하기 위해
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치로 작업파일의 디렉토리를 다시 설정하고 있다.
-                m_design.m_strDesignDirPath = Path.GetDirectoryName(strActuatorDesignFileFullName);
+                m_design.m_strDesignDirPath = Path.GetDirectoryName(strDesignFileFullName);
 
                 // Design 디렉토리에서 Design 명을 제거한 디렉토리를 작업디렉토리로 설정한다.
                 CSettingData.m_strCurrentWorkingDirPath = Path.GetDirectoryName(m_design.m_strDesignDirPath);
@@ -929,6 +987,35 @@ namespace DoSA
             this.Text = "DoSA-3D - " + m_design.m_strDesignName;
 
             CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBO"));    
+        }
+
+        /// <summary>
+        /// DoSA-3D Shape 디렉토리가 정상인지 평가한다.
+        /// [평가 항목]
+        ///  - Shape 디렉토리 존재 여부
+        ///  - Design명.msh, Design명.step, Design명.txt 존재 여부
+        ///   ( 스텝파일은 복사할 때 확장자가 step 지정 된다. )
+        /// </summary>
+        /// <param name="strDirectory">Design Directory</param>
+        /// <param name="strDesignName">Design Name</param>
+        /// <returns></returns>
+        private bool isShapeDirectoryOK(string strDirectory, string strDesignName)
+        {
+            string strShapeDirectory = Path.Combine(strDirectory, "Shape");
+
+            if (false == m_manageFile.isExistDirectory(strShapeDirectory))
+                return false;
+
+            if (false == m_manageFile.isExistFile(Path.Combine(strShapeDirectory, strDesignName + ".msh")))
+                return false;
+
+            if (false == m_manageFile.isExistFile(Path.Combine(strShapeDirectory, strDesignName + ".step")))
+                return false;
+
+            if (false == m_manageFile.isExistFile(Path.Combine(strShapeDirectory, strDesignName + ".txt")))
+                return false;
+
+            return true; 
         }
 
         private void ribbonOrbMenuItemClose_Click(object sender, EventArgs e)
@@ -2188,11 +2275,16 @@ namespace DoSA
 
                 if (false == m_manageFile.isExistFile(m_strCommandLineDesignFullName))
                 {
-                    CNotice.printLog("커멘드라인으로 입력한 디자인 파일이 존재하지 않는다.");
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("디자인 파일이 존재하지 않습니다.");
+                    else
+                        CNotice.noticeWarning("The design file does not exist.");
+
                     return;
                 }
 
-                loadDesignFile(m_strCommandLineDesignFullName);
+                if (false == loadDesignFile(m_strCommandLineDesignFullName))
+                    return;
 
                 // 디자인 파일이 생성될 때의 디자인 작업 디렉토리는 프로그램 기본 디렉토리 강제 설정하고 있다.
                 // 만약 디렉토리를 옮긴 디자인 디렉토리를 오픈 할 경우라면 
@@ -2302,17 +2394,39 @@ namespace DoSA
 
             try
             {
-                getForceResult(strTestName, ref dForceX, ref dForceY, ref dForceZ);
+                if (false == getForceResult(strTestName, ref dForceX, ref dForceY, ref dForceZ))
+                    return;
 
-                /// 영구자석이 포함된 자기회로의 정확도를 높이기위한 전류 0 시험이 존재하는 지를 확인한다.
-                /// 전류를 인가했을 때와 하지 않았을 때의 자기력 차를 자기력으로 사용한다.
-                if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
+                if(forceTest.ActuatorType == EMActuatorType.VCM)
                 {
-                    getForceResult(strTestZeroName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ);
+                    bool bVCMSolveError = false;
 
-                    dForceX = dForceX - dZeroForceX;
-                    dForceY = dForceY - dZeroForceY;
-                    dForceZ = dForceZ - dZeroForceZ;
+                    /// 영구자석이 포함된 자기회로의 정확도를 높이기위한 전류 0 시험이 존재하는 지를 확인한다.
+                    /// 전류를 인가했을 때와 하지 않았을 때의 자기력 차를 자기력으로 사용한다.
+                    if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
+                    {
+                        if (true == getForceResult(strTestZeroName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ))
+                        {
+                            dForceX = dForceX - dZeroForceX;
+                            dForceY = dForceY - dZeroForceY;
+                            dForceZ = dForceZ - dZeroForceZ;
+                        }
+                        else
+                            bVCMSolveError = true;
+
+                    }
+                    else
+                        bVCMSolveError = true;
+
+                    if(bVCMSolveError == true)
+                    {
+                        if(CSettingData.m_emLanguage == EMLanguage.Korean)
+                            CNotice.noticeWarning("VCM Type 는 Zero Current를 포함해 2회 해석을 진행해야 합니다.");
+                        else
+                            CNotice.noticeWarning("VCM Type should be analyzed twice including Zero Current.");
+
+                        return;
+                    }                
                 }
 
                 textBoxForceX.Text = string.Format("{0:0.0000}", dForceX);
@@ -2344,7 +2458,7 @@ namespace DoSA
             }
         }
 
-        private void getForceResult(string strTestName, ref double dForceX, ref double dForceY, ref double dForceZ)
+        private bool getForceResult(string strTestName, ref double dForceX, ref double dForceY, ref double dForceZ)
         {
             string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
@@ -2372,7 +2486,7 @@ namespace DoSA
             else
             {
                 CNotice.noticeWarningID("TROA1");
-                return;
+                return false;
             }
 
             bCheck = m_manageFile.isExistFile(strForceYFileFullName);
@@ -2388,7 +2502,7 @@ namespace DoSA
             else
             {
                 CNotice.noticeWarningID("TROA1");
-                return;
+                return false;
             }
 
             bCheck = m_manageFile.isExistFile(strForceZFileFullName);
@@ -2404,8 +2518,10 @@ namespace DoSA
             else
             {
                 CNotice.noticeWarningID("TROA1");
-                return;
+                return false;
             }
+
+            return true;
         }
 
         #endregion        
@@ -2475,7 +2591,32 @@ namespace DoSA
                 // 전체 내용을 읽어드린다.
                 readFile.getAllLines(strDesignFileFullName, ref listStringLines);
 
-                foreach (string strLine in listStringLines)
+                ///-----------------------------------------------------
+                /// DoSA-2D 와 DoSA-3D 의 구분 기호가 아래와 같음을 유의하라
+                ///  - DoSA-3D : DoSA_3D_Project
+                ///  - DoSA-2D : DoSA_Project
+                ///-----------------------------------------------------
+                if (listStringLines[0].Contains("DoSA_Project") == true)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("DoSA-2D 파일은 열 수 없습니다.");
+                    else
+                        CNotice.noticeWarning("DoSA-2D files cannot be opened.");
+
+                    return false;
+
+                }
+                else if (listStringLines[0].Contains("DoSA_3D_Project") == false)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("DoSA-3D 파일에 문제가 있습니다.");
+                    else
+                        CNotice.noticeWarning("There is a problem with the DoSA-3D file.");
+
+                    return false;
+                }
+
+                    foreach (string strLine in listStringLines)
                 {
                     // Design 구문 안의 내용만 listDesignActuator 담는다.
                     //

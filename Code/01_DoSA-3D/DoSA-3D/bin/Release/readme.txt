@@ -3,6 +3,9 @@ https://solenoid.or.kr/index_dosa_open_3d_kor.html
 Gi-Tae Kweon
 zgitae@gmail.com
 
+2022-05-20 Ver(0.9.16.0)
+ - Automatic creation of directory structure for work files and restrictions on opening DoSA-2D files
+
 2022-05-08 Ver(0.9.15.0)
  - Added Drawing Guides before simulation
 

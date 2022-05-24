@@ -496,9 +496,6 @@ namespace DoSA
 
                 #region //--------------------- 기본 재료 추가하기 -------------------------
 
-                //------------------------------------------------
-                // 자기회로 Maxwell 내장 연자성 재료
-                //------------------------------------------------
                 // 내장 연자성재료를 추가할 때는 BH 곡선의 내장 연자성재료 설정도 같이 변경해 주어야 한다
                 
                 string strMaterialFileFullName = Path.Combine(strProgramMaterialDirName, "DoSA_MS.dmat");
@@ -558,7 +555,7 @@ namespace DoSA
 
         #region--------------------- Ribbon Menu ---------------------------
 
-        private void ribbonButtonShape_Click(object sender, EventArgs e)
+        private void ribbonButtonShowShape_Click(object sender, EventArgs e)
         {
             List<string> listScriptString = new List<string>();
             CWriteFile writeFile = new CWriteFile();
@@ -682,23 +679,23 @@ namespace DoSA
                 // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
                 // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
-                string strDesignDirName = Path.Combine(CSettingData.m_strCurrentWorkingDirPath, strDesignName);
+                string strDesignDirPath = Path.Combine(CSettingData.m_strCurrentWorkingDirPath, strDesignName);
 
                 // 형상 디렉토리 
-                string strShapeDirName = Path.Combine(strDesignDirName, "Shape");
+                string strShapeDirPath = Path.Combine(strDesignDirPath, "Shape");
                 // 형상 디렉토리안의 만들어진다.
-                string strShapeModelFileFullName = Path.Combine(strShapeDirName, strDesignName + ".step");
+                string strShapeModelFileFullName = Path.Combine(strShapeDirPath, strDesignName + ".step");
 
                 string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
 
                 // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
-                string strRunScriptFileFullName = Path.Combine(strShapeDirName, strDesignName + ".geo");
+                string strRunScriptFileFullName = Path.Combine(strShapeDirPath, strDesignName + ".geo");
                 
                 // Part Names 파일도 형상 디렉토리에서 존재 한다.
-                string strPartNamesFileFullName = Path.Combine(strShapeDirName, strDesignName + ".txt");
+                string strPartNamesFileFullName = Path.Combine(strShapeDirPath, strDesignName + ".txt");
 
                 // Mesh 파일도 형상 디렉토리에서 작업을 한다.
-                string strMeshFileFullName = Path.Combine(strShapeDirName, strDesignName + ".msh");
+                string strMeshFileFullName = Path.Combine(strShapeDirPath, strDesignName + ".msh");
 
                 #endregion
 
@@ -706,12 +703,21 @@ namespace DoSA
                 #region ------------------------- 디렉토리 생성 및 파일 복사------------------------
 
                 // 다지인 디렉토리를 생성한다.
-                m_manageFile.createDirectory(strDesignDirName);
+                m_manageFile.createDirectory(strDesignDirPath);
                 // 형상 디렉토리도 같이 생성한다.
-                m_manageFile.createDirectory(strShapeDirName);
+                m_manageFile.createDirectory(strShapeDirPath);
 
-                // Maxwell Shape 파일을 현 디자인에 복사한다.
+                // Shape 파일을 현 디자인에 복사한다.
                 m_manageFile.copyFile(strSTEPFileFullName, strShapeModelFileFullName);
+
+                if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
+                {
+                    CNotice.printLog("형상 파일을 찾지 못했다.");
+
+                    // 취소되면 신규 형상 디렉토리를 삭제한다.
+                    m_manageFile.deleteDirectory(strDesignDirPath);
+                    return;
+                }
 
                 #endregion --------------------------------------------------------------------------
 
@@ -735,11 +741,6 @@ namespace DoSA
                     // 아래와 같이 묶음처리를 사용한다.
                     string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
        
-                    if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
-                    {
-                        CNotice.printLog("형상 파일을 찾지 못했다.");
-                        return;
-                    }
 
                     // Gmsh 를 종료할 때까지 기다리지 않는다.
                     // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
@@ -760,40 +761,40 @@ namespace DoSA
 
                     // 생성할 경우 Design Directory 는 CSettingData.m_strWorkingDirName + strActuatorDesignName 로
                     // 무조건 프로그램 작업디렉토리에 생성되도록 하고 있다. 
-                    m_design.m_strDesignDirPath = strDesignDirName;
+                    m_design.m_strDesignDirPath = strDesignDirPath;
 
                     if( true == m_manageFile.isExistFile(strPartNamesFileFullName) )
                     {
                         readFile.readCSVColumnString2(strPartNamesFileFullName, ref listTempPartNames, 1);
 
                         string[] arraySplitPartNames;
-                        string strTempPartName;
+                        string strPartName;
                         string strFindRet = string.Empty;
 
-                        foreach (string strPartName in listTempPartNames)
+                        foreach (string strTempName in listTempPartNames)
                         {
                             // Group 처리가 되어 있는 Step 파일의 이름은 kt100g/Yoke Cover/Yoke Cover 로 그룹까지 포함되어 있다.
                             // 여기서 '/' 로 분리해서 가장 하위의 명칭을 파트명으로 사용한다.
-                            arraySplitPartNames = strPartName.Split('/');
+                            arraySplitPartNames = strTempName.Split('/');
 
                             // 가장 뒤에 있는 이름을 사용한다
-                            strTempPartName = arraySplitPartNames[arraySplitPartNames.Length - 1];
+                            strPartName = arraySplitPartNames[arraySplitPartNames.Length - 1];
 
                             // 이름에 스페이스가 있으면 '_' 로 변경한다.
-                            strTempPartName = strTempPartName.Replace(' ', '_');
+                            strPartName = strPartName.Replace(' ', '_');
 
-                            strFindRet = listAllPartNames.Find(x => x.Equals(strTempPartName));
+                            strFindRet = listAllPartNames.Find(x => x.Equals(strPartName));
 
                             if (null != strFindRet)
                             {
                                 
                                 if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                                    CNotice.noticeWarning(strTempPartName + "의 파트명에 중복 사용되고 있습니다.");
+                                    CNotice.noticeWarning(strPartName + "의 파트명에 중복 사용되고 있습니다.");
                                 else
-                                    CNotice.noticeWarning("It is used in duplicate with the part name called " + strTempPartName + ".");
+                                    CNotice.noticeWarning("It is used in duplicate with the part name called " + strPartName + ".");
 
                                 // 취소되면 디자인 디렉토리를 삭제한다.
-                                m_manageFile.deleteDirectory(strDesignDirName);
+                                m_manageFile.deleteDirectory(strDesignDirPath);
                                 return;
                             }
 
@@ -801,8 +802,8 @@ namespace DoSA
                             //
                             // 하나의 문자열을 사용해서 m_design 에서 복사하면 m_design 안의 두개의 List 가 같이 동작하기 때문에
                             // 두개의 문자열이 별도로 Add 해서 복사를 분리해서 진행한다.
-                            listRemainedPartNames.Add(strTempPartName);
-                            listAllPartNames.Add(strTempPartName);
+                            listRemainedPartNames.Add(strPartName);
+                            listAllPartNames.Add(strPartName);
                         }
 
                         m_design.RemainedShapeNameList = listRemainedPartNames;
@@ -818,7 +819,7 @@ namespace DoSA
                         if (DialogResult.Cancel == dlgFormNodeName.ShowDialog())
                         {
                             // 취소되면 디자인 디렉토리를 삭제한다.
-                            m_manageFile.deleteDirectory(strDesignDirName);
+                            m_manageFile.deleteDirectory(strDesignDirPath);
                             return;
                         }
                             
@@ -828,8 +829,7 @@ namespace DoSA
                         CNotice.printLog("Part Names 파일이 존재하지 않는다.");
 
                         // 생성된 Design 디렉토리를 내부파일과 같이 한꺼번에 삭제한다.
-                        m_manageFile.deleteDirectory(strDesignDirName);
-
+                        m_manageFile.deleteDirectory(strDesignDirPath);
                         return;
                     }
 
@@ -841,6 +841,9 @@ namespace DoSA
                 else
                 {
                     CNotice.printLog("Part Names Script 파일 생성에 문제가 발생했습니다.");
+
+                    // 생성된 Design 디렉토리를 내부파일과 같이 한꺼번에 삭제한다.
+                    m_manageFile.deleteDirectory(strDesignDirPath);
                     return;
                 }
 
@@ -884,7 +887,7 @@ namespace DoSA
             // 디자인 파일을 열 때 디렉토리는 프로그램 작업 디렉토리로 하고 있다.
             openFileDialog.InitialDirectory = CSettingData.m_strCurrentWorkingDirPath;
             openFileDialog.FileName = null;
-            openFileDialog.Filter = "DoSA-3D Files (*.dsa)|*.dsa|All files (*.*)|*.*";
+            openFileDialog.Filter = "DoSA-3D Files (*.dsa3d; *.dsa)|*.dsa3d;*.dsa|All files (*.*)|*.*";
             openFileDialog.FilterIndex = 1;
             openFileDialog.RestoreDirectory = true;
 
@@ -894,64 +897,11 @@ namespace DoSA
             {
                 string strDesignFileFullName = openFileDialog.FileName;
 
-                string strDesignName = Path.GetFileNameWithoutExtension(strDesignFileFullName);
-                string strDesignDirectory = Path.GetDirectoryName(strDesignFileFullName);
-
-                if (false == isShapeDirectoryOK(strDesignDirectory, strDesignName))
-                {
-                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeWarning("DoSA-3D 의 Shape 디렉토리에 문제가 있습니다.");
-                    else
-                        CNotice.noticeWarning("There is a problem with DoSA-3D's Shape directory.");
-
+                if (false == checkDesignFile(ref strDesignFileFullName))
                     return;
-                }
-
-                string[] arrayString = strDesignDirectory.Split(Path.DirectorySeparatorChar);
-
-                // 디자인명과 디자인파일이 포함된 디렉토리명이 일치하는지 확인한다.
-                if(strDesignName != arrayString[arrayString.Length - 1])
-                {
-                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        result = CNotice.noticeWarningYesNo("DoSA-3D 파일의 디렉토리 구조에 문제가 있습니다.\n디렉토리 구조를 자동 생성 하겠습니까?");
-                    else
-                        result = CNotice.noticeWarningYesNo("There is a problem with the directory structure of the DoSA-3D file.\nDo you want to automatically create the directory structure?");
-
-
-                    if (result == DialogResult.Yes)
-                    {
-                        string strNewDesignFileFullName = Path.Combine(strDesignDirectory, strDesignName, strDesignName + ".dsa");
-
-                        if (true == m_manageFile.isExistDirectory(Path.Combine(strDesignDirectory, strDesignName)))
-                        {
-                            if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                                CNotice.noticeWarning("디자인 명의 디렉토리가 이미 존재합니다.");
-                            else
-                                CNotice.noticeWarning("A directory named design already exists.");
-
-                            return;
-                        }
-
-                        if (false == m_manageFile.createDirectory(Path.Combine(strDesignDirectory, strDesignName)))
-                            return;
-
-                        m_manageFile.copyFile(strDesignFileFullName, strNewDesignFileFullName);
-                        m_manageFile.deleteFile(strDesignFileFullName);
-
-                        m_manageFile.copyDirectory(Path.Combine(strDesignDirectory, "Shape"), Path.Combine(Path.Combine(strDesignDirectory, strDesignName, "Shape")));
-                        m_manageFile.deleteDirectory(Path.Combine(strDesignDirectory, "Shape"));
-
-                        // 수정된 디렉토리로 Design 파일의 풀 패스를 변경한다.
-                        strDesignFileFullName = strNewDesignFileFullName;
-                    }
-                    else
-                        return;
-
-                }
 
                 // 기존 디자인 데이터를 모두 삭제한다.
                 closeDesign();
-
 
                 if(false == loadDesignFile(strDesignFileFullName))
                     return;
@@ -987,6 +937,90 @@ namespace DoSA
             this.Text = "DoSA-3D - " + m_design.m_strDesignName;
 
             CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBO"));    
+        }
+
+        private bool checkDesignFile(ref string strDesignFileFullName)
+        {
+            DialogResult result;
+
+            string strDesignName = Path.GetFileNameWithoutExtension(strDesignFileFullName);
+            string strDesignDirectory = Path.GetDirectoryName(strDesignFileFullName);
+
+            if (false == isShapeDirectoryOK(strDesignDirectory, strDesignName))
+            {
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.noticeWarning("DoSA-3D 의 Shape 디렉토리에 문제가 있습니다.");
+                else
+                    CNotice.noticeWarning("There is a problem with DoSA-3D's Shape directory.");
+
+                return false;
+            }
+
+            string strExtension = Path.GetExtension(strDesignFileFullName);
+            string strNewDesignFileFullName;
+
+            // 2022-05-22, V0.9.16.2
+            // 디자인 확장자가 dsa 이면 신규 확장자 dsa3d 로 변경한다.
+            if (strExtension == ".dsa")
+            {
+                strNewDesignFileFullName = Path.Combine(strDesignDirectory, strDesignName + ".dsa3d");
+                
+                m_manageFile.copyFile(strDesignFileFullName, strNewDesignFileFullName);
+                Thread.Sleep(10);
+                m_manageFile.deleteFile(strDesignFileFullName);
+
+                // 확장자가 변경되면 디자인 파일 전체경로는 신규 확장자를 사용하는 경로로 변경한다.
+                strDesignFileFullName = strNewDesignFileFullName;
+            }
+
+            string[] arrayString = strDesignDirectory.Split(Path.DirectorySeparatorChar);
+
+            // 디자인명과 디자인파일이 포함된 디렉토리명이 일치하는지 확인한다.
+            if (strDesignName != arrayString[arrayString.Length - 1])
+            {
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    result = CNotice.noticeWarningYesNo("DoSA-3D 파일의 디렉토리 구조에 문제가 있습니다.\n디렉토리 구조를 자동 생성 하겠습니까?");
+                else
+                    result = CNotice.noticeWarningYesNo("There is a problem with the directory structure of the DoSA-3D file.\nDo you want to automatically create the directory structure?");
+
+
+                if (result == DialogResult.Yes)
+                {
+                    strNewDesignFileFullName = Path.Combine(strDesignDirectory, strDesignName, strDesignName + ".dsa3d");
+
+                    if (true == m_manageFile.isExistDirectory(Path.Combine(strDesignDirectory, strDesignName)))
+                    {
+                        if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                            CNotice.noticeWarning("디자인 명의 디렉토리가 이미 존재합니다.");
+                        else
+                            CNotice.noticeWarning("A directory named design already exists.");
+
+                        return false;
+                    }
+
+                    if (false == m_manageFile.createDirectory(Path.Combine(strDesignDirectory, strDesignName)))
+                        return false;
+
+                    m_manageFile.copyFile(strDesignFileFullName, strNewDesignFileFullName);
+                    Thread.Sleep(10);
+                    m_manageFile.deleteFile(strDesignFileFullName);
+
+                    m_manageFile.copyDirectory(Path.Combine(strDesignDirectory, "Shape"), Path.Combine(Path.Combine(strDesignDirectory, strDesignName, "Shape")));
+                    Thread.Sleep(10);
+                    m_manageFile.deleteDirectory(Path.Combine(strDesignDirectory, "Shape"));
+
+                    // 수정된 디렉토리로 Design 파일의 풀 패스를 변경한다.
+                    strDesignFileFullName = strNewDesignFileFullName;
+                }
+                else
+                {
+                    // 디렉토리 생성을 강제하지 않는다.
+                    //return false;
+                }
+                    
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -1113,20 +1147,36 @@ namespace DoSA
                         return;
                     }
 
-                    String strOrgDesingFileFullName = Path.Combine(strOrgDesignDirName, strOrgDesignName + ".dsa");
-                    String strSaveAsDesignFileFullName = Path.Combine(strSaveAsDesignDirName, strSaveAsDesignName + ".dsa");
+                    string strOrgDesingFileFullName;
 
-                    String strOrgShapeDirName = Path.Combine(strOrgDesignDirName, "Shape");
-                    String strSaveAsShapeDirName = Path.Combine(strSaveAsDesignDirName, "Shape");
+                    // 2022-05-22, v0.9.16.2
+                    // ".dsa" 은 하위 호환을 유지하기 위해 확인하고 있다.
+                    if (true == m_manageFile.isExistFile(Path.Combine(strOrgDesignDirName, strOrgDesignName + ".dsa")))
+                        strOrgDesingFileFullName = Path.Combine(strOrgDesignDirName, strOrgDesignName + ".dsa");
+                    else if(true == m_manageFile.isExistFile(Path.Combine(strOrgDesignDirName, strOrgDesignName + ".dsa3d")))
+                        strOrgDesingFileFullName = Path.Combine(strOrgDesignDirName, strOrgDesignName + ".dsa3d");
+                    else
+                    {
+                        if(CSettingData.m_emLanguage == EMLanguage.Korean)
+                            CNotice.noticeWarning("원본 DoSA-3D 디자인 파일이 존재하지 않습니다.");
+                        else
+                            CNotice.noticeWarning("The original DoSA-3D design file does not exist.");
 
-                    String strOrgMeshFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".msh");
-                    String strOrgStepFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".step");
-                    String strOrgPartNameFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".txt");
+                        return;
+                    }
 
-                    String strSaveAsMeshFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".msh");
-                    String strSaveAsStepFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".step");
-                    String strSaveAsPartNameFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".txt");
+                    string strSaveAsDesignFileFullName = Path.Combine(strSaveAsDesignDirName, strSaveAsDesignName + ".dsa3d");
 
+                    string strOrgShapeDirName = Path.Combine(strOrgDesignDirName, "Shape");
+                    string strSaveAsShapeDirName = Path.Combine(strSaveAsDesignDirName, "Shape");
+
+                    string strOrgMeshFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".msh");
+                    string strOrgStepFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".step");
+                    string strOrgPartNameFileFullName = Path.Combine(strSaveAsShapeDirName, strOrgDesignName + ".txt");
+
+                    string strSaveAsMeshFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".msh");
+                    string strSaveAsStepFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".step");
+                    string strSaveAsPartNameFileFullName = Path.Combine(strSaveAsShapeDirName, strSaveAsDesignName + ".txt");
                     
                     #region // --------------- 파일과 디렉토리 복사 ---------------------
 
@@ -1243,6 +1293,231 @@ namespace DoSA
             PopupAboutBox frmAbout = new PopupAboutBox();
 
             frmAbout.ShowDialog();
+        }
+
+        private void ribbonButtonDonation_Click(object sender, EventArgs e)
+        {
+            string target;
+
+            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+            {
+                target = "https://solenoid.or.kr/index_donation.html";
+            }
+            else
+            {
+                target = "https://www.buymeacoffee.com/openactuator";
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(target);
+            }
+            catch (System.ComponentModel.Win32Exception noBrowser)
+            {
+                if (noBrowser.ErrorCode == -2147467259)
+                    CNotice.printLog(noBrowser.Message);
+            }
+            catch (System.Exception other)
+            {
+                CNotice.printLog(other.Message);
+            }
+        }
+
+        private void ribbonButtonChangeShape_Click(object sender, EventArgs e)
+        {
+            List<string> listScriptString = new List<string>();
+            List<string> listTempNames = new List<string>();
+            List<string> listNewAllPartNames = new List<string>();
+            //List<string> listRemainedPartNames = new List<string>();
+
+            PopupChangeShape formChangeShape = new PopupChangeShape();
+            formChangeShape.StartPosition = FormStartPosition.CenterParent;
+
+            /// 이해할 수 없지만, 자동으로 Owner 설정이 되는 경우도 있고 아닌 경우도 있기 때문에
+            /// Shape 창에서 MainForm 을 접근할 수 있도록 미리 설정을 한다.
+            formChangeShape.Owner = this;
+
+            if (DialogResult.Cancel == formChangeShape.ShowDialog())
+                return;
+
+            string strSTEPFileFullName = formChangeShape.m_strSTEPFileFullName;
+
+
+            string strDesignName = m_design.m_strDesignName;
+
+            #region ------------------------- 디렉토리 및 파일명 설정 ------------------------
+
+            // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
+            // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
+            // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
+            string strDesignDirPath = Path.Combine(CSettingData.m_strCurrentWorkingDirPath, strDesignName);
+
+            // 신규 형상 디렉토리 
+            string strShapeDirPath = Path.Combine(strDesignDirPath, "Shape");
+
+            // 신규 형상 디렉토리 
+            string strShapeNewDirPath = Path.Combine(strDesignDirPath, "Shape_New");
+
+            // 형상 디렉토리안의 만들어진다.
+            string strShapeModelFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".step");
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+
+            // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
+            string strRunScriptFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".geo");
+
+            // Part Names 파일도 형상 디렉토리에서 존재 한다.
+            string strPartNamesFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".txt");
+
+            // Mesh 파일도 형상 디렉토리에서 작업을 한다.
+            string strMeshFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".msh");
+
+            #endregion
+
+            // 형상 디렉토리도 같이 생성한다.
+            m_manageFile.createDirectory(strShapeNewDirPath);
+
+            // Shape 파일을 현 디자인에 복사한다.
+            m_manageFile.copyFile(strSTEPFileFullName, strShapeModelFileFullName);
+
+            if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
+            {
+                CNotice.printLog("형상 파일을 찾지 못했다.");
+
+                // 취소되면 신규 형상 디렉토리를 삭제한다.
+                m_manageFile.deleteDirectory(strShapeNewDirPath);
+                return;
+            }
+
+            CWriteFile writeFile = new CWriteFile();
+            CReadFile readFile = new CReadFile();
+
+
+            CScriptContents scriptContents = new CScriptContents();
+
+            string strOrgStriptContents = scriptContents.m_str01_CheckSTEP_Script;
+
+            // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
+            listScriptString.Add(strShapeModelFileFullName);
+            listScriptString.Add(strPartNamesFileFullName);
+            listScriptString.Add(strDesignName);
+
+            // Script 파일이 문제없이 만들어지면 아래 동작을 실시하다.
+            if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
+            {
+                // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                // 아래와 같이 묶음처리를 사용한다.
+                string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
+
+                // Gmsh 를 종료할 때까지 기다리지 않는다.
+                // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
+                CScript.runScript(strGmshExeFileFullName, strArguments, false);
+
+                while (false == m_manageFile.isExistFile(strPartNamesFileFullName))
+                {
+                    // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
+                    Thread.Sleep(500);
+                }
+
+                if (true == m_manageFile.isExistFile(strPartNamesFileFullName))
+                {
+                    readFile.readCSVColumnString2(strPartNamesFileFullName, ref listTempNames, 1);
+
+                    string[] arraySplitPartNames;
+                    string strPartName;
+                    string strFindRet = string.Empty;
+
+                    foreach (string strTempName in listTempNames)
+                    {
+                        // Group 처리가 되어 있는 Step 파일의 이름은 kt100g/Yoke Cover/Yoke Cover 로 그룹까지 포함되어 있다.
+                        // 여기서 '/' 로 분리해서 가장 하위의 명칭을 파트명으로 사용한다.
+                        arraySplitPartNames = strTempName.Split('/');
+
+                        // 가장 뒤에 있는 이름을 사용한다
+                        strPartName = arraySplitPartNames[arraySplitPartNames.Length - 1];
+
+                        // 이름에 스페이스가 있으면 '_' 로 변경한다.
+                        strPartName = strPartName.Replace(' ', '_');
+
+                        strFindRet = listNewAllPartNames.Find(x => x.Equals(strPartName));
+
+                        if (null != strFindRet)
+                        {
+                            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                                CNotice.noticeWarning(strPartName + "의 파트명에 중복 사용하고 있습니다.\n교체 작업이 취소 되었습니다.");
+                            else
+                                CNotice.noticeWarning("It is used in duplicate with the part name called " + strPartName + ".\nThe replacement operation has been canceled.");
+
+                            // 취소되면 신규 형상 디렉토리를 삭제한다.
+                            m_manageFile.deleteDirectory(strShapeNewDirPath);
+                            return;
+                        }
+
+                        listNewAllPartNames.Add(strPartName);
+                    }
+
+                    if (m_design.AllShapeNameList.Count != listNewAllPartNames.Count)
+                    {
+                        if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                            CNotice.noticeWarning("작업 형상과 신규 형상의 Part 개수가 일치하지 않습니다.\n교체 작업이 취소 되었습니다.");
+                        else
+                            CNotice.noticeWarning("The number of parts of the working shape and the new shape do not match.\nThe replacement operation has been canceled.");
+
+                        // 취소되면 신규 형상 디렉토리를 삭제한다.
+                        m_manageFile.deleteDirectory(strShapeNewDirPath);
+                        return;
+                    }
+
+                    foreach(string strCurrentPartName in m_design.AllShapeNameList)
+                    {
+                        strFindRet = listNewAllPartNames.Find(x => x.Equals(strCurrentPartName));
+
+                        if(null == strFindRet)
+                        {
+                            if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                                CNotice.noticeWarning("작업 형상과 신규 형상의 Part 이름이 일치하지 않습니다.\n교체 작업이 취소 되었습니다.");
+                            else
+                                CNotice.noticeWarning("The part names of the working shape and the new shape do not match.\nThe replacement operation has been canceled.");
+
+                            // 취소되면 신규 형상 디렉토리를 삭제한다.
+                            m_manageFile.deleteDirectory(strShapeNewDirPath);
+                            return;
+                        }
+                    }
+
+                    // 정상적으로 신규형상을 읽어드리면 기존 형상을 삭제한다.
+                    m_manageFile.deleteDirectory(strShapeDirPath);
+                    Thread.Sleep(50);
+
+                    m_manageFile.copyDirectory(strShapeNewDirPath, strShapeDirPath);
+                    Thread.Sleep(50);
+
+                    // 복사후에 신규 디렉토리를 삭제한다.
+                    m_manageFile.deleteDirectory(strShapeNewDirPath);
+
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeInfomation("정상적으로 형상 교체이 완료 되었습니다.", "알림");
+                    else
+                        CNotice.noticeInfomation("Shape replacement has been completed normally.", "Notice");
+                }
+                else
+                {
+                    CNotice.printLog("Part Names 파일이 존재하지 않는다.");
+
+                    // 취소되면 신규 형상 디렉토리를 삭제한다.
+                    m_manageFile.deleteDirectory(strShapeNewDirPath);
+                    return;
+                }
+            }
+            else
+            {
+                CNotice.printLog("New Part Names Script 파일 생성에 문제가 발생했습니다.");
+
+                // 취소되면 신규 형상 디렉토리를 삭제한다.
+                m_manageFile.deleteDirectory(strShapeNewDirPath);
+                return;
+            }
+
         }
 
 
@@ -1400,7 +1675,7 @@ namespace DoSA
 
                 //CScript.moveGmshWindow(0, 0);
 
-                // Maxwell 의 종료시간을 기다려준다.
+                // 종료시간을 기다려준다.
                 Thread.Sleep(500);
 
                 plotForceResult(forceTest);
@@ -1447,11 +1722,11 @@ namespace DoSA
             // 아래와 같이 묶음처리를 사용한다.
             string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
 
-            // Maxwell 종료될 때 가지 툴킷을 기다린다.
+            // 종료될 때 가지 툴킷을 기다린다.
             // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
             CScript.runScript(strGmshExeFileFullName, strArguments, true);
 
-            // Maxwell 의 종료시간을 기다려준다.
+            // 종료시간을 기다려준다.
             Thread.Sleep(500);
 
             return true;
@@ -2283,6 +2558,9 @@ namespace DoSA
                     return;
                 }
 
+                if (false == checkDesignFile(ref m_strCommandLineDesignFullName))
+                    return;
+
                 if (false == loadDesignFile(m_strCommandLineDesignFullName))
                     return;
 
@@ -2548,7 +2826,7 @@ namespace DoSA
                     m_manageFile.createDirectory(strDesignDirPath);
                 }
 
-                string strActuatorDesignFileFullName = Path.Combine(strDesignDirPath, m_design.m_strDesignName + ".dsa");
+                string strActuatorDesignFileFullName = Path.Combine(strDesignDirPath, m_design.m_strDesignName + ".dsa3d");
 
                 StreamWriter writeStream = new StreamWriter(strActuatorDesignFileFullName);
                 CWriteFile writeFile = new CWriteFile();
@@ -3323,10 +3601,8 @@ namespace DoSA
             List<double> listH = new List<double>();
             List<double> listB = new List<double>();
 
-
             try
             {
-                //string strMaxwellMaterialDirName = CSettingData.m_strMaxwellMaterialDirName;
                 string strProgramMaterialDirName = Path.Combine(CSettingData.m_strProgramDirPath, "Materials");
 
                 // 내장 비자성 재료
@@ -3505,32 +3781,6 @@ namespace DoSA
 
         #endregion
 
-        private void ribbonButtonDonation_Click(object sender, EventArgs e)
-        {
-            string target;
 
-            if (CSettingData.m_emLanguage == EMLanguage.Korean)
-            {
-                target = "https://solenoid.or.kr/index_donation.html";
-            }
-            else
-            {
-                target = "https://www.buymeacoffee.com/openactuator";
-            }
-
-            try
-            {
-                System.Diagnostics.Process.Start(target);
-            }
-            catch (System.ComponentModel.Win32Exception noBrowser)
-            {
-                if (noBrowser.ErrorCode == -2147467259)
-                    CNotice.printLog(noBrowser.Message);
-            }
-            catch (System.Exception other)
-            {
-                CNotice.printLog(other.Message);
-            }
-        }
     }
 }

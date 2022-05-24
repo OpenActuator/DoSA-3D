@@ -1,7 +1,7 @@
 $begin "DoSA_3D_Project"
-	Writed=4/13/2022 10:10:37 PM
-	DoSA_Version=0.9.13.3
-	File_Version=0.9.13.3
+	Writed=2022-05-24 오후 9:52:44
+	DoSA_Version=1.1.0.0
+	File_Version=1.1.0.0
 	$begin "Design"
 		DesignName=VCM
 		AllShapeName=Plate,Magnet,Case,Coil,

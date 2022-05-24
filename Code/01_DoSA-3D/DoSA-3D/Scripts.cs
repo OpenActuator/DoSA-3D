@@ -144,9 +144,9 @@ namespace Onelab
 
             //// Process 의 Arguments 에서 스페이스 문제가 발생한다.
             //// 아래와 같이 묶음처리를 사용한다.
-            //string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullNameMaxwell);
+            //string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
 
-            //runScript(strMaxwellFileFullName, strArguments, m_strRunScriptFileFullName, true, progressBarMovement);
+            //runScript(strFileFullName, strArguments, m_strRunScriptFileFullName, true, progressBarMovement);
 
             //progressBarMovement.Value = progressBarTime.Maximum;
             //------------------------------------------------------------
@@ -157,9 +157,6 @@ namespace Onelab
                 m_process.StartInfo.FileName = strCmd;
                 m_process.StartInfo.Arguments = strArgs;
 
-                // 자속밀도의 그림이 범례의 문제가 없으려면 Maxwell 이 최대화가 되어야 한다. 
-                // 
-                //m_process.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Maximized;
                 m_process.Start();
 
                 // 프로세스를 기다리게 설정된 경우만 사용된다.

@@ -26,17 +26,21 @@ namespace DoSA
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {
-                buttonDoSAUserGuide.Text = "DoSA-3D 사용 설명서";
                 buttonVCMGuide.Text = "VCM 예제 따라하기";
                 buttonSolenoidGuide.Text = "Solenoid 예제 따라하기";
                 buttonDrawingGuide.Text = "해석 전 형상작업 가이드";
+                buttonOpenHelpDirectory.Text = "도움말 디렉토리 열기";
+                labelNotice1.Text = "- 도움말이 열리지 않으면";
+                labelNotice2.Text = "   가장 아래의 디렉토리 열기 버튼을 사용 하세요.";
             }
             else
             {
-                buttonDoSAUserGuide.Text = "DoSA-3D User Manual";
                 buttonVCMGuide.Text = "VCM Example";
                 buttonSolenoidGuide.Text = "Solenoid Example";
                 buttonDrawingGuide.Text = "Drawing Guide before Simulation";
+                buttonOpenHelpDirectory.Text = "Open the help directory";
+                labelNotice1.Text = "- If the help does not open,";
+                labelNotice2.Text = "   use the Open Directory button at the bottom.";
             }
         }
 
@@ -132,6 +136,13 @@ namespace DoSA
             }
 
             System.Diagnostics.Process.Start(strHelpFileFullName);
+        }
+
+        private void buttonOpenHelpDirectory_Click(object sender, EventArgs e)
+        {
+            string strHelpFolderPath = Path.Combine(CSettingData.m_strProgramDirPath, "Help");
+
+            System.Diagnostics.Process.Start(strHelpFolderPath);
         }
     }
 }

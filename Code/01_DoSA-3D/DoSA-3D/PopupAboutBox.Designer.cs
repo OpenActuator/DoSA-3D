@@ -34,7 +34,7 @@
             this.labelProductName = new System.Windows.Forms.Label();
             this.labelVersion = new System.Windows.Forms.Label();
             this.labelCopyright = new System.Windows.Forms.Label();
-            this.buttonOK = new System.Windows.Forms.Button();
+            this.buttonClose = new System.Windows.Forms.Button();
             this.buttonLicense = new System.Windows.Forms.Button();
             this.buttonDonation = new System.Windows.Forms.Button();
             this.buttonHomepage = new System.Windows.Forms.Button();
@@ -145,15 +145,15 @@
             this.labelCopyright.Text = "License";
             this.labelCopyright.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
-            // buttonOK
+            // buttonClose
             // 
-            this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonOK.Location = new System.Drawing.Point(386, 446);
-            this.buttonOK.Name = "buttonOK";
-            this.buttonOK.Size = new System.Drawing.Size(110, 35);
-            this.buttonOK.TabIndex = 0;
-            this.buttonOK.Text = "&OK";
+            this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonClose.Location = new System.Drawing.Point(386, 446);
+            this.buttonClose.Name = "buttonClose";
+            this.buttonClose.Size = new System.Drawing.Size(110, 35);
+            this.buttonClose.TabIndex = 0;
+            this.buttonClose.Text = "Close";
             // 
             // buttonLicense
             // 
@@ -197,7 +197,7 @@
             this.Controls.Add(this.buttonHomepage);
             this.Controls.Add(this.buttonDonation);
             this.Controls.Add(this.buttonLicense);
-            this.Controls.Add(this.buttonOK);
+            this.Controls.Add(this.buttonClose);
             this.Controls.Add(this.tableLayoutPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -220,7 +220,7 @@
         private System.Windows.Forms.Label labelContributor;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel;
         private System.Windows.Forms.Label labelProductName;
-        private System.Windows.Forms.Button buttonOK;
+        private System.Windows.Forms.Button buttonClose;
         private System.Windows.Forms.Button buttonLicense;
         private System.Windows.Forms.TextBox textBoxOpenLicense;
         private System.Windows.Forms.Label labelVersion;

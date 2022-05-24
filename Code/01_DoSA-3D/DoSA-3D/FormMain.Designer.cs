@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             this.ribbonToolbar = new System.Windows.Forms.Ribbon();
             this.ribbonOrbMenuItemNew = new System.Windows.Forms.RibbonOrbMenuItem();
             this.ribbonOrbMenuItemOpen = new System.Windows.Forms.RibbonOrbMenuItem();
@@ -48,7 +48,7 @@
             this.ribbonButtonOpen = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonSave = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonSaveAs = new System.Windows.Forms.RibbonButton();
-            this.ribbonButtonShape = new System.Windows.Forms.RibbonButton();
+            this.ribbonButtonShowShape = new System.Windows.Forms.RibbonButton();
             this.ribbonPanelDesign = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonCoil = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonMagnet = new System.Windows.Forms.RibbonButton();
@@ -107,6 +107,7 @@
             this.buttonLoadCurrentResult = new System.Windows.Forms.Button();
             this.pictureBoxCurrent = new System.Windows.Forms.PictureBox();
             this.buttonTestCurrent = new System.Windows.Forms.Button();
+            this.ribbonButtonChangeShape = new System.Windows.Forms.RibbonButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerLeft)).BeginInit();
             this.splitContainerLeft.Panel1.SuspendLayout();
             this.splitContainerLeft.Panel2.SuspendLayout();
@@ -227,7 +228,8 @@
             this.ribbonPanelFile.Items.Add(this.ribbonButtonOpen);
             this.ribbonPanelFile.Items.Add(this.ribbonButtonSave);
             this.ribbonPanelFile.Items.Add(this.ribbonButtonSaveAs);
-            this.ribbonPanelFile.Items.Add(this.ribbonButtonShape);
+            this.ribbonPanelFile.Items.Add(this.ribbonButtonShowShape);
+            this.ribbonPanelFile.Items.Add(this.ribbonButtonChangeShape);
             this.ribbonPanelFile.Text = "FILE";
             // 
             // ribbonButtonNew
@@ -235,7 +237,7 @@
             this.ribbonButtonNew.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonNew.Image")));
             this.ribbonButtonNew.MinimumSize = new System.Drawing.Size(60, 0);
             this.ribbonButtonNew.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonNew.SmallImage")));
-            this.ribbonButtonNew.Text = "New3D";
+            this.ribbonButtonNew.Text = "New";
             this.ribbonButtonNew.Click += new System.EventHandler(this.ribbonButtonNew_Click);
             // 
             // ribbonButtonOpen
@@ -262,13 +264,13 @@
             this.ribbonButtonSaveAs.Text = "SaveAs";
             this.ribbonButtonSaveAs.Click += new System.EventHandler(this.ribbonButtonSaveAs_Click);
             // 
-            // ribbonButtonShape
+            // ribbonButtonShowShape
             // 
-            this.ribbonButtonShape.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonShape.Image")));
-            this.ribbonButtonShape.MinimumSize = new System.Drawing.Size(60, 0);
-            this.ribbonButtonShape.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonShape.SmallImage")));
-            this.ribbonButtonShape.Text = "Shape";
-            this.ribbonButtonShape.Click += new System.EventHandler(this.ribbonButtonShape_Click);
+            this.ribbonButtonShowShape.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonShowShape.Image")));
+            this.ribbonButtonShowShape.MinimumSize = new System.Drawing.Size(60, 0);
+            this.ribbonButtonShowShape.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonShowShape.SmallImage")));
+            this.ribbonButtonShowShape.Text = "Show Shape";
+            this.ribbonButtonShowShape.Click += new System.EventHandler(this.ribbonButtonShowShape_Click);
             // 
             // ribbonPanelDesign
             // 
@@ -604,8 +606,8 @@
             // 
             this.chartBHCurve.BorderlineColor = System.Drawing.Color.Black;
             this.chartBHCurve.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea1.Name = "ChartArea1";
-            this.chartBHCurve.ChartAreas.Add(chartArea1);
+            chartArea4.Name = "ChartArea1";
+            this.chartBHCurve.ChartAreas.Add(chartArea4);
             this.chartBHCurve.Location = new System.Drawing.Point(185, 60);
             this.chartBHCurve.Name = "chartBHCurve";
             this.chartBHCurve.Size = new System.Drawing.Size(520, 400);
@@ -740,8 +742,8 @@
             // 
             this.chartStrokeResult.BorderlineColor = System.Drawing.Color.Black;
             this.chartStrokeResult.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea2.Name = "ChartArea1";
-            this.chartStrokeResult.ChartAreas.Add(chartArea2);
+            chartArea5.Name = "ChartArea1";
+            this.chartStrokeResult.ChartAreas.Add(chartArea5);
             this.chartStrokeResult.Location = new System.Drawing.Point(185, 60);
             this.chartStrokeResult.Name = "chartStrokeResult";
             this.chartStrokeResult.Size = new System.Drawing.Size(520, 400);
@@ -810,8 +812,8 @@
             // 
             this.chartCurrentResult.BorderlineColor = System.Drawing.Color.Black;
             this.chartCurrentResult.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea3.Name = "ChartArea1";
-            this.chartCurrentResult.ChartAreas.Add(chartArea3);
+            chartArea6.Name = "ChartArea1";
+            this.chartCurrentResult.ChartAreas.Add(chartArea6);
             this.chartCurrentResult.Location = new System.Drawing.Point(185, 60);
             this.chartCurrentResult.Name = "chartCurrentResult";
             this.chartCurrentResult.Size = new System.Drawing.Size(520, 400);
@@ -845,6 +847,14 @@
             this.buttonTestCurrent.TabIndex = 11;
             this.buttonTestCurrent.Text = "Current Test";
             this.buttonTestCurrent.UseVisualStyleBackColor = true;
+            // 
+            // ribbonButtonChangeShape
+            // 
+            this.ribbonButtonChangeShape.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonChangeShape.Image")));
+            this.ribbonButtonChangeShape.MinimumSize = new System.Drawing.Size(60, 0);
+            this.ribbonButtonChangeShape.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonChangeShape.SmallImage")));
+            this.ribbonButtonChangeShape.Text = "Change Shape";
+            this.ribbonButtonChangeShape.Click += new System.EventHandler(this.ribbonButtonChangeShape_Click);
             // 
             // FormMain
             // 
@@ -970,8 +980,9 @@
         private System.Windows.Forms.TextBox textBoxForceY;
         private System.Windows.Forms.Label labelN_Z;
         private System.Windows.Forms.Label labelN_Y;
-        private System.Windows.Forms.RibbonButton ribbonButtonShape;
+        private System.Windows.Forms.RibbonButton ribbonButtonShowShape;
         private System.Windows.Forms.RibbonButton ribbonButtonDonation;
+        private System.Windows.Forms.RibbonButton ribbonButtonChangeShape;
     }
 }
 

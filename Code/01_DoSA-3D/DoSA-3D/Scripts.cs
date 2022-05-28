@@ -218,7 +218,10 @@ namespace Onelab
         }
     }
 
-
+    /// <summary>
+    /// # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
+    /// # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
+    /// </summary>
     public class CScriptContents
     {
         //--------------------------------------------------
@@ -235,6 +238,9 @@ namespace Onelab
 # 2 : Part Name File Full Name
 # 3 : Design Name
 
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
+
 SetFactory(""OpenCASCADE"");
 
 Merge ""{{1}}"";
@@ -245,10 +251,10 @@ STEP_Volumes[] = Volume '*';
 
 For k In {0 : #STEP_Volumes[]-1}
 
-	stepName = StrReplace(Volume{STEP_Volumes[k]}, ""Shapes/"", """");
-	
-	Printf(stepName) >> ""{{2}}"";
-	
+    stepName = StrReplace(Volume{STEP_Volumes[k]}, ""Shapes/"", """");
+
+    Printf(stepName) >> ""{{2}}"";
+
 EndFor
 
 Geometry.Volumes = 1;
@@ -272,7 +278,7 @@ Merge ""{{1}}"";
 Geometry.Volumes = 1;
 Geometry.VolumeNumbers = 1;
 
-//Geometry.SurfaceType = 2;
+# Geometry.SurfaceType = 2;
 
 ";
         #endregion
@@ -343,19 +349,19 @@ SKIN_STEEL = 302;
         @"#BH,1
 # 1 : Material Name
 
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
-    Mat_{{1}}_B2() = Mat_{{1}}_B()^2;
-    Mat_{{1}}_nu() = Mat_{{1}}_H() / Mat_{{1}}_B();
-    Mat_{{1}}_nu(0) = Mat_{{1}}_nu(1);
+Mat_{{1}}_B2() = Mat_{{1}}_B()^2;
+Mat_{{1}}_nu() = Mat_{{1}}_H() / Mat_{{1}}_B();
+Mat_{{1}}_nu(0) = Mat_{{1}}_nu(1);
 
-    Mat_{{1}}_nu_B2() = ListAlt[Mat_{{1}}_B2(), Mat_{{1}}_nu()];
-    nu_{{1}}[] = InterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
-    dnudb2_{{1}}[] = dInterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
-    H_{{1}}[] = nu_{{1}}[$1] * $1 ;
-    dhdb_{{1}}[] = TensorDiag[1,1,1] * nu_{{1}}[$1#1] + 2 * dnudb2_{{1}}[#1] * SquDyadicProduct[#1];
-    dhdb_{{1}}_NL[] = 2 * dnudb2_{{1}}[$1] * SquDyadicProduct[$1] ;
-
+Mat_{{1}}_nu_B2() = ListAlt[Mat_{{1}}_B2(), Mat_{{1}}_nu()];
+nu_{{1}}[] = InterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
+dnudb2_{{1}}[] = dInterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
+H_{{1}}[] = nu_{{1}}[$1] * $1 ;
+dhdb_{{1}}[] = TensorDiag[1,1,1] * nu_{{1}}[$1#1] + 2 * dnudb2_{{1}}[#1] * SquDyadicProduct[#1];
+dhdb_{{1}}_NL[] = 2 * dnudb2_{{1}}[$1] * SquDyadicProduct[$1] ;
 
 ";
         #endregion
@@ -365,6 +371,10 @@ SKIN_STEEL = 302;
         public string m_str04_Import_Script =
         @"#IMPORT,1
 # 1 : STEP File Name
+
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
+
 SetFactory(""OpenCASCADE"");
 
 Include ""Define.geo"";
@@ -377,7 +387,6 @@ Merge ""{{1}}"";
 
 STEP_Volumes[] = Volume '*';
 
-# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
 
 # Message console 을 보이게 한다. 
@@ -404,8 +413,9 @@ General.ShowMessagesOnStartup = 1;
 # 10 : Outer Width Y
 # 11 : Outer Width Z
 
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
-#
+
 volOuterBox = newv; Box(newv) = { {{2}}*mm, {{3}}*mm, {{4}}*mm, {{5}}*mm, {{5}}*mm, {{5}}*mm };
 volInnerBox = newv; Box(newv) = { {{6}}*mm, {{7}}*mm, {{8}}*mm, {{9}}*mm, {{10}}*mm, {{11}}*mm };
 
@@ -441,6 +451,10 @@ Physical Surface(SKIN_AIR) = skinAir();
         public string m_str05_Image_Script =
         @"#IMPORT,1
 # 1 : STEP File Name
+
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
+
 SetFactory(""OpenCASCADE"");
 
 mm = 1e-3;
@@ -449,7 +463,6 @@ Merge ""{{1}}"";
 
 STEP_Volumes[] = Volume '*';
 
-# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
 
 General.Trackball = 0;
@@ -484,13 +497,13 @@ Group {
         public string m_str07_Function_Script =
         @"#DEFINE,0
 
-Function {	
+Function {
 
     mu0 = 4*Pi*1e-7;
 
     Nb_max_iter = 30;
     stop_criterion = 1e-5;
-    relaxation_factor = 1.0;		
+    relaxation_factor = 1.0;
 
     mu[volAir] = mu0;
     nu[volAir] = 1.0/mu0;
@@ -503,74 +516,75 @@ Function {
         public string m_str08_Constraint_Script =
         @"#DEFINE,0
 
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 Constraint {
-	{ Name cstDirichlet_A_0 ;
-		Case {
-			{ Region skinAir ; Type Assign ; Value 0. ; }
-		}
-	}
+    { Name cstDirichlet_A_0 ;
+        Case {
+            { Region skinAir ; Type Assign ; Value 0. ; }
+        }
+    }
 
-	{ Name cstForceMoving;
-		Case {
-			{ Region skinMoving ; Value 1. ; }
-		}
-	}	
-	
-	{ Name cstGaugeCondition_A ; Type Assign ;
-		Case {
-			{ Region domainALL ; SubRegion skinAir ; Value 0. ; }
-		}
-	}	
+    { Name cstForceMoving;
+        Case {
+            { Region skinMoving ; Value 1. ; }
+        }
+    }    
+    
+    { Name cstGaugeCondition_A ; Type Assign ;
+        Case {
+            { Region domainALL ; SubRegion skinAir ; Value 0. ; }
+        }
+    }    
 }
 
 FunctionSpace {
-	
-	{ Name fsHcurl_A_3D ; Type Form1 ;
-		BasisFunction {
-			{ 	Name se ; NameOfCoef ae ; Function BF_Edge ;
-				Support domainALL ; Entity EdgesOf[ All ] ; }
-		}
-		Constraint {
-			{ 	NameOfCoef ae;	EntityType EdgesOf ; NameOfConstraint cstDirichlet_A_0 ; }
-			
-			{	NameOfCoef ae  ;	EntityType EdgesOfTreeIn ; EntitySubType StartingOn ;
-				 NameOfConstraint cstGaugeCondition_A ; }			
-		}
-	}
-	
-	{ Name fsForceMoving ; Type Form0 ;
-		BasisFunction {
-			{ Name sn ; NameOfCoef un ; Function BF_GroupOfNodes ;
-			  Support volAir ; Entity GroupsOfNodesOf[ skinMoving ] ; }
-		}
-		Constraint {
-			{ NameOfCoef un ; EntityType GroupsOfNodesOf ; NameOfConstraint cstForceMoving ; }	
-		}
-	}
+    
+    { Name fsHcurl_A_3D ; Type Form1 ;
+        BasisFunction {
+            { Name se ; NameOfCoef ae ; Function BF_Edge ;
+                Support domainALL ; Entity EdgesOf[ All ] ; }
+        }
+        Constraint {
+            { NameOfCoef ae;    EntityType EdgesOf ; NameOfConstraint cstDirichlet_A_0 ; }
+            
+            { NameOfCoef ae  ;    EntityType EdgesOfTreeIn ; EntitySubType StartingOn ;
+                 NameOfConstraint cstGaugeCondition_A ; }
+        }
+    }
+    
+    { Name fsForceMoving ; Type Form0 ;
+        BasisFunction {
+            { Name sn ; NameOfCoef un ; Function BF_GroupOfNodes ;
+              Support volAir ; Entity GroupsOfNodesOf[ skinMoving ] ; }
+        }
+        Constraint {
+            { NameOfCoef un ; EntityType GroupsOfNodesOf ; NameOfConstraint cstForceMoving ; }    
+        }
+    }
 }
 
 Jacobian {
-	{ Name jbVolume ;
-		Case { 
-			{ Region All ;       Jacobian Vol ; }
-		}
-	}
+    { Name jbVolume ;
+        Case { 
+            { Region All ;       Jacobian Vol ; }
+        }
+    }
 }
 
 Integration {
-	{ Name igElement ;
-		Case {
-			{	Type Gauss ;
-				Case {
-					{ GeoElement Triangle    ; NumberOfPoints  4 ; }
-					{ GeoElement Quadrangle  ; NumberOfPoints  4 ; }
-					{ GeoElement Tetrahedron ; NumberOfPoints  4 ; }
-				}
-			}
-		}
-	}
+    { Name igElement ;
+        Case {
+            {    Type Gauss ;
+                Case {
+                    { GeoElement Triangle    ; NumberOfPoints  4 ; }
+                    { GeoElement Quadrangle  ; NumberOfPoints  4 ; }
+                    { GeoElement Tetrahedron ; NumberOfPoints  4 ; }
+                }
+            }
+        }
+    }
 }
 
 ";
@@ -581,52 +595,53 @@ Integration {
         public string m_str11_Formulation_Resolution_Script =
         @"#DEFINE,3
 # 1 : Coil Name
-# 2 : Magnet Part String - 1
-# 3 : Magnet Part String - 2
+# 2 : First Line String of Magnet
+# 3 : Second Line String of Magnet
 
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 Formulation {
 
-	{ Name fmMagStatic_A; Type FemEquation;
-		Quantity {
-			{ Name qnt_A; Type Local; NameOfSpace fsHcurl_A_3D; }
-			{ Name qnt_MovingForce ; Type Local ; NameOfSpace fsForceMoving ; }
-		}
-		Equation {
-			Integral { [ nu[{d qnt_A}] * Dof{d qnt_A} , {d qnt_A} ] ;
-				In domainALL ; Jacobian jbVolume ; Integration igElement ; }
-				
-			Galerkin { JacNL [ dhdb_NL[{d qnt_A}] * Dof{d qnt_A} , {d qnt_A} ] ;
-				In domainNL ; Jacobian jbVolume ; Integration igElement ; }			
+    { Name fmMagStatic_A; Type FemEquation;
+        Quantity {
+            { Name qnt_A; Type Local; NameOfSpace fsHcurl_A_3D; }
+            { Name qnt_MovingForce ; Type Local ; NameOfSpace fsForceMoving ; }
+        }
+        Equation {
+            Integral { [ nu[{d qnt_A}] * Dof{d qnt_A} , {d qnt_A} ] ;
+                In domainALL ; Jacobian jbVolume ; Integration igElement ; }
+                
+            Galerkin { JacNL [ dhdb_NL[{d qnt_A}] * Dof{d qnt_A} , {d qnt_A} ] ;
+                In domainNL ; Jacobian jbVolume ; Integration igElement ; }
 
 {{2}}
 {{3}}
-				
-			Galerkin { [ -js0[], {qnt_A} ] ;
-				In vol{{1}} ; Jacobian jbVolume ; Integration igElement ; }							
-				
-			Galerkin { [ 0 * Dof{qnt_MovingForce} , {qnt_MovingForce} ] ;
-				In volAir ; Jacobian jbVolume ; Integration igElement ; }				
+                
+            Galerkin { [ -js0[], {qnt_A} ] ;
+                In vol{{1}} ; Jacobian jbVolume ; Integration igElement ; }
+                
+            Galerkin { [ 0 * Dof{qnt_MovingForce} , {qnt_MovingForce} ] ;
+                In volAir ; Jacobian jbVolume ; Integration igElement ; }
 
         }
-	}
+    }
 }
 
 Resolution {
-	{ Name rsMagStatic_A ;
-		System {
-			{ Name sys_A ; NameOfFormulation fmMagStatic_A ; }
-		}
+    { Name rsMagStatic_A ;
+        System {
+            { Name sys_A ; NameOfFormulation fmMagStatic_A ; }
+        }
 
-		Operation {
-			IterativeLoop[Nb_max_iter, stop_criterion, relaxation_factor]{
-				GenerateJac[sys_A] ; SolveJac[sys_A] ; }						
-			SaveSolution[sys_A] ;
-			
-			//PostOperation[Get_Force] ;
-		}
-	}
+        Operation {
+            IterativeLoop[Nb_max_iter, stop_criterion, relaxation_factor]{
+                GenerateJac[sys_A] ; SolveJac[sys_A] ; }
+            SaveSolution[sys_A] ;
+            
+            //PostOperation[Get_Force] ;
+        }
+    }
 }
 
 ";
@@ -634,54 +649,56 @@ Resolution {
 
         #region ---------------------------- 12_PostProcessing (*.pro) ----------------------------
 
+
         public string m_str12_PostProcessing_Script =
         @"#DEFINE,1
 # 1 : Coil Name
 
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 PostProcessing {
 
-	{ Name ppMagStatic_A ; NameOfFormulation fmMagStatic_A ;
-		PostQuantity {			
-			
-			{ Name b ; Value { 
-				Term { [ {d qnt_A} ]; In domainALL; Jacobian jbVolume; } 
-				} 
-			}	
+    { Name ppMagStatic_A ; NameOfFormulation fmMagStatic_A ;
+        PostQuantity {
+            
+            { Name b ; Value { 
+                Term { [ {d qnt_A} ]; In domainALL; Jacobian jbVolume; } 
+                } 
+            }    
 
             { Name js ; Value { 
-				Term { [ js0[] ] ; In vol{{1}} ; Jacobian jbVolume ; } 
-				} 
-			}	
-		
-			{ Name psMovingForce ; Value {
-				Term { [ {qnt_MovingForce} ] ; In domainALL ; Jacobian jbVolume ; }
-				}
-			}
-			{ Name forceMoving ; Value {
-				Integral { [ - TM[{d qnt_A}] * {d qnt_MovingForce} ] ;
-					In volAir ; Jacobian jbVolume ; Integration igElement ; }
-				}
-			}
-			{ Name forceMovingX ; Value {
-				Integral { [ CompX[- TM[{d qnt_A}] * {d qnt_MovingForce} ] ] ;
-					In volAir ; Jacobian jbVolume ; Integration igElement ; }
-				}
-			}
-			{ Name forceMovingY ; Value {
-				Integral { [ CompY[- TM[{d qnt_A}] * {d qnt_MovingForce} ] ] ;
-				  In volAir ; Jacobian jbVolume ; Integration igElement ; }
-			  }
-			}
-			{ Name forceMovingZ ; Value {
-				Integral { [ CompZ[- TM[{d qnt_A}] * {d qnt_MovingForce} ] ] ;
-				  In volAir ; Jacobian jbVolume ; Integration igElement ; }
-			  }
-		    }			
-		}
-	}
-}
+                Term { [ js0[] ] ; In vol{{1}} ; Jacobian jbVolume ; } 
+                } 
+            }
+        
+            { Name psMovingForce ; Value {
+                Term { [ {qnt_MovingForce} ] ; In domainALL ; Jacobian jbVolume ; }
+                }
+            }
+            { Name forceMoving ; Value {
+                Integral { [ - TM[{d qnt_A}] * {d qnt_MovingForce} ] ;
+                    In volAir ; Jacobian jbVolume ; Integration igElement ; }
+                }
+            }
+            { Name forceMovingX ; Value {
+                Integral { [ CompX[- TM[{d qnt_A}] * {d qnt_MovingForce} ] ] ;
+                    In volAir ; Jacobian jbVolume ; Integration igElement ; }
+                }
+            }
+            { Name forceMovingY ; Value {
+                Integral { [ CompY[- TM[{d qnt_A}] * {d qnt_MovingForce} ] ] ;
+                    In volAir ; Jacobian jbVolume ; Integration igElement ; }
+                }
+            }
+            { Name forceMovingZ ; Value {
+                Integral { [ CompZ[- TM[{d qnt_A}] * {d qnt_MovingForce} ] ] ;
+                    In volAir ; Jacobian jbVolume ; Integration igElement ; }
+                }
+            }
+        }
+    }
+}   
 
 ";
         #endregion
@@ -691,39 +708,61 @@ PostProcessing {
         public string m_str13_PostOperation_Script =
         @"#DEFINE,2
 # 1 : Coil Name
-# 2 : X Coord of Left Bottom Point on XY Plane 
-# 3 : Y Coord of Left Bottom Point on XY Plane 
-# 4 : X Coord of Right Bottom Point on XY Plane 
-# 5 : Y Coord of Left Top Point on XY Plane 
-# 6 : Z Coord of Center Point on XY Plane 
+# 가. 좌하단점
+# 2 : X Coord of Left Bottom Point on Roation Plane 
+# 3 : Y Coord of Left Bottom Point on Roation Plane 
+# 4 : Z Coord of Left Bottom Point on Roation Plane 
+# 나. 우하단점
+# 5 : X Coord of Right Bottom Point on Roation Plane 
+#     Y Coord 는 #3 를 사용함
+# 6 : Z Coord of Right Bottom Point on Roation Plane 
+# 다. 좌상단점
+#     X Coord 는 #2 를 사용함
+# 7 : Y Coord of Left Top Point Roation XY Plane 
+#     Z Coord 는 #4 를 사용함
+# 8 : 자속밀도 벡터 해상도
 
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 PostOperation {
-	{ Name poMagStatic_A ; NameOfPostProcessing ppMagStatic_A;
-		Operation {			
-			
-            Print[ js, OnElementsOf vol{{1}}, File ""js.pos"" ] ;	
-			Print[ b, OnElementsOf domainALL, File ""b.pos"" ] ;	
-            Print[ b, OnPlane { { {{2}}*mm, {{3}}*mm, {{6}}*mm } { {{4}}*mm, {{3}}*mm, {{6}}*mm } { {{2}}*mm, {{5}}*mm, {{6}}*mm } } {125, 75}, File ""b_cut.pos"" ];
-			
-			DeleteFile [""F.dat""];
-			DeleteFile [""Fx.dat""];
-			DeleteFile [""Fy.dat""];
-			DeleteFile [""Fz.dat""];
-			
-			Print[ forceMoving[volAir], OnGlobal, Format Table, File > ""F.dat""  ];
-	
-			Print[ forceMovingX[volAir], OnGlobal, Format Table, File > ""Fx.dat"",
-			  SendToServer Sprintf(""Output/Coil %g/X force [N]"", 1), Color ""Ivory""  ];
-			  
-			Print[ forceMovingY[volAir], OnGlobal, Format Table, File > ""Fy.dat"",
-			  SendToServer Sprintf(""Output/Coil %g/Y force [N]"", 1), Color ""Ivory""  ];
-			  
-			Print[ forceMovingZ[volAir], OnGlobal, Format Table, File > ""Fz.dat"",
-			  SendToServer Sprintf(""Output/Coil %g/Z force [N]"", 1), Color ""Ivory""  ];			
-		}
-	}
+    { Name poMagStatic_A ; NameOfPostProcessing ppMagStatic_A;
+        Operation {            
+            
+            Print[ js, OnElementsOf vol{{1}}, File ""js.pos"" ] ;
+# 전체 출력은 용량이 너무커서 사용하지 않는다.            
+            //Print[ b, OnElementsOf domainALL, File ""b.pos"" ] ;
+            
+# OnPlane 은 {좌하단점}, {우하단점}, {좌상단점} 순서로 좌표를 입력하고 뒤이어서 {가로 해상도, 세로 해상도} 를 지정한다.
+# mm 은 단위 환산이다. ( mm = 1e-3 )
+            Print[ b, OnPlane { { {{2}}*mm, {{3}}*mm, {{4}}*mm } { {{5}}*mm, {{3}}*mm, {{6}}*mm } { {{2}}*mm, {{7}}*mm, {{4}}*mm } } { {{8}}, {{8}} }, File ""b_cut.pos"" ];
+# Print 수 만큼 View 가 생긴다. 따라서 View 인덱스는 0 부터 시작해서 1이다.
+            Echo[ Str[
+                ""nView = 1;"",
+                ""View[nView].RangeType = 2;"",
+                ""View[nView].CustomMax = 1.7;"",
+                ""View[nView].CustomMin = 0.0;"",
+                ""View[nView].Name = StrCat['Magnetic Density'];"",
+                ""Mesh.SurfaceEdges = 0;"" ],
+                File ""maps.opt"" ];
+
+            DeleteFile[""F.dat""];
+            DeleteFile [""Fx.dat""];
+            DeleteFile [""Fy.dat""];
+            DeleteFile [""Fz.dat""];
+            
+            Print[ forceMoving[volAir], OnGlobal, Format Table, File > ""F.dat""  ];
+    
+            Print[ forceMovingX[volAir], OnGlobal, Format Table, File > ""Fx.dat"",
+              SendToServer Sprintf(""Output/Coil %g/X force [N]"", 1), Color ""Ivory""  ];
+              
+            Print[ forceMovingY[volAir], OnGlobal, Format Table, File > ""Fy.dat"",
+              SendToServer Sprintf(""Output/Coil %g/Y force [N]"", 1), Color ""Ivory""  ];
+              
+            Print[ forceMovingZ[volAir], OnGlobal, Format Table, File > ""Fz.dat"",
+              SendToServer Sprintf(""Output/Coil %g/Z force [N]"", 1), Color ""Ivory""  ];
+        }
+    }
 }
 
 #OnelabRun

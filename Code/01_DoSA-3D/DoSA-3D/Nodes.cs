@@ -45,7 +45,7 @@ namespace Nodes
         }
 
         // 작업파일 저장을 각 객체에서 진행하고 있다.
-        public virtual bool writeObject(StreamWriter writeFile) { return true; }
+        public virtual bool writeObject(StreamWriter writeFile, int nLevel) { return true; }
         public virtual bool readObject(List<string> listStringLines, ref CNode node) { return true; }
     }
 
@@ -349,39 +349,39 @@ namespace Nodes
             return nMovingPartCount;
         }
 
-        public void writeObject(StreamWriter writeStream)
+        public void writeObject(StreamWriter writeStream, int nLevel)
         {
             CWriteFile writeFile = new CWriteFile();
             string strTemp = string.Empty;
 
-            writeFile.writeBeginLine(writeStream, "Design", 1);
-            writeFile.writeDataLine(writeStream, "DesignName", m_strDesignName, 2);
+            writeFile.writeBeginLine(writeStream, "Design", nLevel);
+            writeFile.writeDataLine(writeStream, "DesignName", m_strDesignName, nLevel + 1);
 
             foreach (string str in m_listAllShapeName)
                 strTemp = strTemp + str + ',';
-            writeFile.writeDataLine(writeStream, "AllShapeName", strTemp, 2);
+            writeFile.writeDataLine(writeStream, "AllShapeName", strTemp, nLevel + 1);
 
             strTemp = string.Empty;
 
             foreach (string str in m_listRemainedShapeName)
                 strTemp = strTemp + str + ',';
-            writeFile.writeDataLine(writeStream, "RemainedShapeName", strTemp, 2);
+            writeFile.writeDataLine(writeStream, "RemainedShapeName", strTemp, nLevel + 1);
 
-            writeFile.writeDataLine(writeStream, "ShapeMinX", m_dMinX.ToString(), 2);
-            writeFile.writeDataLine(writeStream, "ShapeMaxX", m_dMaxX.ToString(), 2);
+            writeFile.writeDataLine(writeStream, "ShapeMinX", m_dMinX.ToString(), nLevel + 1);
+            writeFile.writeDataLine(writeStream, "ShapeMaxX", m_dMaxX.ToString(), nLevel + 1);
 
-            writeFile.writeDataLine(writeStream, "ShapeMinY", m_dMinY.ToString(), 2);
-            writeFile.writeDataLine(writeStream, "ShapeMaxY", m_dMaxY.ToString(), 2);
+            writeFile.writeDataLine(writeStream, "ShapeMinY", m_dMinY.ToString(), nLevel + 1);
+            writeFile.writeDataLine(writeStream, "ShapeMaxY", m_dMaxY.ToString(), nLevel + 1);
 
-            writeFile.writeDataLine(writeStream, "ShapeMinZ", m_dMinZ.ToString(), 2);
-            writeFile.writeDataLine(writeStream, "ShapeMaxZ", m_dMaxZ.ToString(), 2);
+            writeFile.writeDataLine(writeStream, "ShapeMinZ", m_dMinZ.ToString(), nLevel + 1);
+            writeFile.writeDataLine(writeStream, "ShapeMaxZ", m_dMaxZ.ToString(), nLevel + 1);
 
             foreach (CNode node in NodeList)
             {
-                node.writeObject(writeStream);
+                node.writeObject(writeStream, nLevel);
             }
 
-            writeFile.writeEndLine(writeStream, "Design", 1);
+            writeFile.writeEndLine(writeStream, "Design", nLevel);
         }
 
         public void getMaterial()

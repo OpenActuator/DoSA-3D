@@ -29,20 +29,22 @@ namespace DoSA
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {
                 groupBoxComment.Text = "기능 제한";
-                labelComment1.Text = "1. 코일 형상";
-                labelComment2.Text = "- 코일 중심축은 Y 축이어야 한다.";
-                labelComment3.Text = "- 전류는 원통코일 형태로 인가된다.";
-                labelComment4.Text = "2. 구동부 제한";
-                labelComment5.Text = "- 구동부는 하나의 부품만을 지원하고 있다.";
+                labelComment1.Text = "1. 형상 제한";
+                labelComment2.Text = "- 코일 중심축은 Y 축과 일치해야 합니다.";
+                labelComment3.Text = "- 전류는 다각 코일이라도 원통 형태로 인가됩니다.";
+                labelComment4.Text = "2. 파트 수 제한";
+                labelComment5.Text = "- 동작은 하나의 파트만 지원합니다.";
+                labelComment6.Text = "- 하나의 코일만 지원합니다.";
             }
             else
             {
                 groupBoxComment.Text = "Functional limitations";
-                labelComment1.Text = " 1. Coil Shape";
-                labelComment2.Text = "- Coil center axis should be Y axis.";
-                labelComment3.Text = "- The current is applied like a cylindrical coil.";
-                labelComment4.Text = "2. Moving Part";
-                labelComment5.Text = "- The moving part still supports only one component.";
+                labelComment1.Text = " 1. Shape constraint";
+                labelComment2.Text = "- Coil central axis must coincide with Y axis.";
+                labelComment3.Text = "- Current is always applied in cylindrical form.";
+                labelComment4.Text = "2. Limited number of parts";
+                labelComment5.Text = "- Actions only support one part.";
+                labelComment6.Text = "- Only one coil is supported.";
             }
         }
 

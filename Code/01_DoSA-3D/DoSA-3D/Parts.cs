@@ -14,20 +14,11 @@ using System.IO;
 
 namespace Parts
 {
-    public enum EMMagnetPlane
+    public enum EMMagnetRotationAxis
     {
-        XY_Plane_Z,
-        YZ_Plane_X,
-        ZX_Plane_Y
+        Z_AXIS,
+        Y_AXIS
     }
-
-    public enum EMMagnetDirection 
-    { 
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT
-    };
 
     public enum EMCurrentDirection
     {
@@ -107,6 +98,17 @@ namespace Parts
             // 소수점 5째 자리 까지만 출력한다.
             get { return Math.Round(m_dResistance, 5); }
             set { m_dResistance = value; }
+        }
+
+        private double m_dResistance_20;
+
+        [ReadOnlyAttribute(true)]
+        [DisplayNameAttribute("Resistance at 20℃ [Ω]"), CategoryAttribute("\tCalculated Fields"), DescriptionAttribute("Coil Resistance at 20℃")]
+        public double Resistance_20
+        {
+            // 소수점 5째 자리 까지만 출력한다.
+            get { return Math.Round(m_dResistance_20, 5); }
+            set { m_dResistance_20 = value; }
         }
 
         [ReadOnlyAttribute(true)]
@@ -340,7 +342,7 @@ namespace Parts
                 this.TurnsOfOneLayer = iVirtical_N;
                 this.Layers = iHorizontal_N;
 
-                double dWireLength = Math.PI * this.Turns * dCoilAvgDiameter;
+                double dWireLength_Meter = Math.PI * this.Turns * dCoilAvgDiameter / 1000.0;
 
                 // IEC 317, 단위 저항 보간
                 double res_a = 0.0, res_b = 0.0, res_c = 0.0;
@@ -356,7 +358,7 @@ namespace Parts
                     res_c = -1.9999322f;
 
                     // 온도 계수
-                    dTemperatureCoefficient = 0.004041f;
+                    dTemperatureCoefficient = 0.00393f;
                 }
                 // 두가지 밖에 없어서 알루미늄의 경우이다.
                 else if(m_strMaterial == "Aluminum")
@@ -375,13 +377,11 @@ namespace Parts
                     return;
                 }
 
-
                 double dResistancePerMeter = res_a * (Math.Pow(res_b, CopperDiameter) * Math.Pow(CopperDiameter, res_c));
 
-                dResistancePerMeter = (1 + dTemperatureCoefficient * (this.Temperature - 20.0f)) * dResistancePerMeter;
-                this.Resistance = dResistancePerMeter * dWireLength * ResistanceCoefficient;
+                Resistance_20 = dResistancePerMeter * dWireLength_Meter * ResistanceCoefficient;
 
-                this.Resistance = this.Resistance / 1000.0f;     
+                Resistance = Resistance_20 * (1 + dTemperatureCoefficient * (Temperature - 20.0f));
             }
             catch (Exception ex)
             {
@@ -392,38 +392,39 @@ namespace Parts
 
         // 파일스트림 객체에 코일 정보를 기록한다.
         // override 를 꼭 사용해야 가상함수가 아니라 현 함수가 호출된다.
-        public override bool writeObject(StreamWriter writeStream)
+        public override bool writeObject(StreamWriter writeStream, int nLevel)
         {
             try
             {
                 CWriteFile writeFile = new CWriteFile();
 
-                writeFile.writeBeginLine(writeStream, "Coil", 2);
+                writeFile.writeBeginLine(writeStream, "Coil", nLevel);
 
                 // CNode
-                writeFile.writeDataLine(writeStream, "NodeName", NodeName, 3);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, 3);
+                writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
 
                 // CParts
-                writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, 3);
+                writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, nLevel + 1);
 
                 // CCoil
-                writeFile.writeDataLine(writeStream, "Material", Material, 3);
-                writeFile.writeDataLine(writeStream, "CurrentDirection", CurrentDirection, 3);
-                writeFile.writeDataLine(writeStream, "Turns", Turns, 3);
-                writeFile.writeDataLine(writeStream, "Resistance", Resistance, 3);
-                writeFile.writeDataLine(writeStream, "Layers", Layers, 3);
-                writeFile.writeDataLine(writeStream, "TurnsOfOneLayer", TurnsOfOneLayer, 3);
-                writeFile.writeDataLine(writeStream, "CoilWireGrade", CoilWireGrade, 3);
-                writeFile.writeDataLine(writeStream, "InnerDiameter", InnerDiameter, 3);
-                writeFile.writeDataLine(writeStream, "OuterDiameter", OuterDiameter, 3);
-                writeFile.writeDataLine(writeStream, "Height", Height, 3);
-                writeFile.writeDataLine(writeStream, "CopperDiameter", CopperDiameter, 3);
-                writeFile.writeDataLine(writeStream, "WireDiameter", WireDiameter, 3);
-                writeFile.writeDataLine(writeStream, "Temperature", Temperature, 3);
-                writeFile.writeDataLine(writeStream, "HorizontalCoefficient", HorizontalCoefficient, 3);
-                writeFile.writeDataLine(writeStream, "VerticalCoefficient", VerticalCoefficient, 3);
-                writeFile.writeDataLine(writeStream, "ResistanceCoefficient", ResistanceCoefficient, 3);
+                writeFile.writeDataLine(writeStream, "Material", Material, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "CurrentDirection", CurrentDirection, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Turns", Turns, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Resistance", Resistance, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Resistance_20", Resistance_20, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Layers", Layers, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "TurnsOfOneLayer", TurnsOfOneLayer, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "CoilWireGrade", CoilWireGrade, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "InnerDiameter", InnerDiameter, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "OuterDiameter", OuterDiameter, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Height", Height, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "CopperDiameter", CopperDiameter, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "WireDiameter", WireDiameter, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Temperature", Temperature, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "HorizontalCoefficient", HorizontalCoefficient, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "VerticalCoefficient", VerticalCoefficient, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "ResistanceCoefficient", ResistanceCoefficient, nLevel + 1);
 
                 // CFace
                 //if (Face != null)
@@ -431,7 +432,7 @@ namespace Parts
                 //    Face.writeObject(writeStream);
                 //}
             
-                writeFile.writeEndLine(writeStream, "Coil", 2);
+                writeFile.writeEndLine(writeStream, "Coil", nLevel);
 
             }
             catch (Exception ex)
@@ -508,48 +509,67 @@ namespace Parts
                         case "Material":
                             Material = arrayString[1];
                             break;
+
                         case "CurrentDirection":
                             CurrentDirection = (EMCurrentDirection)Enum.Parse(typeof(EMCurrentDirection), arrayString[1]);
                             break;
+
                         case "Turns":
                             Turns = Convert.ToInt16(arrayString[1]);
                             break;
+
                         case "Resistance":
                             Resistance = Convert.ToDouble(arrayString[1]);
                             break;
+
+                        case "Resistance_20":
+                            Resistance_20 = Convert.ToDouble(arrayString[1]);
+                            break;
+
                         case "Layers":
                             Layers = Convert.ToInt16(arrayString[1]);
                             break;
+
                         case "TurnsOfOneLayer":
                             TurnsOfOneLayer = Convert.ToInt16(arrayString[1]);
                             break;
+
                         case "CoilWireGrade":
                             CoilWireGrade = (EMCoilWireGrade)Enum.Parse(typeof(EMCoilWireGrade), arrayString[1]);
                             break;
+
                         case "InnerDiameter":
                             InnerDiameter = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "OuterDiameter":
                             OuterDiameter = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "Height":
                             Height = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "CopperDiameter":
                             CopperDiameter = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "WireDiameter":
                             WireDiameter = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "Temperature":
                             Temperature = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "HorizontalCoefficient":
                             HorizontalCoefficient = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "VerticalCoefficient":
                             VerticalCoefficient = Convert.ToDouble(arrayString[1]);
                             break;
+
                         case "ResistanceCoefficient":
                             ResistanceCoefficient = Convert.ToDouble(arrayString[1]);
                             break;
@@ -581,19 +601,20 @@ namespace Parts
             set { m_strMaterial = value; }
         }
 
+        [ReadOnlyAttribute(true)]
         [DisplayNameAttribute("Hc"), CategoryAttribute("\t\tSpecification Fields"), DescriptionAttribute("Magnetic Intensity")]
         public double Hc { get; set; }
 
+        [ReadOnlyAttribute(true)]
         [DisplayNameAttribute("Br"), CategoryAttribute("\t\tSpecification Fields"), DescriptionAttribute("Magnetic Density")]
         public double Br { get; set; }
 
 
-        [DisplayNameAttribute("Magnet Plane"), CategoryAttribute("\tMagnetization Fields"), DescriptionAttribute("착자 기준평면")]
-        public EMMagnetPlane emMagnetPlane { get; set; }
+        [DisplayNameAttribute("Rotation Axis"), CategoryAttribute("\tMagnetization Fields"), DescriptionAttribute("착자 회전 축")]
+        public EMMagnetRotationAxis emMagnetRotationAxis { get; set; }
 
-        [DisplayNameAttribute("Magnet Angle"), CategoryAttribute("\tMagnetization Fields"), DescriptionAttribute("착자 각도")]
-        public double MagnetAngle { get; set; }
-
+        [DisplayNameAttribute("Rotation Angle"), CategoryAttribute("\tMagnetization Fields"), DescriptionAttribute("착자 회전 각도")]
+        public double MagnetRotationAngle { get; set; }
 
 
         public CMagnet()
@@ -601,8 +622,8 @@ namespace Parts
             m_kindKey = EMKind.MAGNET;
 
             Material = "NdFeB_40";
-            emMagnetPlane = EMMagnetPlane.XY_Plane_Z;
-            MagnetAngle = 90.0f;
+            emMagnetRotationAxis = EMMagnetRotationAxis.Z_AXIS;
+            MagnetRotationAngle = 90.0f;
 
             double dMu0 = 4 * Math.PI * 1e-7;
             Hc = 969969;
@@ -611,29 +632,29 @@ namespace Parts
 
         // 파일스트림 객체에 코일 정보를 기록한다.
         // override 를 꼭 사용해야 가상함수가 아니라 현 함수가 호출된다.
-        public override bool writeObject(StreamWriter writeStream)
+        public override bool writeObject(StreamWriter writeStream, int nLevel)
         {
             try
             {
                 CWriteFile writeFile = new CWriteFile();
 
-                writeFile.writeBeginLine(writeStream, "Magnet", 2);
+                writeFile.writeBeginLine(writeStream, "Magnet", nLevel);
 
                 // CNode
-                writeFile.writeDataLine(writeStream, "NodeName", NodeName, 3);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, 3);
+                writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
 
                 // CParts
-                writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, 3);
+                writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, nLevel + 1);
 
                 // CMagnet
-                writeFile.writeDataLine(writeStream, "Material", m_strMaterial, 3);
-                writeFile.writeDataLine(writeStream, "Hc", Hc, 3);
-                writeFile.writeDataLine(writeStream, "Br", Br, 3);
-                writeFile.writeDataLine(writeStream, "MagnetPlane", emMagnetPlane, 3);
-                writeFile.writeDataLine(writeStream, "MagnetAngle", MagnetAngle, 3);
+                writeFile.writeDataLine(writeStream, "Material", m_strMaterial, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Hc", Hc, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Br", Br, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "MagnetRotationAxis", emMagnetRotationAxis, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "MagnetRotationAngle", MagnetRotationAngle, nLevel + 1);
          
-                writeFile.writeEndLine(writeStream, "Magnet", 2);
+                writeFile.writeEndLine(writeStream, "Magnet", nLevel);
             }
             catch (Exception ex)
             {
@@ -723,12 +744,22 @@ namespace Parts
                             Br = Convert.ToDouble(arrayString[1]);
                             break;
 
-                        case "MagnetPlane":
-                            emMagnetPlane = (EMMagnetPlane)Enum.Parse(typeof(EMMagnetPlane), arrayString[1]);
+                        case "MagnetPlane": // V1.1.1 이전의 하위 호환 유지
+                        case "MagnetRotationAxis":
+
+                            //------------------------------------------------------------
+                            // V1.1.1 이전의 하위 호환을 유지한다. (2022-05-25)
+                            if (arrayString[1] == "XY_Plane_Z") arrayString[1] = "Z_AXIS";
+                            if (arrayString[1] == "ZX_Plane_Y") arrayString[1] = "Y_AXIS";
+                            //------------------------------------------------------------
+
+                            emMagnetRotationAxis = (EMMagnetRotationAxis)Enum.Parse(typeof(EMMagnetRotationAxis), arrayString[1]);
                             break;
 
-                        case "MagnetAngle":
-                            MagnetAngle = Convert.ToDouble(arrayString[1]);
+                        case "MagnetAngle": // V1.1.1 이전의 하위 호환 유지
+                        case "MagnetRotationAngle":
+
+                            MagnetRotationAngle = Convert.ToDouble(arrayString[1]);
                             break;
                         
                         default:
@@ -765,23 +796,23 @@ namespace Parts
         
         // 파일스트림 객체에 코일 정보를 기록한다.
         // override 를 꼭 사용해야 가상함수가 아니라 현 함수가 호출된다.
-        public override bool writeObject(StreamWriter writeStream)
+        public override bool writeObject(StreamWriter writeStream, int nLevel)
         {
             try
             {
                 CWriteFile writeFile = new CWriteFile();
 
-                writeFile.writeBeginLine(writeStream, "Steel", 2);
+                writeFile.writeBeginLine(writeStream, "Steel", nLevel);
 
                 // CNode
-                writeFile.writeDataLine(writeStream, "NodeName", NodeName, 3);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, 3);
+                writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
 
                 // CParts
-                writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, 3);
+                writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, nLevel + 1);
 
                 // CSteel
-                writeFile.writeDataLine(writeStream, "Material", m_strMaterial, 3);
+                writeFile.writeDataLine(writeStream, "Material", m_strMaterial, nLevel + 1);
 
                 // CFace
                 //if (Face != null)
@@ -789,7 +820,7 @@ namespace Parts
                 //    Face.writeObject(writeStream);
                 //}            
 
-                writeFile.writeEndLine(writeStream, "Steel", 2);
+                writeFile.writeEndLine(writeStream, "Steel", nLevel);
             }
             catch (Exception ex)
             {

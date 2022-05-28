@@ -42,6 +42,7 @@
             this.labelComment3 = new System.Windows.Forms.Label();
             this.labelComment2 = new System.Windows.Forms.Label();
             this.labelComment1 = new System.Windows.Forms.Label();
+            this.labelComment6 = new System.Windows.Forms.Label();
             this.groupBoxNew.SuspendLayout();
             this.groupBoxComment.SuspendLayout();
             this.SuspendLayout();
@@ -57,7 +58,7 @@
             // 
             // buttonOK
             // 
-            this.buttonOK.Location = new System.Drawing.Point(224, 305);
+            this.buttonOK.Location = new System.Drawing.Point(224, 327);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(100, 30);
             this.buttonOK.TabIndex = 0;
@@ -116,7 +117,7 @@
             // 
             // buttonCancel
             // 
-            this.buttonCancel.Location = new System.Drawing.Point(330, 305);
+            this.buttonCancel.Location = new System.Drawing.Point(330, 327);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(100, 30);
             this.buttonCancel.TabIndex = 1;
@@ -126,6 +127,7 @@
             // 
             // groupBoxComment
             // 
+            this.groupBoxComment.Controls.Add(this.labelComment6);
             this.groupBoxComment.Controls.Add(this.labelComment5);
             this.groupBoxComment.Controls.Add(this.labelComment4);
             this.groupBoxComment.Controls.Add(this.labelComment3);
@@ -133,7 +135,7 @@
             this.groupBoxComment.Controls.Add(this.labelComment1);
             this.groupBoxComment.Location = new System.Drawing.Point(12, 141);
             this.groupBoxComment.Name = "groupBoxComment";
-            this.groupBoxComment.Size = new System.Drawing.Size(418, 146);
+            this.groupBoxComment.Size = new System.Drawing.Size(418, 168);
             this.groupBoxComment.TabIndex = 2;
             this.groupBoxComment.TabStop = false;
             this.groupBoxComment.Text = "기능 제한";
@@ -143,9 +145,9 @@
             this.labelComment5.AutoSize = true;
             this.labelComment5.Location = new System.Drawing.Point(36, 116);
             this.labelComment5.Name = "labelComment5";
-            this.labelComment5.Size = new System.Drawing.Size(239, 12);
+            this.labelComment5.Size = new System.Drawing.Size(199, 12);
             this.labelComment5.TabIndex = 4;
-            this.labelComment5.Text = "- 구동부는 하나의 부품만을 지원하고 있다.";
+            this.labelComment5.Text = "- 구동은 파트의 파트만 지원합니다.";
             // 
             // labelComment4
             // 
@@ -153,27 +155,27 @@
             this.labelComment4.Font = new System.Drawing.Font("Gulim", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.labelComment4.Location = new System.Drawing.Point(23, 96);
             this.labelComment4.Name = "labelComment4";
-            this.labelComment4.Size = new System.Drawing.Size(92, 12);
+            this.labelComment4.Size = new System.Drawing.Size(97, 12);
             this.labelComment4.TabIndex = 3;
-            this.labelComment4.Text = "2. 구동부 제한";
+            this.labelComment4.Text = "2. 파트 수 제한";
             // 
             // labelComment3
             // 
             this.labelComment3.AutoSize = true;
             this.labelComment3.Location = new System.Drawing.Point(36, 68);
             this.labelComment3.Name = "labelComment3";
-            this.labelComment3.Size = new System.Drawing.Size(199, 12);
+            this.labelComment3.Size = new System.Drawing.Size(279, 12);
             this.labelComment3.TabIndex = 2;
-            this.labelComment3.Text = "- 전류는 원통코일 형태로 인가된다.";
+            this.labelComment3.Text = "- 전류는 사각 코일이라도 원통 형태로 인가됩니다.";
             // 
             // labelComment2
             // 
             this.labelComment2.AutoSize = true;
             this.labelComment2.Location = new System.Drawing.Point(36, 47);
             this.labelComment2.Name = "labelComment2";
-            this.labelComment2.Size = new System.Drawing.Size(187, 12);
+            this.labelComment2.Size = new System.Drawing.Size(199, 12);
             this.labelComment2.TabIndex = 1;
-            this.labelComment2.Text = "- 코일 중심축은 Y 축이어야 한다.";
+            this.labelComment2.Text = "- 코일 중심축은 Y 축만 지원합니다.";
             // 
             // labelComment1
             // 
@@ -183,13 +185,22 @@
             this.labelComment1.Name = "labelComment1";
             this.labelComment1.Size = new System.Drawing.Size(79, 12);
             this.labelComment1.TabIndex = 0;
-            this.labelComment1.Text = "1. 코일 형상";
+            this.labelComment1.Text = "1. 형상 제한";
+            // 
+            // labelComment6
+            // 
+            this.labelComment6.AutoSize = true;
+            this.labelComment6.Location = new System.Drawing.Point(36, 137);
+            this.labelComment6.Name = "labelComment6";
+            this.labelComment6.Size = new System.Drawing.Size(159, 12);
+            this.labelComment6.TabIndex = 5;
+            this.labelComment6.Text = "- 하나의 코일만 지원합니다.";
             // 
             // PopupNewDesign
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(442, 346);
+            this.ClientSize = new System.Drawing.Size(442, 369);
             this.Controls.Add(this.groupBoxComment);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.groupBoxNew);
@@ -221,5 +232,6 @@
         private System.Windows.Forms.Label labelComment1;
         private System.Windows.Forms.Label labelComment5;
         private System.Windows.Forms.Label labelComment4;
+        private System.Windows.Forms.Label labelComment6;
     }
 }

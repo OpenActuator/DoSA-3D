@@ -567,7 +567,7 @@ namespace DoSA
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
                         CNotice.noticeWarning("3차원 형상을 보여줄 디자인이 없습니다.");
                     else
-                        CNotice.noticeWarning("There is no design to show 3D shape.This job is canceled.");
+                        CNotice.noticeWarning("There is no working design to show 3D shape.");
                     
                     return;
                 }
@@ -1330,194 +1330,212 @@ namespace DoSA
             List<string> listNewAllPartNames = new List<string>();
             //List<string> listRemainedPartNames = new List<string>();
 
-            PopupChangeShape formChangeShape = new PopupChangeShape();
-            formChangeShape.StartPosition = FormStartPosition.CenterParent;
-
-            /// 이해할 수 없지만, 자동으로 Owner 설정이 되는 경우도 있고 아닌 경우도 있기 때문에
-            /// Shape 창에서 MainForm 을 접근할 수 있도록 미리 설정을 한다.
-            formChangeShape.Owner = this;
-
-            if (DialogResult.Cancel == formChangeShape.ShowDialog())
-                return;
-
-            string strSTEPFileFullName = formChangeShape.m_strSTEPFileFullName;
-
-
-            string strDesignName = m_design.m_strDesignName;
-
-            #region ------------------------- 디렉토리 및 파일명 설정 ------------------------
-
-            // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
-            // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
-            // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
-            string strDesignDirPath = Path.Combine(CSettingData.m_strCurrentWorkingDirPath, strDesignName);
-
-            // 신규 형상 디렉토리 
-            string strShapeDirPath = Path.Combine(strDesignDirPath, "Shape");
-
-            // 신규 형상 디렉토리 
-            string strShapeNewDirPath = Path.Combine(strDesignDirPath, "Shape_New");
-
-            // 형상 디렉토리안의 만들어진다.
-            string strShapeModelFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".step");
-
-            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
-
-            // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
-            string strRunScriptFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".geo");
-
-            // Part Names 파일도 형상 디렉토리에서 존재 한다.
-            string strPartNamesFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".txt");
-
-            // Mesh 파일도 형상 디렉토리에서 작업을 한다.
-            string strMeshFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".msh");
-
-            #endregion
-
-            // 형상 디렉토리도 같이 생성한다.
-            m_manageFile.createDirectory(strShapeNewDirPath);
-
-            // Shape 파일을 현 디자인에 복사한다.
-            m_manageFile.copyFile(strSTEPFileFullName, strShapeModelFileFullName);
-
-            if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
+            try
             {
-                CNotice.printLog("형상 파일을 찾지 못했다.");
 
-                // 취소되면 신규 형상 디렉토리를 삭제한다.
-                m_manageFile.deleteDirectory(strShapeNewDirPath);
-                return;
-            }
-
-            CWriteFile writeFile = new CWriteFile();
-            CReadFile readFile = new CReadFile();
-
-
-            CScriptContents scriptContents = new CScriptContents();
-
-            string strOrgStriptContents = scriptContents.m_str01_CheckSTEP_Script;
-
-            // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
-            listScriptString.Add(strShapeModelFileFullName);
-            listScriptString.Add(strPartNamesFileFullName);
-            listScriptString.Add(strDesignName);
-
-            // Script 파일이 문제없이 만들어지면 아래 동작을 실시하다.
-            if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
-            {
-                // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                // 아래와 같이 묶음처리를 사용한다.
-                string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
-
-                // Gmsh 를 종료할 때까지 기다리지 않는다.
-                // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
-                CScript.runScript(strGmshExeFileFullName, strArguments, false);
-
-                while (false == m_manageFile.isExistFile(strPartNamesFileFullName))
+                if (m_design.m_strDesignName.Length == 0)
                 {
-                    // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
-                    Thread.Sleep(500);
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("3차원 형상을 교체할 작업 Design 이 없습니다.");
+                    else
+                        CNotice.noticeWarning("There is no working design to replace the 3D shape.");
+
+                    return;
                 }
 
-                if (true == m_manageFile.isExistFile(strPartNamesFileFullName))
+                PopupChangeShape formChangeShape = new PopupChangeShape();
+                formChangeShape.StartPosition = FormStartPosition.CenterParent;
+
+                /// 이해할 수 없지만, 자동으로 Owner 설정이 되는 경우도 있고 아닌 경우도 있기 때문에
+                /// Shape 창에서 MainForm 을 접근할 수 있도록 미리 설정을 한다.
+                formChangeShape.Owner = this;
+
+                if (DialogResult.Cancel == formChangeShape.ShowDialog())
+                    return;
+
+                string strSTEPFileFullName = formChangeShape.m_strSTEPFileFullName;
+
+
+                string strDesignName = m_design.m_strDesignName;
+
+                #region ------------------------- 디렉토리 및 파일명 설정 ------------------------
+
+                // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
+                // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
+                // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
+                string strDesignDirPath = Path.Combine(CSettingData.m_strCurrentWorkingDirPath, strDesignName);
+
+                // 신규 형상 디렉토리 
+                string strShapeDirPath = Path.Combine(strDesignDirPath, "Shape");
+
+                // 신규 형상 디렉토리 
+                string strShapeNewDirPath = Path.Combine(strDesignDirPath, "Shape_New");
+
+                // 형상 디렉토리안의 만들어진다.
+                string strShapeModelFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".step");
+
+                string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+
+                // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
+                string strRunScriptFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".geo");
+
+                // Part Names 파일도 형상 디렉토리에서 존재 한다.
+                string strPartNamesFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".txt");
+
+                // Mesh 파일도 형상 디렉토리에서 작업을 한다.
+                string strMeshFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".msh");
+
+                #endregion
+
+                // 형상 디렉토리도 같이 생성한다.
+                m_manageFile.createDirectory(strShapeNewDirPath);
+
+                // Shape 파일을 현 디자인에 복사한다.
+                m_manageFile.copyFile(strSTEPFileFullName, strShapeModelFileFullName);
+
+                if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                 {
-                    readFile.readCSVColumnString2(strPartNamesFileFullName, ref listTempNames, 1);
+                    CNotice.printLog("형상 파일을 찾지 못했다.");
 
-                    string[] arraySplitPartNames;
-                    string strPartName;
-                    string strFindRet = string.Empty;
+                    // 취소되면 신규 형상 디렉토리를 삭제한다.
+                    m_manageFile.deleteDirectory(strShapeNewDirPath);
+                    return;
+                }
 
-                    foreach (string strTempName in listTempNames)
+                CWriteFile writeFile = new CWriteFile();
+                CReadFile readFile = new CReadFile();
+
+
+                CScriptContents scriptContents = new CScriptContents();
+
+                string strOrgStriptContents = scriptContents.m_str01_CheckSTEP_Script;
+
+                // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
+                listScriptString.Add(strShapeModelFileFullName);
+                listScriptString.Add(strPartNamesFileFullName);
+                listScriptString.Add(strDesignName);
+
+                // Script 파일이 문제없이 만들어지면 아래 동작을 실시하다.
+                if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
+
+                    // Gmsh 를 종료할 때까지 기다리지 않는다.
+                    // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
+                    CScript.runScript(strGmshExeFileFullName, strArguments, false);
+
+                    while (false == m_manageFile.isExistFile(strPartNamesFileFullName))
                     {
-                        // Group 처리가 되어 있는 Step 파일의 이름은 kt100g/Yoke Cover/Yoke Cover 로 그룹까지 포함되어 있다.
-                        // 여기서 '/' 로 분리해서 가장 하위의 명칭을 파트명으로 사용한다.
-                        arraySplitPartNames = strTempName.Split('/');
+                        // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
+                        Thread.Sleep(500);
+                    }
 
-                        // 가장 뒤에 있는 이름을 사용한다
-                        strPartName = arraySplitPartNames[arraySplitPartNames.Length - 1];
+                    if (true == m_manageFile.isExistFile(strPartNamesFileFullName))
+                    {
+                        readFile.readCSVColumnString2(strPartNamesFileFullName, ref listTempNames, 1);
 
-                        // 이름에 스페이스가 있으면 '_' 로 변경한다.
-                        strPartName = strPartName.Replace(' ', '_');
+                        string[] arraySplitPartNames;
+                        string strPartName;
+                        string strFindRet = string.Empty;
 
-                        strFindRet = listNewAllPartNames.Find(x => x.Equals(strPartName));
+                        foreach (string strTempName in listTempNames)
+                        {
+                            // Group 처리가 되어 있는 Step 파일의 이름은 kt100g/Yoke Cover/Yoke Cover 로 그룹까지 포함되어 있다.
+                            // 여기서 '/' 로 분리해서 가장 하위의 명칭을 파트명으로 사용한다.
+                            arraySplitPartNames = strTempName.Split('/');
 
-                        if (null != strFindRet)
+                            // 가장 뒤에 있는 이름을 사용한다
+                            strPartName = arraySplitPartNames[arraySplitPartNames.Length - 1];
+
+                            // 이름에 스페이스가 있으면 '_' 로 변경한다.
+                            strPartName = strPartName.Replace(' ', '_');
+
+                            strFindRet = listNewAllPartNames.Find(x => x.Equals(strPartName));
+
+                            if (null != strFindRet)
+                            {
+                                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                                    CNotice.noticeWarning(strPartName + "의 파트명에 중복 사용하고 있습니다.\n교체 작업이 취소 되었습니다.");
+                                else
+                                    CNotice.noticeWarning("It is used in duplicate with the part name called " + strPartName + ".\nThe replacement operation has been canceled.");
+
+                                // 취소되면 신규 형상 디렉토리를 삭제한다.
+                                m_manageFile.deleteDirectory(strShapeNewDirPath);
+                                return;
+                            }
+
+                            listNewAllPartNames.Add(strPartName);
+                        }
+
+                        if (m_design.AllShapeNameList.Count != listNewAllPartNames.Count)
                         {
                             if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                                CNotice.noticeWarning(strPartName + "의 파트명에 중복 사용하고 있습니다.\n교체 작업이 취소 되었습니다.");
+                                CNotice.noticeWarning("작업 형상과 신규 형상의 Part 개수가 일치하지 않습니다.\n교체 작업이 취소 되었습니다.");
                             else
-                                CNotice.noticeWarning("It is used in duplicate with the part name called " + strPartName + ".\nThe replacement operation has been canceled.");
+                                CNotice.noticeWarning("The number of parts of the working shape and the new shape do not match.\nThe replacement operation has been canceled.");
 
                             // 취소되면 신규 형상 디렉토리를 삭제한다.
                             m_manageFile.deleteDirectory(strShapeNewDirPath);
                             return;
                         }
 
-                        listNewAllPartNames.Add(strPartName);
-                    }
+                        foreach(string strCurrentPartName in m_design.AllShapeNameList)
+                        {
+                            strFindRet = listNewAllPartNames.Find(x => x.Equals(strCurrentPartName));
 
-                    if (m_design.AllShapeNameList.Count != listNewAllPartNames.Count)
-                    {
+                            if(null == strFindRet)
+                            {
+                                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                                    CNotice.noticeWarning("작업 형상과 신규 형상의 Part 이름이 일치하지 않습니다.\n교체 작업이 취소 되었습니다.");
+                                else
+                                    CNotice.noticeWarning("The part names of the working shape and the new shape do not match.\nThe replacement operation has been canceled.");
+
+                                // 취소되면 신규 형상 디렉토리를 삭제한다.
+                                m_manageFile.deleteDirectory(strShapeNewDirPath);
+                                return;
+                            }
+                        }
+
+                        // 정상적으로 신규형상을 읽어드리면 기존 형상을 삭제한다.
+                        m_manageFile.deleteDirectory(strShapeDirPath);
+                        Thread.Sleep(50);
+
+                        m_manageFile.copyDirectory(strShapeNewDirPath, strShapeDirPath);
+                        Thread.Sleep(50);
+
+                        // 복사후에 신규 디렉토리를 삭제한다.
+                        m_manageFile.deleteDirectory(strShapeNewDirPath);
+
                         if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                            CNotice.noticeWarning("작업 형상과 신규 형상의 Part 개수가 일치하지 않습니다.\n교체 작업이 취소 되었습니다.");
+                            CNotice.noticeInfomation("정상적으로 형상 교체이 완료 되었습니다.", "알림");
                         else
-                            CNotice.noticeWarning("The number of parts of the working shape and the new shape do not match.\nThe replacement operation has been canceled.");
+                            CNotice.noticeInfomation("Shape replacement has been completed normally.", "Notice");
+                    }
+                    else
+                    {
+                        CNotice.printLog("Part Names 파일이 존재하지 않는다.");
 
                         // 취소되면 신규 형상 디렉토리를 삭제한다.
                         m_manageFile.deleteDirectory(strShapeNewDirPath);
                         return;
                     }
-
-                    foreach(string strCurrentPartName in m_design.AllShapeNameList)
-                    {
-                        strFindRet = listNewAllPartNames.Find(x => x.Equals(strCurrentPartName));
-
-                        if(null == strFindRet)
-                        {
-                            if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                                CNotice.noticeWarning("작업 형상과 신규 형상의 Part 이름이 일치하지 않습니다.\n교체 작업이 취소 되었습니다.");
-                            else
-                                CNotice.noticeWarning("The part names of the working shape and the new shape do not match.\nThe replacement operation has been canceled.");
-
-                            // 취소되면 신규 형상 디렉토리를 삭제한다.
-                            m_manageFile.deleteDirectory(strShapeNewDirPath);
-                            return;
-                        }
-                    }
-
-                    // 정상적으로 신규형상을 읽어드리면 기존 형상을 삭제한다.
-                    m_manageFile.deleteDirectory(strShapeDirPath);
-                    Thread.Sleep(50);
-
-                    m_manageFile.copyDirectory(strShapeNewDirPath, strShapeDirPath);
-                    Thread.Sleep(50);
-
-                    // 복사후에 신규 디렉토리를 삭제한다.
-                    m_manageFile.deleteDirectory(strShapeNewDirPath);
-
-                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeInfomation("정상적으로 형상 교체이 완료 되었습니다.", "알림");
-                    else
-                        CNotice.noticeInfomation("Shape replacement has been completed normally.", "Notice");
                 }
                 else
                 {
-                    CNotice.printLog("Part Names 파일이 존재하지 않는다.");
+                    CNotice.printLog("New Part Names Script 파일 생성에 문제가 발생했습니다.");
 
                     // 취소되면 신규 형상 디렉토리를 삭제한다.
                     m_manageFile.deleteDirectory(strShapeNewDirPath);
                     return;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                CNotice.printLog("New Part Names Script 파일 생성에 문제가 발생했습니다.");
-
-                // 취소되면 신규 형상 디렉토리를 삭제한다.
-                m_manageFile.deleteDirectory(strShapeNewDirPath);
+                CNotice.printLog(ex.Message);
                 return;
             }
-
         }
 
 
@@ -1535,7 +1553,7 @@ namespace DoSA
                 return;
             }
 
-            ((CMagnet)node).MagnetAngle = 90.0;
+            ((CMagnet)node).MagnetRotationAngle = 90.0;
 
             propertyGridMain.Refresh();
         }
@@ -1550,7 +1568,7 @@ namespace DoSA
                 return;
             }
 
-            ((CMagnet)node).MagnetAngle = 270.0;
+            ((CMagnet)node).MagnetRotationAngle = 270.0;
 
             propertyGridMain.Refresh();
         }
@@ -1565,7 +1583,7 @@ namespace DoSA
                 return;
             }
 
-            ((CMagnet)node).MagnetAngle = 180.0;
+            ((CMagnet)node).MagnetRotationAngle = 180.0;
 
             propertyGridMain.Refresh();
         }
@@ -1580,7 +1598,7 @@ namespace DoSA
                 return;
             }
 
-            ((CMagnet)node).MagnetAngle = 0.0;
+            ((CMagnet)node).MagnetRotationAngle = 0.0;
 
             propertyGridMain.Refresh();
         }
@@ -1683,7 +1701,6 @@ namespace DoSA
                 // Result 버튼이 동작하게 한다.
                 buttonLoadForceResult.Enabled = true;
 
-                //m_manageFile.deleteFile(strImageScriptFileFullName);
             }
 
         }
@@ -1761,6 +1778,7 @@ namespace DoSA
                             return;
                         }
 
+                        // # 1 : Coil Name
                         listScriptString.Add(node.NodeName);
 
                         nCount++;
@@ -1775,9 +1793,8 @@ namespace DoSA
                 //listScriptString.Clear();
 
                 strOrgStriptContents = scriptContents.m_str13_PostOperation_Script;
+                       
 
-                List<double> listProductLength = new List<double>();
-                
                 // [주의 사항]
                 //
                 // 형상 작업의 값과 일치해야 한다.
@@ -1786,6 +1803,8 @@ namespace DoSA
                 double dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
                 double dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
                 double dProductLengthZ = Math.Abs(m_design.MaxZ - m_design.MinZ);
+
+                List<double> listProductLength = new List<double>();
 
                 listProductLength.Add(dProductLengthX);
                 listProductLength.Add(dProductLengthY);
@@ -1796,28 +1815,51 @@ namespace DoSA
                 // X,Y,Z 의 제품 폭 중에 최대 폭으로 모든 방향의 Region 크기를 결정한다.
                 double dOuterPaddingLength = dAverageProductLength * (iOuterPaddingPercent / 100.0f);
 
-                // 중심 위치
-                double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
+                // 회전에 사요되는 길이는 중심점에서 편측의 길이이다.
+                double dRotationBaseLength = dOuterPaddingLength / 2.0;
+
+                //// 제품이 Y 축에 위치해서 X, Z 는 사용하지 않는다.
+                //double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
                 double dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
-                double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
+                //double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
 
-                // 전체 영역의 1/2 로 자속밀도 단면 벡터출력면을 사용한다.
-                //# 1 : X Coord of Left Bottom Point on XY Plane 
-                //# 2 : Y Coord of Left Bottom Point on XY Plane 
-                //# 3 : X Coord of Right Bottom Point on XY Plane 
-                //# 4 : Y Coord of Left Top Point on XY Plane 
-                //# 5 : Z Coord of Center Point on XY Plane 
-                double dSectionBMinX = dRegionCenterX - dAverageProductLength / 2.0f - dOuterPaddingLength;
-                double dSectionBMinY = dRegionCenterY - dAverageProductLength / 2.0f - dOuterPaddingLength;
-                double dSectionBMaxX = dRegionCenterX + dAverageProductLength / 2.0f + dOuterPaddingLength;
-                double dSectionBMaxY = dRegionCenterY + dAverageProductLength / 2.0f + dOuterPaddingLength;
+                // XY 평면에서 직사각형의 좌하단과 우상단의 좌표값을 저장한다.
+                double dSectionBMinX, dSectionBMinY, dSectionBMinZ;
+                double dSectionBMaxX, dSectionBMaxY, dSectionBMaxZ;
 
+                // Y 축에 제품의 중심이 위치하기 때문에 XZ 면의 중심을 기준으로 XZ 면에서 회전이 일어난다.
+                //
+                // 1. X 좌표
+                dSectionBMinX = -dRotationBaseLength * Math.Cos(forceTest.B_RotationAngle * Math.PI / 180.0f);
+                dSectionBMaxX = dRotationBaseLength * Math.Cos(forceTest.B_RotationAngle * Math.PI / 180.0f);
+                // 2. Z 좌표
+                dSectionBMinZ = dRotationBaseLength * Math.Sin(forceTest.B_RotationAngle * Math.PI / 180.0f);
+                dSectionBMaxZ = -dRotationBaseLength * Math.Sin(forceTest.B_RotationAngle * Math.PI / 180.0f);
+                // 3. Y 좌표
+                dSectionBMinY = -dRotationBaseLength + dRegionCenterY;
+                dSectionBMaxY = dRotationBaseLength + dRegionCenterY;
+
+                // 자속밀도 면을 설정하기 위해서는 아래의 세 좌표의 정보가 필요하다.
+                // - 좌하단점
+                //# 2 : X Coord of Left Bottom Point on Roation Plane 
+                //# 3 : Y Coord of Left Bottom Point on Roation Plane 
+                //# 4 : Z Coord of Left Bottom Point on Roation Plane 
+                // - 우하단점
+                //# 5 : X Coord of Right Bottom Point on Roation Plane 
+                //      Y Coord 는 #3 를 사용함
+                //# 6 : Z Coord of Right Bottom Point on Roation Plane 
+                // - 좌상단점
+                //      X Coord 는 #2 를 사용함
+                //# 7 : Y Coord of Left Top Point Roation XY Plane 
+                //      Z Coord 는 #4 를 사용함
                 listScriptString.Add(dSectionBMinX.ToString());
                 listScriptString.Add(dSectionBMinY.ToString());
+                listScriptString.Add(dSectionBMinZ.ToString());
                 listScriptString.Add(dSectionBMaxX.ToString());
+                listScriptString.Add(dSectionBMaxZ.ToString());
                 listScriptString.Add(dSectionBMaxY.ToString());
-                listScriptString.Add(dRegionCenterZ.ToString());
 
+                listScriptString.Add(forceTest.B_VectorResolution.ToString());
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
@@ -1855,9 +1897,10 @@ namespace DoSA
                 {
                     if (node.m_kindKey == EMKind.COIL)
                     {
-                        if (nCount != 0)
+                        if (nCount >= 1)
                         {
-                            CNotice.printLog("코일 수가 하나 이상이다.");
+                            // 해석때 코일수는 확인하기 때문에 여기서는 사용자에게 알리지 않고 Log 만 출력한다.
+                            CNotice.noticeWarning("코일 수가 하나 이상이 포함되어 있다.");
                             return;
                         }
 
@@ -1870,6 +1913,7 @@ namespace DoSA
                         bUsedMagnet = true;
                 }
 
+                // 영구자석 수와는 상관이 없다.
                 if (bUsedMagnet == true)
                 {
                     listScriptString.Add("            Galerkin { [ nu[] * br[] , {d qnt_A} ] ;\n");
@@ -1917,7 +1961,7 @@ namespace DoSA
 
                 double dHcX, dHcY, dHcZ;
                 double dBrX, dBrY, dBrZ;
-                EMMagnetPlane emMagnetPlane;
+                EMMagnetRotationAxis emMagnetRotationAxis;
                 double dAngle;
 
                 foreach (CNode node in m_design.NodeList)
@@ -1965,10 +2009,11 @@ namespace DoSA
                             dBr = ((CMagnet)node).Br;
                             dMur = dBr / dHc;
 
-                            emMagnetPlane = ((CMagnet)node).emMagnetPlane;
-                            dAngle = ((CMagnet)node).MagnetAngle;
+                            emMagnetRotationAxis = ((CMagnet)node).emMagnetRotationAxis;
+                            dAngle = ((CMagnet)node).MagnetRotationAngle;
 
-                            if (emMagnetPlane == EMMagnetPlane.XY_Plane_Z)
+                            // X 축는 착자방향이기 때문에 회전축으로 사용하지 않는다.
+                            if (emMagnetRotationAxis == EMMagnetRotationAxis.Z_AXIS)
                             {
                                 dHcX = dHc * Math.Cos(dAngle * Math.PI / 180.0f);
                                 dHcY = dHc * Math.Sin(dAngle * Math.PI / 180.0f);
@@ -1977,23 +2022,14 @@ namespace DoSA
                                 dBrY = dBr * Math.Sin(dAngle * Math.PI / 180.0f);
                                 dBrZ = 0.0;
                             }
-                            else if (emMagnetPlane == EMMagnetPlane.YZ_Plane_X)
+                            else // EMMagnetRotationAxis.Y_AXIS
                             {
-                                dHcX = 0.0;
-                                dHcY = dHc * Math.Cos(dAngle * Math.PI / 180.0f);
-                                dHcZ = dHc * Math.Sin(dAngle * Math.PI / 180.0f);
-                                dBrX = 0.0;
-                                dBrY = dBr * Math.Cos(dAngle * Math.PI / 180.0f);
-                                dBrZ = dBr * Math.Sin(dAngle * Math.PI / 180.0f);
-                            }
-                            else            // EMMagnetPlane.ZX_Plane
-                            {
-                                dHcX = dHc * -Math.Cos(dAngle * Math.PI / 180.0f);
+                                dHcX = dHc * Math.Cos(dAngle * Math.PI / 180.0f);
                                 dHcY = 0.0;
-                                dHcZ = dHc * Math.Sin(dAngle * Math.PI / 180.0f);
-                                dBrX = dBr * -Math.Cos(dAngle * Math.PI / 180.0f);
+                                dHcZ = -dHc * Math.Sin(dAngle * Math.PI / 180.0f);
+                                dBrX = dBr * Math.Cos(dAngle * Math.PI / 180.0f);
                                 dBrY = 0.0;
-                                dBrZ = dBr * Math.Sin(dAngle * Math.PI / 180.0f);
+                                dBrZ = -dBr * Math.Sin(dAngle * Math.PI / 180.0f);
                             }
 
                             // 입력 자계의 세기는 양의 값이지만 실제 동작은 음에서 동작하기 때문에 '-' 을 사용해서 부호를 바꾸고 있다.
@@ -2699,9 +2735,9 @@ namespace DoSA
                     if(bVCMSolveError == true)
                     {
                         if(CSettingData.m_emLanguage == EMLanguage.Korean)
-                            CNotice.noticeWarning("VCM Type 는 Zero Current를 포함해 2회 해석을 진행해야 합니다.");
+                            CNotice.noticeWarning("VCM Type 는\nZero Current를 포함해 2회 해석을 진행해야 합니다.");
                         else
-                            CNotice.noticeWarning("VCM Type should be analyzed twice including Zero Current.");
+                            CNotice.noticeWarning("VCM Type\nshould be analyzed twice including Zero Current.");
 
                         return;
                     }                
@@ -2838,7 +2874,7 @@ namespace DoSA
                 writeFile.writeDataLine(writeStream, "DoSA_Version", Assembly.GetExecutingAssembly().GetName().Version, 1);
                 writeFile.writeDataLine(writeStream, "File_Version", FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion, 1);
 
-                m_design.writeObject(writeStream);
+                m_design.writeObject(writeStream, 1);
 
                 writeFile.writeEndLine(writeStream, "DoSA_3D_Project", 0);
 

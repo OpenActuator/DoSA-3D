@@ -73,38 +73,50 @@ namespace Tests
         [DisplayNameAttribute("Z Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Z Displacement")]
         public double MovingZ { get; set; }
 
+
+        [DisplayNameAttribute("B Rotation Angle [°]"), CategoryAttribute("\tPost-Processing Fields"), DescriptionAttribute("B Rotation Angle")]
+        public double B_RotationAngle { get; set; }
+
+        // 제품 크기를 기준으로 해상도 등분이다.
+        [DisplayNameAttribute("B Vector Resolution"), CategoryAttribute("\tPost-Processing Fields"), DescriptionAttribute("B Vector Resolution")]
+        public double B_VectorResolution { get; set; }
+
         public CForceTest()
         {
             m_kindKey = EMKind.FORCE_TEST;
             Voltage = 5.0;
+
+            B_VectorResolution = 50;
         }
 
         // 파일스트림 객체에 코일 정보를 기록한다.
         // override 를 꼭 사용해야 가상함수가 아니라 현 함수가 호출된다.
-        public override bool writeObject(StreamWriter writeStream)
+        public override bool writeObject(StreamWriter writeStream, int nLevel)
         {
             try
             {
                 CWriteFile writeFile = new CWriteFile();
 
-                writeFile.writeBeginLine(writeStream, "ForceTest", 2);
+                writeFile.writeBeginLine(writeStream, "ForceTest", nLevel);
 
                 // CNode
-                writeFile.writeDataLine(writeStream, "NodeName", NodeName, 3);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, 3);
+                writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
 
                 // CTest
-                writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, 3);
-                writeFile.writeDataLine(writeStream, "ActuatorType", ActuatorType, 3);
+                writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "ActuatorType", ActuatorType, nLevel + 1);
 
                 // CForceTest
-                writeFile.writeDataLine(writeStream, "Voltage", Voltage, 3);
-                writeFile.writeDataLine(writeStream, "Current", Current, 3); 
-                writeFile.writeDataLine(writeStream, "MovingY", MovingY, 3);
-                writeFile.writeDataLine(writeStream, "MovingX", MovingX, 3);
-                writeFile.writeDataLine(writeStream, "MovingZ", MovingZ, 3);
+                writeFile.writeDataLine(writeStream, "Voltage", Voltage, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "Current", Current, nLevel + 1); 
+                writeFile.writeDataLine(writeStream, "MovingY", MovingY, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "MovingX", MovingX, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "MovingZ", MovingZ, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "B_RotationAngle", B_RotationAngle, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "B_VectorResolution", B_VectorResolution, nLevel + 1);                
 
-                writeFile.writeEndLine(writeStream, "ForceTest", 2);
+                writeFile.writeEndLine(writeStream, "ForceTest", nLevel);
             }
             catch (Exception ex)
             {
@@ -178,6 +190,14 @@ namespace Tests
 
                         case "MovingZ":
                             MovingZ = Convert.ToDouble(arrayString[1]);
+                            break;
+
+                        case "B_RotationAngle":
+                            B_RotationAngle = Convert.ToDouble(arrayString[1]);
+                            break;
+
+                        case "B_VectorResolution":
+                            B_VectorResolution = Convert.ToDouble(arrayString[1]);
                             break;
 
                         default:

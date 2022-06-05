@@ -51,6 +51,9 @@ namespace DoSA
         public CDesign m_design = new CDesign();
 
         public ResourceManager m_resManager = null;
+        
+        private bool m_bFinishThread;
+        private Thread m_addedThreadInMain;
 
         #endregion
 
@@ -113,7 +116,16 @@ namespace DoSA
                 m_strCommandLineDesignFullName = strDSAFileFullName;
                 if(strDataFileFullName != null)
                     m_strCommandLineDataFullName = strDataFileFullName;
-            }                
+            }
+
+            m_bFinishThread = false;
+            
+            progressBarForce.Maximum = 20;
+            progressBarForce.Minimum = 0;
+            progressBarForce.Step = 1;
+
+            progressBarForce.Hide();
+            labelProgressForce.Hide();
         }
 
         //----------- Update Dialog Test --------------
@@ -203,7 +215,7 @@ namespace DoSA
                 }
 
                 // 신규버전을 알리는 창을 띄운다.
-                if(bVersionCheckDialog == true)
+                if (bVersionCheckDialog == true)
                 {
                     // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
                     string strMainUpdateContents = new WebClient().DownloadString("http://www.actuator.or.kr/DoSA_3D_Update_Contents.txt");
@@ -475,7 +487,7 @@ namespace DoSA
             }
             else
             {
-                messageListView.addItem(strMSG);
+                messageListView.addMessage(strMSG);
             }
         }
 
@@ -535,6 +547,10 @@ namespace DoSA
         //전체 초기화 한다
         private void closeDesign()
         {
+            // 데이터가 있는 경우만 Close 메시지를 알린다.
+            if (m_design.GetNodeList.Count != 0)
+                CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBC"));
+
             // 기존 자료를 초기화 한다
             // Second Node 들을 삭제한다.
             foreach (TreeNode firstLayerNode in treeViewMain.Nodes)
@@ -572,8 +588,6 @@ namespace DoSA
                     return;
                 }
 
-                #region ------------------------- 디렉토리 및 파일명 설정 ------------------------
-
                 // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
                 // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
@@ -587,17 +601,79 @@ namespace DoSA
                 string strShapeModelFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
 
                 // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
-                string strRunScriptFileFullName = Path.Combine(strShapeDirName, "Shape.geo");
+                string strRunScriptFileFullName = Path.Combine(strShapeDirName, "Show.geo");
+              
+                double dMovingX, dMovingY, dMovingZ;
 
-                #endregion
+                dMovingX = 0;
+                dMovingY = 0;
+                dMovingZ = 0;
+
+                CNode nodeCheck = (CNode)propertyGridMain.SelectedObject;
+                CForceTest forceTest;
+
+                if (nodeCheck.KindKey == EMKind.FORCE_TEST)
+                {
+                    forceTest = (CForceTest)nodeCheck;
+                    
+                    dMovingX = forceTest.MovingX;
+                    dMovingY = forceTest.MovingY;
+                    dMovingZ = forceTest.MovingZ;
+                }
+
+                string strNodeName, strTemp;
+                string strMovingPartNames = string.Empty;
+                string strMovingPartName = string.Empty;
+
+                foreach (CNode node in m_design.GetNodeList)
+                {
+                    strNodeName = node.NodeName;
+                    strTemp = strNodeName.ToUpper();
+
+                    if (node.GetType().BaseType.Name == "CParts")
+                    {
+                        if (((CParts)node).MovingPart == EMMoving.MOVING)
+                        {
+                            strMovingPartNames += String.Format("vol{0}, ", strNodeName);
+                            strMovingPartName = strNodeName;
+
+                            // 하나의 구동파트만 지원한다.
+                            break;
+                        }
+                    }
+                }
+
+                int nIndex = 0;
+
+                if (strMovingPartNames.Length > 2)
+                {
+                    // 마지막 ", " 를 제거한다.
+                    nIndex = strMovingPartNames.Length - 2;
+                    strMovingPartNames = strMovingPartNames.Remove(nIndex);
+                }
+
+                int nPartIndexInSTEP = 0;
+                int nCount = 0;
+
+                foreach (string strName in m_design.AllShapeNameList)
+                {
+                    if (strName == strMovingPartName)
+                        nPartIndexInSTEP = nCount;
+
+                    nCount++;
+                }
 
                 CScriptContents scriptContents = new CScriptContents();
 
-                string strOrgStriptContents = scriptContents.m_str01_1_Show_Shape_Script;
+                string strOrgStriptContents = scriptContents.m_str02_Show_Shape_Script;
 
-                listScriptString.Add(strShapeModelFileFullName);
+                listScriptString.Add(strShapeModelFileFullName); 
+                // 구동 파트의 이동량을 고려해서 형상 확인이 가능하다.
+                listScriptString.Add(nPartIndexInSTEP.ToString());
+                listScriptString.Add(dMovingX.ToString());
+                listScriptString.Add(dMovingY.ToString());
+                listScriptString.Add(dMovingZ.ToString());
 
-                writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString);
                 if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
                 {
                     // Process 의 Arguments 에서 스페이스 문제가 발생한다.
@@ -923,9 +999,9 @@ namespace DoSA
                 treeNode = new TreeNode("Tests", (int)EMKind.TESTS, (int)EMKind.TESTS);
                 treeViewMain.Nodes.Add(treeNode);
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
-                    this.addTreeNode(node.NodeName, node.m_kindKey);
+                    this.addTreeNode(node.NodeName, node.KindKey);
                 }
             }
             else
@@ -1064,8 +1140,6 @@ namespace DoSA
 
             // 저장을 하고 나면 초기화 한다.
             m_design.m_bChanged = false;
-
-            CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBC"));
 
             // 기존 디자인 데이터를 모두 삭제한다.
             closeDesign();
@@ -1377,7 +1451,9 @@ namespace DoSA
                 string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
 
                 // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
-                string strRunScriptFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".geo");
+                //
+                // Show 스크립트와 충돌을 피하기 위해서 디자인이름을 사용하지 않고 이름을 Change 로 고정한다.
+                string strRunScriptFileFullName = Path.Combine(strShapeNewDirPath, "Change.geo");
 
                 // Part Names 파일도 형상 디렉토리에서 존재 한다.
                 string strPartNamesFileFullName = Path.Combine(strShapeNewDirPath, strDesignName + ".txt");
@@ -1547,6 +1623,8 @@ namespace DoSA
         {
             CNode node = (CNode)propertyGridMain.SelectedObject;
 
+            if (node == null) return;
+
             if ("CMagnet" != node.GetType().Name)
             {
                 Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetUp_Click");
@@ -1561,6 +1639,8 @@ namespace DoSA
         private void buttonMagnetDown_Click(object sender, EventArgs e)
         {
             CNode node = (CNode)propertyGridMain.SelectedObject;
+
+            if (node == null) return;
 
             if ("CMagnet" != node.GetType().Name)
             {
@@ -1577,6 +1657,8 @@ namespace DoSA
         {
             CNode node = (CNode)propertyGridMain.SelectedObject;
 
+            if (node == null) return;
+
             if ("CMagnet" != node.GetType().Name)
             {
                 Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetLeft_Click");
@@ -1592,6 +1674,8 @@ namespace DoSA
         {
             CNode node = (CNode)propertyGridMain.SelectedObject;
 
+            if (node == null) return;
+
             if ("CMagnet" != node.GetType().Name)
             {
                 Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetRight_Click");
@@ -1605,7 +1689,11 @@ namespace DoSA
 
         private void buttonDesignCoil_Click(object sender, EventArgs e)
         {
-            ((CCoil)propertyGridMain.SelectedObject).designCoil();
+            CCoil coil = (CCoil)propertyGridMain.SelectedObject;
+
+            if (coil == null) return;
+
+            coil.designCoil();
 
             propertyGridMain.Refresh();
         }
@@ -1614,6 +1702,8 @@ namespace DoSA
         {
             CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
 
+            if (forceTest == null) return;
+
             plotForceResult(forceTest);
         }
                 
@@ -1621,100 +1711,463 @@ namespace DoSA
         {
             CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
 
+            if (forceTest == null) return;
+
             // 현재 시험의 이름을 m_nodeList 에서 찾지 않고
             // 현재 표시되고 있는 PropertyGird 창에서 Test 이름을 찾아 낸다
             string strTestName = forceTest.NodeName;
             string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
+            string strTestZeroDirName = strTestDirName + "_Zero";
+
             string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
 
-            // 해석 전에 전처리 조건을 확인한다.
-            if (false == isForceTestOK(forceTest))
-                return;
-
-            // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
-            if (m_manageFile.isExistDirectory(strTestDirName) == true)
+            try
             {
-                DialogResult ret = CNotice.noticeWarningYesNoID("TIAP", "NE");
-
-                if (ret == DialogResult.No)
+                // 해석 전에 전처리 조건을 확인한다.
+                if (false == isForceTestOK(forceTest))
                     return;
 
-                m_manageFile.deleteDirectory(strTestDirName);
+                // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
+                if (m_manageFile.isExistDirectory(strTestDirName) == true)
+                {
+                    DialogResult ret = CNotice.noticeWarningYesNoID("TIAP", "NE");
 
-                // 삭제되는 시간이 필요한 듯 한다.
-                Thread.Sleep(1000);
+                    if (ret == DialogResult.No)
+                        return;
 
-                /// VCM Type 으로 해석이 되어 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
-                string strTestZeroDirName = strTestDirName + "_Zero";
+                    m_manageFile.deleteDirectory(strTestDirName);
 
-                if (m_manageFile.isExistDirectory(strTestZeroDirName ) == true)
-                    m_manageFile.deleteDirectory(strTestZeroDirName);
+                    // 삭제되는 시간이 필요한 듯 한다.
+                    Thread.Sleep(1000);
+
+                    /// VCM Type 으로 해석이 되어 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
+                    if (m_manageFile.isExistDirectory(strTestZeroDirName ) == true)
+                        m_manageFile.deleteDirectory(strTestZeroDirName);
                 
-                // 삭제되는 시간이 필요한 듯 한다.
-                Thread.Sleep(1000);
-            }
+                    // 삭제되는 시간이 필요한 듯 한다.
+                    Thread.Sleep(1000);
+                }
 
-            // 시험 디렉토리를 생성한다.
-            m_manageFile.createDirectory(strTestDirName);
+                // 시험 디렉토리를 생성한다.
+                m_manageFile.createDirectory(strTestDirName);
 
-            // 해석전 현 설정을 저장한다.
-            saveDesignFile();
+                // 해석전 현 설정을 저장한다.
+                saveDesignFile();
 
-            solveForce(forceTest);
+                if (false == startSolveForceThread(forceTest, false))
+                    return;
 
-            // 해석 결과 이미지가 있다면 후처리를 진행한다.
-            if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == true)
-            {
+                // 해석 결과 이미지가 있다면 후처리를 진행한다.
+                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeError("자기력 해석 결과가 존재하지 않습니다.\n메시지 창에서 확인하세요.", "오류 발생");
+                    else
+                        CNotice.noticeError("Magnetic force analysis result does not exist.\nCheck in the message window.", "Error");
+
+                    return;
+                }
+
+                // 전류가 인가된 자속밀도 Vector 결과를 확인한다.
+                // 순서 주의 
+                // - VCM 자기력 보정 해석전에 호출해야 한다.
+                showMagneticDensityVector(strTestDirName);
+
                 /// 영구자석이 포함된 VCM 방식인 경우는 자기력의 정확도가 크게 떨어진다.
                 /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
                 if (forceTest.ActuatorType == EMActuatorType.VCM)
                 {
-                    /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
-                    CForceTest forceTestZeroCurrent = forceTest.Clone();
-
-                    forceTestZeroCurrent.NodeName = forceTest.NodeName + "_Zero";
-                    // 해석에 사용되는 전류값은 전압과 저항으로 다시 계산되기 때문에 전류 값을 0으로 하지않고 전압 값을 0으로 설정한다.
-                    forceTestZeroCurrent.Voltage = 0.0f;
-
-                    solveForce(forceTestZeroCurrent);
+                    startSolveForceThread(forceTest, true);
                 }
 
-                string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
-                string strArguments;
-
-                // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                // 아래와 같이 묶음처리를 사용한다.
-                strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName) 
-                                   + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
-
-                CScript.runScript(strGmshExeFileFullName, strArguments, true);
-
-                //CScript.moveGmshWindow(0, 0);
-
-                // 종료시간을 기다려준다.
-                Thread.Sleep(500);
-
+                // 자기력 결과를 읽어드린다.
                 plotForceResult(forceTest);
 
                 // Result 버튼이 동작하게 한다.
+                buttonPlotDensity.Enabled = true;
                 buttonLoadForceResult.Enabled = true;
 
             }
-
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
         }
-         
+
+        private bool showMagneticDensityVector(string strTestDirName)            
+        {
+            string strArguments;
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+
+            try
+            {
+                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
+                if ( m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+                if (m_manageFile.isExistFile(strOptionFileFullName) == false) return false;
+
+                // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                // 아래와 같이 묶음처리를 사용한다.
+                strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                   + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
+                                   + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+
+                CScript.runScript(strGmshExeFileFullName, strArguments, true);
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 해석 Log 파일을 분석하고 선별해서 사용자 메시지에 표시한다.
+        /// </summary>
+        /// <param name="strTestDirName"></param>
+        /// 
+        /// 출력 중인 파일을 반복적으로 읽어드리기 때문에 이전에 분석한 라인들은 분석에서 제외한다.
+        /// <param name="nStartLineNumber">분석을 시작하는 라인번호</param>
+        /// 
+        /// log 출력이 주기적으로 되지 않고 한꺼번에 몰아서 출력이 되어 사용하지 않는다.
+        /// <param name="nProgressBarValue">사용하지 않음</param>
+        /// <returns>해석중 오류가 발생했는지 리턴</returns>
+        private bool printLogMessage(string strTestDirName, ref int nStartLineNumber, ref int nProgressBarValue)
+        {
+            string strLine;
+            string[] arrayString;
+            string strLogFileFullName = Path.Combine(strTestDirName, "log.txt");
+
+            if (false == m_manageFile.isExistFile(strLogFileFullName))
+            {
+                // 해석중 오류가 발생이 아니고
+                // 다른 문제로 리턴이기 때문에 false 를 사용하고 있다.
+                return false;
+            }
+
+            // 사용중인 파일을 읽어오기 : FileShare.ReadWrite 를 꼭 사용해야 함 (FileShare.Read 는 안됨)
+            FileStream readFile = new FileStream(strLogFileFullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            StreamReader streamReader = new StreamReader(readFile);
+
+            int nLineCount = 0;
+            string strMessage = string.Empty;
+
+            try
+            {
+                // string Array 를 List 에 담는다.
+                while ((strLine = streamReader.ReadLine()) != null)
+                {
+                    nLineCount++;
+
+                    if (nLineCount > nStartLineNumber)
+                    { 
+                        if (true == strLine.Contains("Error"))
+                        {
+                            CNotice.printUserMessage(strLine);
+
+                            streamReader.Close();
+                            readFile.Close();
+
+                            nStartLineNumber = nLineCount;
+
+                            // 해석중 오류가 발생했음을 알린다.
+                            return true;
+                        }
+                        else if(true == strLine.Contains("Done meshing 3D"))
+                        {
+                            // 다음줄을 읽어낸다.
+                            strLine = streamReader.ReadLine();
+                            arrayString = strLine.Split(':');
+
+                            if(arrayString.Length >= 2)
+                                CNotice.printUserMessage("Done 3D mesh (" + arrayString[1] + ")");
+
+                            nProgressBarValue = 2;
+                        }
+                        else if (true == strLine.Contains("GetDP - IterativeLoop ..."))
+                        {
+                            CNotice.printUserMessage("Start Iterative Loop...");
+                        }
+                        else if (true == strLine.Contains("Nonlinear Residual norm"))
+                        {
+                            // 출력 파일에는 화면 출력에는 보이지 않는 Direct: 가 앞에 붙어 있음을 주의하라.
+                            // Direct: Info    : GetDP -   1 Nonlinear Residual norm 1.000000000000e+00
+                            CParsing.pickoutString(strLine, 26, 29, ref strMessage);
+
+                            arrayString = strLine.Split('-');
+                            if (arrayString.Length >= 2)
+                                CNotice.printUserMessage(arrayString[1]);
+
+                            // + 2 : 시작과 Mesh 작업을 포함한다.
+                            nProgressBarValue = Convert.ToInt32(strMessage) + 2;
+                        }
+                        else if (true == strLine.Contains("E n d   P o s t - P r o c e s s i n g"))
+                        {
+                            // 다음줄을 읽어낸다.
+                            strLine = streamReader.ReadLine();
+                            arrayString = strLine.Split(',');
+
+                            if (arrayString.Length >= 5)
+                                CNotice.printUserMessage("Done Solving (" + arrayString[1] + ", " + arrayString[2] + ", " + arrayString[3] + ")");
+
+                            nProgressBarValue = nProgressBarValue++;
+                        }
+
+                    }
+                }
+
+                streamReader.Close();
+                readFile.Close();
+
+                nStartLineNumber = nLineCount;
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
+
+            // 해석중 오류가 발생하지 않음을 리턴한다.
+            return false;
+        }
+
+        // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
+        public void threadProcForZeroCurrent()
+        {
+            try 
+            { 
+                CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
+
+                if (forceTest == null) return;
+
+                // 해석 전에 전처리 조건을 확인한다.
+                if (false == isForceTestOK(forceTest))
+                    return;
+
+                m_bFinishThread = true;
+
+                /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
+                CForceTest forceTestZeroCurrent = forceTest.Clone();
+
+                forceTestZeroCurrent.NodeName = forceTest.NodeName + "_Zero";
+                // 해석에 사용되는 전류값은 전압과 저항으로 다시 계산되기 때문에 전류 값을 0으로 하지않고 전압 값을 0으로 설정한다.
+                forceTestZeroCurrent.Voltage = 0.0f;
+
+                // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
+                solveForce(forceTestZeroCurrent, true);
+
+                // log 를 마지막까지 출력하도록 시간을 준다.
+                //
+                // [순서 주의]
+                //  - m_bFinishThread = false; 앞에서 사용해야 한다.
+                Thread.Sleep(3000);
+
+                m_bFinishThread = false;
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
+        }
+
+        // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
+        public void threadProcForCurrent()
+        {
+            try 
+            {
+                CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
+
+                if (forceTest == null) return;
+
+                // 해석 전에 전처리 조건을 확인한다.
+                if (false == isForceTestOK(forceTest))
+                    return;
+
+                m_bFinishThread = true;
+
+                // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
+                solveForce(forceTest, true);
+
+                // log 를 마지막까지 출력하도록 시간을 준다.
+                //
+                // [순서 주의]
+                //  - m_bFinishThread = false; 앞에서 사용해야 한다.
+                Thread.Sleep(3000);
+
+                m_bFinishThread = false;
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Solve Force Thread 를 동작 시킨다.
+        /// </summary>
+        /// <param name="forceTest"></param>
+        /// <param name="bZeroCurrent">자기력 보정 해석인지 구분</param>
+        /// <returns></returns>
+        private bool startSolveForceThread(CForceTest forceTest, bool bZeroCurrent = false)
+        {
+            bool bErrorOccurred = false;
+            string strTestName;
+
+            try
+            {
+                // 순서 주의
+                // - m_addedThreadInMain 설정 전에 호출해야 한다.
+                stopSolveForceThread();
+
+                // 해석전에 ProgressBar 를 표시한다.
+                progressBarForce.Value = progressBarForce.Minimum;
+                labelProgressForce.Show();
+                progressBarForce.Show();
+
+                // Thread 는 한번에 하나만 동작한다.
+                if (bZeroCurrent == false)
+                {
+                    strTestName = forceTest.NodeName;
+                    m_addedThreadInMain = new Thread(new ThreadStart(threadProcForCurrent));
+                }
+                else
+                {
+                    strTestName = forceTest.NodeName + "_Zero";
+                    m_addedThreadInMain = new Thread(new ThreadStart(threadProcForZeroCurrent));
+                }
+
+                string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
+                string strBVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+                string strBVectorImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
+
+                int nStartLineNumber = 0;
+                int nProgressBarValue = 0;
+                int nProgressIncreaseValue = 0;
+
+                // 사용자 메시지를 초기화 한다.
+                messageListView.clearMessage();
+
+                // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.printUserMessage(strTestName + "의 자기력 실험이 시작 됩니다.");
+                else
+                    CNotice.printUserMessage("The magnetic force test of " + strTestName + " begins.");
+
+                m_bFinishThread = true;
+                m_addedThreadInMain.IsBackground = true;
+                m_addedThreadInMain.Start();
+
+                do
+                {
+                    Thread.Sleep(500);
+
+                    // 한번이라도 오류가 발생하면 저장해 둔다.
+                    if (true == printLogMessage(strTestDirName, ref nStartLineNumber, ref nProgressBarValue))
+                        bErrorOccurred = true;
+
+                    // 반복수렴 정보가
+                    // 주기적으로 log.txt 에 기록되지 않고 한번씩 왕창 출력되고 있어 사용하지 않는다.
+                    //if (nPogressBarValue >= progressBarSolving.Maximum)
+                    //    progressBarSolving.Value = progressBarSolving.Maximum;
+                    //else
+                    //    progressBarSolving.Value = nPogressBarValue;
+
+                    if (nProgressIncreaseValue >= progressBarForce.Maximum)
+                    {
+                        nProgressIncreaseValue = 0;
+                        progressBarForce.Value = 0;                        
+                    }                        
+                    else
+                        progressBarForce.PerformStep();
+
+                    Application.DoEvents();
+
+                    nProgressIncreaseValue++;
+
+                } while (m_bFinishThread == true);
+
+                stopSolveForceThread();
+
+                progressBarForce.Value = progressBarForce.Minimum;
+                progressBarForce.Hide();
+                labelProgressForce.Hide();
+
+                // 해석이 종료된 이후에 추가로 출력된 오류가 있는 경우를 대비해서 다시한번 오류를 확인한다.
+                Thread.Sleep(500);
+                if (true == printLogMessage(strTestDirName, ref nStartLineNumber, ref nProgressBarValue))
+                    bErrorOccurred = true;
+
+                if (m_manageFile.isExistFile(strBVectorFileFullName) == false)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeError("자기력 해석 결과가 존재하지 않습니다.\n메시지 창에서 확인하세요.", "오류 발생");
+                    else
+                        CNotice.noticeError("Magnetic force analysis result does not exist.\nCheck in the message window.", "Error");
+
+                    if (true == m_manageFile.isExistFile(strBVectorImageFileFullName))
+                        m_manageFile.deleteFile(strBVectorImageFileFullName);
+
+                    return false;
+                }
+
+                if(bErrorOccurred == true)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeError("자기력 해석 중에 오류가 발생 했습니다.\n메시지 창에서 확인하세요.", "오류 발생");
+                    else
+                        CNotice.noticeError("An error occurred during magnetic force analysis.\nCheck in the message window.", "Error");
+
+                    // 해석 오류가 발생했는데도 B VectorFile 과 이미지 생성되면
+                    // B Vector 버튼과 Force 버튼이 활성화 되기 때문에 삭제한다. 
+                    if (true == m_manageFile.isExistFile(strBVectorFileFullName))
+                        m_manageFile.deleteFile(strBVectorFileFullName);
+
+                    if (true == m_manageFile.isExistFile(strBVectorImageFileFullName))
+                        m_manageFile.deleteFile(strBVectorImageFileFullName);
+
+                    return false; 
+                }
+
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.printUserMessage(strTestName + "의 자기력 실험이 완료 되었습니다.");
+                else
+                    CNotice.printUserMessage("The magnetic force test of " + strTestName + "  has been completed.");
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
+
+            return true;
+        }
+
+        public void stopSolveForceThread()
+        {
+            if (m_addedThreadInMain != null)
+            {
+                m_addedThreadInMain.Interrupt();
+                m_addedThreadInMain = null;
+            }
+        }
+
         #endregion
 
         #region------------------------- Script 작업 함수 ---------------------------
 
-        public bool solveForce(CForceTest forceTest)
+        public bool solveForce(CForceTest forceTest, bool bAutoRun = false)
         {
             string strTestName = forceTest.NodeName;
             string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
             string strSolveScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".pro");
+            string strLogFileFullName = Path.Combine(strTestDirName, "log.txt");
+
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
 
             string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
 
@@ -1725,8 +2178,6 @@ namespace DoSA
             if (false == createDesignGeoFile(forceTest))
                 return false;
 
-            createImageGeoFile(forceTest);
-
             createDesignProFile(forceTest);
 
             addFuncitonToDesignProFile(forceTest);
@@ -1735,9 +2186,16 @@ namespace DoSA
 
             addPostToDesignProFile(forceTest);
 
-            // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-            // 아래와 같이 묶음처리를 사용한다.
-            string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
+            createImageGeoFile(forceTest);
+
+            string strArguments;
+
+            if ( bAutoRun == false )
+                strArguments = " -log " + m_manageFile.solveDirectoryNameInPC(strLogFileFullName)
+                                + " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
+            else
+                strArguments = " -run -log " + m_manageFile.solveDirectoryNameInPC(strLogFileFullName)
+                                + " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
 
             // 종료될 때 가지 툴킷을 기다린다.
             // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
@@ -1768,9 +2226,9 @@ namespace DoSA
             try
             {
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
-                    if (node.m_kindKey == EMKind.COIL)
+                    if (node.KindKey == EMKind.COIL)
                     {
                         if (nCount != 0)
                         {
@@ -1785,15 +2243,15 @@ namespace DoSA
                     }
                 }
                 
-                strOrgStriptContents = scriptContents.m_str12_PostProcessing_Script;
+                strOrgStriptContents = scriptContents.m_str41_PostProcessing_Script;
                     
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
 
                 // 아래의 m_str13_PostOperation_Script 에서도 coil name 을 사용하기 때문에 이름을 그대로 유지한다.
                 //listScriptString.Clear();
 
-                strOrgStriptContents = scriptContents.m_str13_PostOperation_Script;
-                       
+
+                strOrgStriptContents = scriptContents.m_str42_PostOperation_Script;                       
 
                 // [주의 사항]
                 //
@@ -1888,14 +2346,14 @@ namespace DoSA
 
             try
             {
-                strOrgStriptContents = scriptContents.m_str11_Formulation_Resolution_Script;
+                strOrgStriptContents = scriptContents.m_str33_Formulation_Resolution_Script;
 
                 int nCount = 0;
                 bool bUsedMagnet = false;
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
-                    if (node.m_kindKey == EMKind.COIL)
+                    if (node.KindKey == EMKind.COIL)
                     {
                         if (nCount >= 1)
                         {
@@ -1909,7 +2367,7 @@ namespace DoSA
                         nCount++;
                     }
 
-                    if (node.m_kindKey == EMKind.MAGNET)
+                    if (node.KindKey == EMKind.MAGNET)
                         bUsedMagnet = true;
                 }
 
@@ -1954,7 +2412,7 @@ namespace DoSA
 
             try
             {
-                strOrgStriptContents = scriptContents.m_str07_Function_Script;
+                strOrgStriptContents = scriptContents.m_str31_Function_Script;
 
                 double dCurrent, dCoilSectionArea, dCoilWidth;
                 double dHc, dBr, dMur;
@@ -1964,11 +2422,11 @@ namespace DoSA
                 EMMagnetRotationAxis emMagnetRotationAxis;
                 double dAngle;
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
                     strNodeName = node.NodeName;
 
-                    switch (node.m_kindKey)
+                    switch (node.KindKey)
                     {
                         case EMKind.COIL:
 
@@ -2060,7 +2518,7 @@ namespace DoSA
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
 
-                strOrgStriptContents = scriptContents.m_str08_Constraint_Script;
+                strOrgStriptContents = scriptContents.m_str32_Constraint_Script;
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
@@ -2087,7 +2545,7 @@ namespace DoSA
 
             try
             {
-                strOrgStriptContents = scriptContents.m_str06_Group_Script;
+                strOrgStriptContents = scriptContents.m_str23_Group_Script;
 
                 // Air 가 1이기 때문에 파트는 2 부터 시작한다.
                 string strTemp = string.Empty;
@@ -2098,12 +2556,12 @@ namespace DoSA
 
                 int nIndex;
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
                     strNodeName = node.NodeName;
                     strTemp = strNodeName.ToUpper();
 
-                    switch (node.m_kindKey)
+                    switch (node.KindKey)
                     {
                         case EMKind.STEEL:
                             strNonlinearNames += String.Format("vol{0}, ", strNodeName);
@@ -2199,7 +2657,7 @@ namespace DoSA
             try
             {
 
-                strOrgStriptContents = scriptContents.m_str05_Image_Script;
+                strOrgStriptContents = scriptContents.m_str51_Image_Script;
 
                 listScriptString.Add(strSTEPFileFullName);
 
@@ -2235,7 +2693,7 @@ namespace DoSA
                 // STEP 파일을 시험 디렉토리로 복사한다.
                 //m_manageFile.copyFile(strOrgSTEPFileFullName, strExprimentSTEPFileFullName);
 
-                strOrgStriptContents = scriptContents.m_str04_Import_Script;
+                strOrgStriptContents = scriptContents.m_str21_Import_Script;
 
                 listScriptString.Add(strSTEPFileFullName);
 
@@ -2243,7 +2701,7 @@ namespace DoSA
                 listScriptString.Clear();
 
                 strOrgStriptContents = string.Empty;
-                int nDefineNumCount = 0;
+                int nPartIndexInSTEP = 0;
                 string strTemp;
 
                 // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
@@ -2251,9 +2709,9 @@ namespace DoSA
                 // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
                 foreach (string strName in m_design.AllShapeNameList)
                 {
-                    strOrgStriptContents += String.Format("vol{0} = STEP_Volumes[{1}];\n", strName, nDefineNumCount);
+                    strOrgStriptContents += String.Format("vol{0} = STEP_Volumes[{1}];\n", strName, nPartIndexInSTEP);
 
-                    nDefineNumCount++;
+                    nPartIndexInSTEP++;
                 }
 
                 strOrgStriptContents += "\n";
@@ -2262,7 +2720,7 @@ namespace DoSA
                 string strMovingPartNames = string.Empty;
                 string strSteelPartNames = string.Empty;
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
                     strNodeName = node.NodeName;
                     strTemp = strNodeName.ToUpper();
@@ -2275,7 +2733,7 @@ namespace DoSA
                         }
                     }
 
-                    if (node.m_kindKey == EMKind.STEEL)
+                    if (node.KindKey == EMKind.STEEL)
                     {
                         strSteelPartNames += String.Format("vol{0}, ", strNodeName);
                     }
@@ -2289,13 +2747,10 @@ namespace DoSA
                     nIndex = strMovingPartNames.Length - 2;
                     strMovingPartNames = strMovingPartNames.Remove(nIndex);
 
-// 작업 검토 중
-//                    strOrgStriptContents += "volMovingParts = Volume{ " + strMovingPartNames + " };\n\n";
-
                     strOrgStriptContents += "Translate { " + forceTest.MovingX.ToString() + "*mm , " + forceTest.MovingY.ToString() + "*mm, " 
-                                            + forceTest.MovingZ.ToString() + "*mm } {  Volume{" + strMovingPartNames + "}; }\n\n";
+                                            + forceTest.MovingZ.ToString() + "*mm } { Volume{ " + strMovingPartNames + " }; }\n\n";
 
-                    strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{" + strMovingPartNames + "}; };\n";
+                    strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{ " + strMovingPartNames + " }; };\n";
                 }
 
                 if (strSteelPartNames.Length > 2)
@@ -2304,7 +2759,7 @@ namespace DoSA
                     nIndex = strSteelPartNames.Length - 2;
                     strSteelPartNames = strSteelPartNames.Remove(nIndex);
 
-                    strOrgStriptContents += "skinSteel() = CombinedBoundary{ Volume{" + strSteelPartNames + "}; };\n\n";
+                    strOrgStriptContents += "skinSteel() = CombinedBoundary{ Volume{ " + strSteelPartNames + " }; };\n\n";
                 }
 
                 foreach (string strName in m_design.AllShapeNameList)
@@ -2313,7 +2768,7 @@ namespace DoSA
 
                     strOrgStriptContents += String.Format("Physical Volume({0}) = vol{1};\n", strTemp, strName);
 
-                    nDefineNumCount++;
+                    nPartIndexInSTEP++;
                 }
 
                 double dMeshSize;
@@ -2423,7 +2878,7 @@ namespace DoSA
                 listScriptString.Add(dInnerRegionLengthY.ToString());
                 listScriptString.Add(dInnerRegionLengthZ.ToString());
    
-                strOrgStriptContents += scriptContents.m_str04_1_Region_Script;
+                strOrgStriptContents += scriptContents.m_str22_Region_Script;
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
                 listScriptString.Clear();
@@ -2469,9 +2924,9 @@ namespace DoSA
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strBHProFileFullName, listScriptString);
                 listScriptString.Clear();
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
-                    switch (node.m_kindKey)
+                    switch (node.KindKey)
                     {
                         case EMKind.STEEL:
 
@@ -2488,7 +2943,7 @@ namespace DoSA
                                 listScriptString.Clear();
 
                                 // BH 관련  수식 기록하기
-                                strOrgStriptContents = scriptContents.m_str03_BH_Calulate_Script;
+                                strOrgStriptContents = scriptContents.m_str12_BH_Calulate_Script;
 
                                 listScriptString.Add(strMaterialName);
 
@@ -2534,10 +2989,11 @@ namespace DoSA
 
             try
             {
-                strOrgStriptContents = scriptContents.m_str02_Define_Script;
+                strOrgStriptContents = scriptContents.m_str11_Define_Script;
 
-                // 파트 번호는 1 부터 시작한다. (저장된 STEP 파일의 Volume 번호와 일치 시킨다)
-                int nDefineNumCount = 1;
+                // GetDP 에서 사용하는 파트 번호는
+                // STEP 파일안의 파트 인덱스 번호와 맞추기 위해 0 부터 시작한다.
+                int nDefineNumber = 0;
                 string strTemp;
 
                 // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
@@ -2547,8 +3003,8 @@ namespace DoSA
                 {
                     strTemp = strName.ToUpper();
 
-                    strOrgStriptContents += String.Format("{0} = {1};\n", strTemp, nDefineNumCount);
-                    nDefineNumCount++;
+                    strOrgStriptContents += String.Format("{0} = {1};\n", strTemp, nDefineNumber);
+                    nDefineNumber++;
                 }
 
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strDefineGeoFileFullName, listScriptString);
@@ -2614,9 +3070,9 @@ namespace DoSA
                 treeNode = new TreeNode("Tests", (int)EMKind.TESTS, (int)EMKind.TESTS);
                 treeViewMain.Nodes.Add(treeNode);
 
-                foreach (CNode node in m_design.NodeList)
+                foreach (CNode node in m_design.GetNodeList)
                 {
-                    this.addTreeNode(node.NodeName, node.m_kindKey);
+                    this.addTreeNode(node.NodeName, node.KindKey);
                 }
 
                 // 제목줄에 디자인명을 표시한다
@@ -2692,6 +3148,8 @@ namespace DoSA
 
         private void plotForceResult(CForceTest forceTest)
         {
+            if (forceTest == null) return;
+
             string strTestName = forceTest.NodeName;
             string strTestZeroName = strTestName + "_Zero";
             string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
@@ -2776,7 +3234,6 @@ namespace DoSA
         {
             string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
 
-            //string strDensityImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
             string strForceXFileFullName = Path.Combine(strTestDirName, "Fx.dat");
             string strForceYFileFullName = Path.Combine(strTestDirName, "Fy.dat");
             string strForceZFileFullName = Path.Combine(strTestDirName, "Fz.dat");
@@ -3000,19 +3457,19 @@ namespace DoSA
                             case "Coil":
                                 CCoil coil = new CCoil();
                                 if (true == coil.readObject(listStringNode))
-                                    m_design.NodeList.Add(coil);
+                                    m_design.GetNodeList.Add(coil);
                                 break;
 
                             case "Steel":
                                 CSteel steel = new CSteel();
                                 if (true == steel.readObject(listStringNode))
-                                    m_design.NodeList.Add(steel);
+                                    m_design.GetNodeList.Add(steel);
                                 break;
 
                             case "Magnet":
                                 CMagnet magnet = new CMagnet();
                                 if (true == magnet.readObject(listStringNode))
-                                    m_design.NodeList.Add(magnet);
+                                    m_design.GetNodeList.Add(magnet);
                                 break;
 
                             // CExpriment 하위 객체
@@ -3020,7 +3477,7 @@ namespace DoSA
                             case "ForceTest":
                                 CForceTest forceTest = new CForceTest();
                                 if (true == forceTest.readObject(listStringNode))
-                                    m_design.NodeList.Add(forceTest);
+                                    m_design.GetNodeList.Add(forceTest);
                                 break;
 
                             default:
@@ -3231,7 +3688,7 @@ namespace DoSA
                     case EMKind.COIL:
                         CCoil coil = new CCoil();
                         coil.NodeName = strNodeName;
-                        coil.m_kindKey = emKind;
+                        coil.KindKey = emKind;
 
                         bRet = m_design.addNode(coil);
                         break;
@@ -3239,7 +3696,7 @@ namespace DoSA
                     case EMKind.MAGNET:
                         CMagnet magnet = new CMagnet();
                         magnet.NodeName = strNodeName;
-                        magnet.m_kindKey = emKind;
+                        magnet.KindKey = emKind;
 
                         bRet = m_design.addNode(magnet);
                         break;
@@ -3247,7 +3704,7 @@ namespace DoSA
                     case EMKind.STEEL:
                         CSteel steel = new CSteel();
                         steel.NodeName = strNodeName;
-                        steel.m_kindKey = emKind;
+                        steel.KindKey = emKind;
 
                         bRet = m_design.addNode(steel);
                         break;
@@ -3255,7 +3712,7 @@ namespace DoSA
                     case EMKind.FORCE_TEST:
                         CForceTest forceTest = new CForceTest();
                         forceTest.NodeName = strNodeName;
-                        forceTest.m_kindKey = emKind;
+                        forceTest.KindKey = emKind;
                         
                         // 생성될 때 환경설정의 조건으로 초기화한다.
                         forceTest.MeshSizePercent = CSettingData.m_dMeshLevelPercent;
@@ -3378,7 +3835,7 @@ namespace DoSA
 
                     strTestDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
 
-                    switch (node.m_kindKey)
+                    switch (node.KindKey)
                     {
                         case EMKind.COIL:
                             splitContainerRight.Panel1.Controls.Add(this.panelCoil);
@@ -3396,18 +3853,21 @@ namespace DoSA
                             break;
 
                         case EMKind.FORCE_TEST:
-
-                            string strFieldImageFullName = Path.Combine(strTestDirName, "Image.gif");
+ 
+                            string strFieldImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
+                            string strMagneticDensityFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
 
                             // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
-                            if (m_manageFile.isExistFile(strFieldImageFullName) == true)
-                            {
+                            if (m_manageFile.isExistFile(strFieldImageFileFullName) == true)
                                 buttonLoadForceResult.Enabled = true;
-                            }
                             else
-                            {
                                 buttonLoadForceResult.Enabled = false;
-                            }
+
+                            // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
+                            if (m_manageFile.isExistFile(strMagneticDensityFileFullName) == true)
+                                buttonPlotDensity.Enabled = true;
+                            else
+                                buttonPlotDensity.Enabled = false;
 
                             splitContainerRight.Panel1.Controls.Add(this.panelForce);
 
@@ -3469,6 +3929,8 @@ namespace DoSA
         {
             CNode node = (CNode)propertyGridMain.SelectedObject;
 
+            if (node == null) return;
+
             string strChangedItemValue = e.ChangedItem.Value.ToString();
             string strChangedItemLabel = e.ChangedItem.Label;
             
@@ -3504,7 +3966,7 @@ namespace DoSA
                     this.treeViewMain.SelectedNode.Text = strChangedItemValue;
                 }            
                 
-                switch (node.m_kindKey)
+                switch (node.KindKey)
                 {
                     case EMKind.COIL:
 
@@ -3579,13 +4041,13 @@ namespace DoSA
             double total_resistance = 0.0f;
 
             // 총 저항
-            foreach (CNode nodeTemp in m_design.NodeList)
-                if (nodeTemp.m_kindKey == EMKind.COIL)
+            foreach (CNode nodeTemp in m_design.GetNodeList)
+                if (nodeTemp.KindKey == EMKind.COIL)
                 {
                     total_resistance += ((CCoil)nodeTemp).Resistance;
                 }
 
-            switch (node.m_kindKey)
+            switch (node.KindKey)
             {
                 case EMKind.FORCE_TEST:
 
@@ -3815,8 +4277,47 @@ namespace DoSA
             System.Diagnostics.Process.Start(strWebAddress);
         }
 
+
         #endregion
 
+        private void pictureBoxOpenActuator_Click(object sender, EventArgs e)
+        {
+            string target = "http://openactuator.org";
 
+            try
+            {
+                System.Diagnostics.Process.Start(target);
+            }
+            catch (System.ComponentModel.Win32Exception noBrowser)
+            {
+                if (noBrowser.ErrorCode == -2147467259)
+                    CNotice.printLog(noBrowser.Message);
+            }
+            catch (System.Exception other)
+            {
+                CNotice.printLog(other.Message);
+            }
+        }
+
+        private void buttonPlotMagneticDensity_Click(object sender, EventArgs e)
+        {
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
+
+            if (forceTest == null) return;
+
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
+
+            showMagneticDensityVector(strTestDirName);
+        }
+
+        private void pictureBoxOpenActuator_MouseLeave(object sender, EventArgs e)
+        {
+            this.Cursor = Cursors.Default;
+        }
+
+        private void pictureBoxOpenActuator_MouseEnter(object sender, EventArgs e)
+        {
+            this.Cursor = Cursors.Hand;
+        }
     }
 }

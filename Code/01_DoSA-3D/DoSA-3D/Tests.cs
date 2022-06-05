@@ -64,11 +64,11 @@ namespace Tests
             set { m_dCurrent = value; }
         }
 
-        [DisplayNameAttribute("Y Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Y Displacement")]
-        public double MovingY { get; set; }
-
         [DisplayNameAttribute("X Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("X Displacement")]
         public double MovingX { get; set; }
+
+        [DisplayNameAttribute("Y Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Y Displacement")]
+        public double MovingY { get; set; }
 
         [DisplayNameAttribute("Z Movement [mm]"), CategoryAttribute("\tInitial Position Fields"), DescriptionAttribute("Z Displacement")]
         public double MovingZ { get; set; }
@@ -83,7 +83,7 @@ namespace Tests
 
         public CForceTest()
         {
-            m_kindKey = EMKind.FORCE_TEST;
+            KindKey = EMKind.FORCE_TEST;
             Voltage = 5.0;
 
             B_VectorResolution = 50;
@@ -101,7 +101,7 @@ namespace Tests
 
                 // CNode
                 writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", KindKey, nLevel + 1);
 
                 // CTest
                 writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, nLevel + 1);
@@ -159,7 +159,7 @@ namespace Tests
                             if (arrayString[1] == "FORCE_EXPERIMENT")
                                 arrayString[1] = "FORCE_TEST";
 
-                            m_kindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
+                            KindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
                             break;
 
                         // CTest
@@ -218,7 +218,7 @@ namespace Tests
         {
             CForceTest forceTest = new CForceTest();
 
-            forceTest.m_kindKey = this.m_kindKey;
+            forceTest.KindKey = this.KindKey;
             forceTest.Current = this.Current;
             forceTest.MovingY = this.MovingY;
             forceTest.MovingX = this.MovingX;

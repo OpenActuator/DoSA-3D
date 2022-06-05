@@ -885,14 +885,17 @@ namespace gtLibrary
             return true;
         }
 
-        // 해당 키워드를 만났을 때 
-        // 해당 라인의 startPos 부터 endPos 사이의 문자열을 숫자로 만들어서 리턴한다.
-        //
-        // 키워드를 만나면 바로 리턴하기 때문에 해당 키워드만 읽어낸다.
+        /// <summary>
+        /// 키워드로 시작하는 라인의 특정 위치의 스트링을 뽑아낸다.
+        /// </summary>
+        /// <param name="strTargetFileFullName"></param>
+        /// <param name="strKeyword">라인을 시작하는 키워드</param>
+        /// <param name="startPos">문자열 시작 위치 (index X, position O)</param>
+        /// <param name="endPos">문자열 끝 위치 (index X, position O)</param>
+        /// <returns></returns>
         public string pickoutString(string strTargetFileFullName, string strKeyword, int startPos, int endPos)
         {
             string strLine, strTemp;
-            int iLength;
 
             try
             {
@@ -914,14 +917,7 @@ namespace gtLibrary
                         // 키워드를 만나면 바로 리턴하기 때문에 해당 키워드만 읽어낸다.
                         if (strTemp == strKeyword)
                         {
-                            // 혹시 strLine 의 길이가 endPos 보다 작다면 
-                            // 리턴하지 않고 강제로 endPos 크기를 strLine 길이로 변경한다
-                            if (strLine.Length < endPos)
-                                endPos = strLine.Length;
-
-                            iLength = endPos - startPos;
-
-                            strTemp = strLine.Substring(startPos, iLength);
+                            CParsing.pickoutString(strLine, startPos, endPos, ref strTemp);
 
                             readFile.Close();
 
@@ -1408,6 +1404,42 @@ namespace gtLibrary
             {
                 CNotice.printLog(ex.Message);
                 return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="strLine"></param>
+        /// <param name="startPos">문자열 시작 위치 (index X, position O)</param>
+        /// <param name="endPos">문자열 끝 위치 (index X, position O)</param>
+        /// <param name="strReturn"></param>
+        /// <returns></returns>
+        public static bool pickoutString(string strLine, int startPos, int endPos, ref string strReturn)
+        {
+            try
+            {
+                if (endPos <= startPos || strLine.Length <= startPos)
+                {
+                    strReturn = string.Empty;
+                    return false;
+                }
+
+                // 혹시 strLine 의 길이가 endPos 보다 작다면 리턴하지 않고 강제로 endPos 크기를 strLine 길이로 변경한다
+                if (strLine.Length < endPos)
+                    endPos = strLine.Length;
+
+                //---------------------- 아주 중요 ----------------------------
+                // - 함수로 넘어오는 startPos은 인덱스가 아니라 문자의 위치이다.
+                // - Substring 의 파라메터는 인덱스값 입력이다.
+                // - 하지만 Substring() 의 동작이 인덱스 이후의 문자열을 넘겨오기 때문에 -1 없이 그대로 사용해도 된다.
+                strReturn = strLine.Substring(startPos, endPos - startPos);
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
             }
 
             return true;

@@ -245,8 +245,6 @@ SetFactory(""OpenCASCADE"");
 
 Merge ""{{1}}"";
 
-Mesh 2;
-
 STEP_Volumes[] = Volume '*';
 
 For k In {0 : #STEP_Volumes[]-1}
@@ -257,33 +255,65 @@ For k In {0 : #STEP_Volumes[]-1}
 
 EndFor
 
-Geometry.Volumes = 1;
-Geometry.VolumeNumbers = 1;
+Geometry.Points = 0;
+Geometry.Curves = 0;
+Geometry.Surfaces = 1;
+Geometry.Volumes = 0;
+Geometry.VolumeLabels = 1;
+
+Geometry.SurfaceType = 2;
+
+Mesh.SurfaceEdges = 0;
+Mesh.VolumeEdges = 0;
+
+# 해석목적이 아니라 제품 크기를 계산하기 위해 2D Mesh 진행하고 파일을 보관한다.
+Mesh 2;
 
 Save ""{{3}}.msh"";
 
 ";
         #endregion
 
-        #region ---------------------------- 01_1 Show Shape  ----------------------------
+        #region ---------------------------- 02 Show Shape  ----------------------------
 
-        public string m_str01_1_Show_Shape_Script =
+        public string m_str02_Show_Shape_Script =
         @"#CHECK_STEP,1
 # 1 : Step File Full Name
+# 2 : Moving Part Index Number
+# 3 : Moving X
+# 4 : Moving Y
+# 5 : Moving Z
+
+mm = 1e-3;
 
 SetFactory(""OpenCASCADE"");
 
 Merge ""{{1}}"";
 
-Geometry.Volumes = 1;
-Geometry.VolumeNumbers = 1;
+STEP_Volumes[] = Volume '*';
 
-# Geometry.SurfaceType = 2;
+Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
+
+volMovingPart = STEP_Volumes[{{2}}];
+
+Translate { {{3}} * mm , {{4}} * mm, {{5}} * mm } { Volume{ volMovingPart }; }
+
+Geometry.Points = 0;
+Geometry.Curves = 0;
+Geometry.Surfaces = 1;
+Geometry.Volumes = 0;
+Geometry.VolumeLabels = 1;
+
+Geometry.SurfaceType = 2;
+
+Mesh.SurfaceEdges = 0;
+Mesh.VolumeEdges = 0;
 
 ";
         #endregion
 
-        #region ---------------------------- 02_Define.geo ----------------------------
+
+        #region ---------------------------- 11_Define.geo ----------------------------
 
         ///----------------------------------------------
         /// Define 번호 규칙
@@ -297,7 +327,7 @@ Geometry.VolumeNumbers = 1;
         ///  - 301 ~ 398 : Parts Skin
         ///  - 399 : Air Skin (Outer Box 만)
         ///  
-        public string m_str02_Define_Script =
+        public string m_str11_Define_Script =
         @"#DEFINE,0
 
 mm = 1e-3;
@@ -311,7 +341,7 @@ SKIN_STEEL = 302;
 ";
         #endregion
 
-        #region ---------------------------- 03_BH.pro ----------------------------
+        #region ---------------------------- 12_BH.pro ----------------------------
 
         public bool getScriptBH(string strMaterialName, ref string strScriptBH, List<double> listH, List<double> listB)
         {
@@ -345,7 +375,7 @@ SKIN_STEEL = 302;
             return true;
         }
         
-        public string m_str03_BH_Calulate_Script =
+        public string m_str12_BH_Calulate_Script =
         @"#BH,1
 # 1 : Material Name
 
@@ -366,9 +396,9 @@ dhdb_{{1}}_NL[] = 2 * dnudb2_{{1}}[$1] * SquDyadicProduct[$1] ;
 ";
         #endregion
 
-        #region ---------------------------- 04_Import STEP (*.geo) ----------------------------
+        #region ---------------------------- 21_Import STEP (*.geo) ----------------------------
 
-        public string m_str04_Import_Script =
+        public string m_str21_Import_Script =
         @"#IMPORT,1
 # 1 : STEP File Name
 
@@ -397,9 +427,9 @@ General.ShowMessagesOnStartup = 1;
 ";
         #endregion
 
-        #region ---------------------------- 04_1_Air_Region (*.geo) ----------------------------
+        #region ---------------------------- 22_Air_Region (*.geo) ----------------------------
 
-        public string m_str04_1_Region_Script =
+        public string m_str22_Region_Script =
         @"#IMPORT,11
 # 1 : Mesh Size
 # 2 : Outer Min X
@@ -446,38 +476,9 @@ Physical Surface(SKIN_AIR) = skinAir();
 ";
         #endregion
 
-        #region ---------------------------- 05_Magnetic Density Vector Image (Image.geo) ----------------------------
+        #region ---------------------------- 23_Group (*.pro) ----------------------------
 
-        public string m_str05_Image_Script =
-        @"#IMPORT,1
-# 1 : STEP File Name
-
-# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
-# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
-
-SetFactory(""OpenCASCADE"");
-
-mm = 1e-3;
-
-Merge ""{{1}}"";
-
-STEP_Volumes[] = Volume '*';
-
-Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
-
-General.Trackball = 0;
-General.RotationX = 20; General.RotationY = -20; General.RotationZ = 0;
-
-Print ""Image.gif"";
-
-Exit;
-
-";
-        #endregion
-
-        #region ---------------------------- 06_Group (*.pro) ----------------------------
-
-        public string m_str06_Group_Script =
+        public string m_str23_Group_Script =
         @"#DEFINE,0
 Include ""Define.geo"";
 Include ""BH.pro"";
@@ -492,9 +493,9 @@ Group {
 ";
         #endregion
 
-        #region ---------------------------- 07_Function (*.pro) ----------------------------
+        #region ---------------------------- 31_Function (*.pro) ----------------------------
 
-        public string m_str07_Function_Script =
+        public string m_str31_Function_Script =
         @"#DEFINE,0
 
 Function {
@@ -511,9 +512,9 @@ Function {
 ";
         #endregion
 
-        #region ---------------------------- 08_09_10_Constraint (*.pro) ----------------------------
+        #region ---------------------------- 32_Constraint (*.pro) ----------------------------
 
-        public string m_str08_Constraint_Script =
+        public string m_str32_Constraint_Script =
         @"#DEFINE,0
 
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
@@ -590,9 +591,9 @@ Integration {
 ";
         #endregion
 
-        #region ---------------------------- 11_Formulation_Resolution (*.pro) ----------------------------
+        #region ---------------------------- 33_Formulation_Resolution (*.pro) ----------------------------
 
-        public string m_str11_Formulation_Resolution_Script =
+        public string m_str33_Formulation_Resolution_Script =
         @"#DEFINE,3
 # 1 : Coil Name
 # 2 : First Line String of Magnet
@@ -647,10 +648,10 @@ Resolution {
 ";
         #endregion
 
-        #region ---------------------------- 12_PostProcessing (*.pro) ----------------------------
+        #region ---------------------------- 41_PostProcessing (*.pro) ----------------------------
 
 
-        public string m_str12_PostProcessing_Script =
+        public string m_str41_PostProcessing_Script =
         @"#DEFINE,1
 # 1 : Coil Name
 
@@ -703,9 +704,9 @@ PostProcessing {
 ";
         #endregion
 
-        #region ---------------------------- 13_PostOperation (*.pro) ----------------------------
+        #region ---------------------------- 42_PostOperation (*.pro) ----------------------------
 
-        public string m_str13_PostOperation_Script =
+        public string m_str42_PostOperation_Script =
         @"#DEFINE,2
 # 1 : Coil Name
 # 가. 좌하단점
@@ -728,6 +729,15 @@ PostProcessing {
 PostOperation {
     { Name poMagStatic_A ; NameOfPostProcessing ppMagStatic_A;
         Operation {            
+
+            Echo[ Str[
+                ""nView = 1;"",
+                ""View[nView].RangeType = 2;"",
+                ""View[nView].CustomMax = 1.7;"",
+                ""View[nView].CustomMin = 0.0;"",
+                ""View[nView].Name = StrCat['Magnetic Density'];"",
+                ""Mesh.SurfaceEdges = 0;"" ],
+                File ""maps.opt"" ];
             
             Print[ js, OnElementsOf vol{{1}}, File ""js.pos"" ] ;
 # 전체 출력은 용량이 너무커서 사용하지 않는다.            
@@ -737,14 +747,6 @@ PostOperation {
 # mm 은 단위 환산이다. ( mm = 1e-3 )
             Print[ b, OnPlane { { {{2}}*mm, {{3}}*mm, {{4}}*mm } { {{5}}*mm, {{3}}*mm, {{6}}*mm } { {{2}}*mm, {{7}}*mm, {{4}}*mm } } { {{8}}, {{8}} }, File ""b_cut.pos"" ];
 # Print 수 만큼 View 가 생긴다. 따라서 View 인덱스는 0 부터 시작해서 1이다.
-            Echo[ Str[
-                ""nView = 1;"",
-                ""View[nView].RangeType = 2;"",
-                ""View[nView].CustomMax = 1.7;"",
-                ""View[nView].CustomMin = 0.0;"",
-                ""View[nView].Name = StrCat['Magnetic Density'];"",
-                ""Mesh.SurfaceEdges = 0;"" ],
-                File ""maps.opt"" ];
 
             DeleteFile[""F.dat""];
             DeleteFile [""Fx.dat""];
@@ -765,9 +767,39 @@ PostOperation {
     }
 }
 
-#OnelabRun
+";
+        #endregion
+
+
+        #region ---------------------------- 51_Magnetic Density Vector Image (Image.geo) ----------------------------
+
+        public string m_str51_Image_Script =
+        @"#IMPORT,1
+# 1 : STEP File Name
+
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
+
+SetFactory(""OpenCASCADE"");
+
+mm = 1e-3;
+
+Merge ""{{1}}"";
+
+STEP_Volumes[] = Volume '*';
+
+Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
+
+General.Trackball = 0;
+General.RotationX = 20; General.RotationY = -20; General.RotationZ = 0;
+
+Print ""Image.gif"";
+
+//Exit;
 
 ";
         #endregion
+
+
     }
 }

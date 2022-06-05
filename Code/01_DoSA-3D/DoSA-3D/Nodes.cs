@@ -32,7 +32,8 @@ namespace Nodes
 
     public class CNode
     {
-        public EMKind m_kindKey;
+        [Browsable(false)]
+        public EMKind KindKey { get; set; }
 
         private string m_nodeName;
 
@@ -81,7 +82,7 @@ namespace Nodes
         public double ShapeVolumeSize { get { return m_dShapeVolumeSize; } set { m_dShapeVolumeSize = value; } }
 
         // Get 전용로 오픈한다
-        public List<CNode> NodeList
+        public List<CNode> GetNodeList
         {
             get
             {
@@ -225,7 +226,7 @@ namespace Nodes
                 return false;
 
             string nodeName = node.NodeName;
-            EMKind kind = node.m_kindKey;
+            EMKind kind = node.KindKey;
 
             switch (kind)
             {
@@ -290,7 +291,7 @@ namespace Nodes
             {
                 if (node.NodeName == nodeName)
                 {
-                    kind = node.m_kindKey;
+                    kind = node.KindKey;
                     strName = node.NodeName;
 
                     // 자기회로 부품과 특수 형상인 경우만 다시 살려낸다
@@ -327,7 +328,7 @@ namespace Nodes
 
             foreach (CNode node in m_listNode)
             {
-                if (node.m_kindKey == kind)
+                if (node.KindKey == kind)
                     size++;
             }
 
@@ -376,7 +377,7 @@ namespace Nodes
             writeFile.writeDataLine(writeStream, "ShapeMinZ", m_dMinZ.ToString(), nLevel + 1);
             writeFile.writeDataLine(writeStream, "ShapeMaxZ", m_dMaxZ.ToString(), nLevel + 1);
 
-            foreach (CNode node in NodeList)
+            foreach (CNode node in GetNodeList)
             {
                 node.writeObject(writeStream, nLevel);
             }
@@ -395,7 +396,7 @@ namespace Nodes
             //femm.getMaterial(strMaterial);
             listMaterial.Add(strMaterial);
 
-            foreach (CNode node in NodeList)
+            foreach (CNode node in GetNodeList)
             {
                 bCheck = false;
                 if (node.GetType().BaseType.Name == "CParts")
@@ -449,7 +450,7 @@ namespace Nodes
         {
             foreach (CNode node in m_listNode)
             {
-                if (node.m_kindKey == EMKind.MAGNET)
+                if (node.KindKey == EMKind.MAGNET)
                     return true;
             }
 
@@ -462,7 +463,7 @@ namespace Nodes
 
             foreach (CNode node in m_listNode)
             {
-                if (node.m_kindKey == EMKind.COIL)
+                if (node.KindKey == EMKind.COIL)
                 {
                     if (((CCoil)node).InnerDiameter > 0 && ((CCoil)node).OuterDiameter > 0
                         && ((CCoil)node).Height > 0 && ((CCoil)node).CopperDiameter > 0)
@@ -479,7 +480,7 @@ namespace Nodes
 
             foreach (CNode node in m_listNode)
             {
-                if (node.m_kindKey == EMKind.COIL)
+                if (node.KindKey == EMKind.COIL)
                 {
                     if (((CCoil)node).Resistance > 0 && ((CCoil)node).Turns > 0)
                         ret = true;

@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             this.ribbonToolbar = new System.Windows.Forms.Ribbon();
             this.ribbonOrbMenuItemNew = new System.Windows.Forms.RibbonOrbMenuItem();
             this.ribbonOrbMenuItemOpen = new System.Windows.Forms.RibbonOrbMenuItem();
@@ -49,6 +49,7 @@
             this.ribbonButtonSave = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonSaveAs = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonShowShape = new System.Windows.Forms.RibbonButton();
+            this.ribbonButtonChangeShape = new System.Windows.Forms.RibbonButton();
             this.ribbonPanelDesign = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonCoil = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonMagnet = new System.Windows.Forms.RibbonButton();
@@ -67,9 +68,13 @@
             this.splitterHorizontal = new System.Windows.Forms.Splitter();
             this.splitContainerRight = new System.Windows.Forms.SplitContainer();
             this.panelEmpty = new System.Windows.Forms.Panel();
+            this.pictureBoxOpenActuator = new System.Windows.Forms.PictureBox();
             this.messageListView = new gtLibrary.MessageListView();
             this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panelForce = new System.Windows.Forms.Panel();
+            this.buttonPlotDensity = new System.Windows.Forms.Button();
+            this.labelProgressForce = new System.Windows.Forms.Label();
+            this.progressBarForce = new System.Windows.Forms.ProgressBar();
             this.labelN_Z = new System.Windows.Forms.Label();
             this.labelN_Y = new System.Windows.Forms.Label();
             this.labelForceZ = new System.Windows.Forms.Label();
@@ -107,7 +112,6 @@
             this.buttonLoadCurrentResult = new System.Windows.Forms.Button();
             this.pictureBoxCurrent = new System.Windows.Forms.PictureBox();
             this.buttonTestCurrent = new System.Windows.Forms.Button();
-            this.ribbonButtonChangeShape = new System.Windows.Forms.RibbonButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerLeft)).BeginInit();
             this.splitContainerLeft.Panel1.SuspendLayout();
             this.splitContainerLeft.Panel2.SuspendLayout();
@@ -116,6 +120,8 @@
             this.splitContainerRight.Panel1.SuspendLayout();
             this.splitContainerRight.Panel2.SuspendLayout();
             this.splitContainerRight.SuspendLayout();
+            this.panelEmpty.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).BeginInit();
             this.panelForce.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).BeginInit();
             this.panelSteel.SuspendLayout();
@@ -272,6 +278,14 @@
             this.ribbonButtonShowShape.Text = "Show Shape";
             this.ribbonButtonShowShape.Click += new System.EventHandler(this.ribbonButtonShowShape_Click);
             // 
+            // ribbonButtonChangeShape
+            // 
+            this.ribbonButtonChangeShape.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonChangeShape.Image")));
+            this.ribbonButtonChangeShape.MinimumSize = new System.Drawing.Size(60, 0);
+            this.ribbonButtonChangeShape.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonChangeShape.SmallImage")));
+            this.ribbonButtonChangeShape.Text = "Change Shape";
+            this.ribbonButtonChangeShape.Click += new System.EventHandler(this.ribbonButtonChangeShape_Click);
+            // 
             // ribbonPanelDesign
             // 
             this.ribbonPanelDesign.Items.Add(this.ribbonButtonCoil);
@@ -370,8 +384,8 @@
             // splitContainerLeft.Panel2
             // 
             this.splitContainerLeft.Panel2.Controls.Add(this.propertyGridMain);
-            this.splitContainerLeft.Size = new System.Drawing.Size(335, 744);
-            this.splitContainerLeft.SplitterDistance = 250;
+            this.splitContainerLeft.Size = new System.Drawing.Size(335, 743);
+            this.splitContainerLeft.SplitterDistance = 249;
             this.splitContainerLeft.TabIndex = 1;
             // 
             // treeViewMain
@@ -382,7 +396,7 @@
             this.treeViewMain.Location = new System.Drawing.Point(0, 0);
             this.treeViewMain.Name = "treeViewMain";
             this.treeViewMain.SelectedImageIndex = 0;
-            this.treeViewMain.Size = new System.Drawing.Size(331, 246);
+            this.treeViewMain.Size = new System.Drawing.Size(331, 245);
             this.treeViewMain.TabIndex = 0;
             this.treeViewMain.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
             this.treeViewMain.KeyUp += new System.Windows.Forms.KeyEventHandler(this.treeView_KeyUp);
@@ -416,7 +430,7 @@
             // 
             this.splitterHorizontal.Location = new System.Drawing.Point(335, 118);
             this.splitterHorizontal.Name = "splitterHorizontal";
-            this.splitterHorizontal.Size = new System.Drawing.Size(3, 744);
+            this.splitterHorizontal.Size = new System.Drawing.Size(3, 743);
             this.splitterHorizontal.TabIndex = 2;
             this.splitterHorizontal.TabStop = false;
             // 
@@ -435,17 +449,31 @@
             // splitContainerRight.Panel2
             // 
             this.splitContainerRight.Panel2.Controls.Add(this.messageListView);
-            this.splitContainerRight.Size = new System.Drawing.Size(746, 744);
-            this.splitContainerRight.SplitterDistance = 558;
+            this.splitContainerRight.Size = new System.Drawing.Size(746, 743);
+            this.splitContainerRight.SplitterDistance = 557;
             this.splitContainerRight.TabIndex = 3;
             // 
             // panelEmpty
             // 
+            this.panelEmpty.Controls.Add(this.pictureBoxOpenActuator);
             this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelEmpty.Location = new System.Drawing.Point(0, 0);
             this.panelEmpty.Name = "panelEmpty";
-            this.panelEmpty.Size = new System.Drawing.Size(742, 554);
+            this.panelEmpty.Size = new System.Drawing.Size(742, 553);
             this.panelEmpty.TabIndex = 0;
+            // 
+            // pictureBoxOpenActuator
+            // 
+            this.pictureBoxOpenActuator.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBoxOpenActuator.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxOpenActuator.Image")));
+            this.pictureBoxOpenActuator.Location = new System.Drawing.Point(197, 232);
+            this.pictureBoxOpenActuator.Name = "pictureBoxOpenActuator";
+            this.pictureBoxOpenActuator.Size = new System.Drawing.Size(348, 75);
+            this.pictureBoxOpenActuator.TabIndex = 1;
+            this.pictureBoxOpenActuator.TabStop = false;
+            this.pictureBoxOpenActuator.Click += new System.EventHandler(this.pictureBoxOpenActuator_Click);
+            this.pictureBoxOpenActuator.MouseEnter += new System.EventHandler(this.pictureBoxOpenActuator_MouseEnter);
+            this.pictureBoxOpenActuator.MouseLeave += new System.EventHandler(this.pictureBoxOpenActuator_MouseLeave);
             // 
             // messageListView
             // 
@@ -468,6 +496,9 @@
             // 
             // panelForce
             // 
+            this.panelForce.Controls.Add(this.buttonPlotDensity);
+            this.panelForce.Controls.Add(this.labelProgressForce);
+            this.panelForce.Controls.Add(this.progressBarForce);
             this.panelForce.Controls.Add(this.labelN_Z);
             this.panelForce.Controls.Add(this.labelN_Y);
             this.panelForce.Controls.Add(this.labelForceZ);
@@ -483,8 +514,34 @@
             this.panelForce.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelForce.Location = new System.Drawing.Point(0, 0);
             this.panelForce.Name = "panelForce";
-            this.panelForce.Size = new System.Drawing.Size(742, 554);
+            this.panelForce.Size = new System.Drawing.Size(742, 553);
             this.panelForce.TabIndex = 0;
+            // 
+            // buttonPlotDensity
+            // 
+            this.buttonPlotDensity.Location = new System.Drawing.Point(25, 182);
+            this.buttonPlotDensity.Name = "buttonPlotDensity";
+            this.buttonPlotDensity.Size = new System.Drawing.Size(130, 50);
+            this.buttonPlotDensity.TabIndex = 21;
+            this.buttonPlotDensity.Text = "Plot B Vector";
+            this.buttonPlotDensity.UseVisualStyleBackColor = true;
+            this.buttonPlotDensity.Click += new System.EventHandler(this.buttonPlotMagneticDensity_Click);
+            // 
+            // labelProgressForce
+            // 
+            this.labelProgressForce.AutoSize = true;
+            this.labelProgressForce.Location = new System.Drawing.Point(185, 490);
+            this.labelProgressForce.Name = "labelProgressForce";
+            this.labelProgressForce.Size = new System.Drawing.Size(158, 12);
+            this.labelProgressForce.TabIndex = 20;
+            this.labelProgressForce.Text = "Simulation is in progress...";
+            // 
+            // progressBarForce
+            // 
+            this.progressBarForce.Location = new System.Drawing.Point(185, 510);
+            this.progressBarForce.Name = "progressBarForce";
+            this.progressBarForce.Size = new System.Drawing.Size(520, 23);
+            this.progressBarForce.TabIndex = 19;
             // 
             // labelN_Z
             // 
@@ -540,11 +597,11 @@
             // 
             // buttonLoadForceResult
             // 
-            this.buttonLoadForceResult.Location = new System.Drawing.Point(25, 116);
+            this.buttonLoadForceResult.Location = new System.Drawing.Point(25, 251);
             this.buttonLoadForceResult.Name = "buttonLoadForceResult";
             this.buttonLoadForceResult.Size = new System.Drawing.Size(130, 50);
             this.buttonLoadForceResult.TabIndex = 7;
-            this.buttonLoadForceResult.Text = "Result";
+            this.buttonLoadForceResult.Text = "Plot Force";
             this.buttonLoadForceResult.UseVisualStyleBackColor = true;
             this.buttonLoadForceResult.Click += new System.EventHandler(this.buttonForceResult_Click);
             // 
@@ -606,8 +663,8 @@
             // 
             this.chartBHCurve.BorderlineColor = System.Drawing.Color.Black;
             this.chartBHCurve.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea4.Name = "ChartArea1";
-            this.chartBHCurve.ChartAreas.Add(chartArea4);
+            chartArea1.Name = "ChartArea1";
+            this.chartBHCurve.ChartAreas.Add(chartArea1);
             this.chartBHCurve.Location = new System.Drawing.Point(185, 60);
             this.chartBHCurve.Name = "chartBHCurve";
             this.chartBHCurve.Size = new System.Drawing.Size(520, 400);
@@ -742,8 +799,8 @@
             // 
             this.chartStrokeResult.BorderlineColor = System.Drawing.Color.Black;
             this.chartStrokeResult.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea5.Name = "ChartArea1";
-            this.chartStrokeResult.ChartAreas.Add(chartArea5);
+            chartArea2.Name = "ChartArea1";
+            this.chartStrokeResult.ChartAreas.Add(chartArea2);
             this.chartStrokeResult.Location = new System.Drawing.Point(185, 60);
             this.chartStrokeResult.Name = "chartStrokeResult";
             this.chartStrokeResult.Size = new System.Drawing.Size(520, 400);
@@ -812,8 +869,8 @@
             // 
             this.chartCurrentResult.BorderlineColor = System.Drawing.Color.Black;
             this.chartCurrentResult.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea6.Name = "ChartArea1";
-            this.chartCurrentResult.ChartAreas.Add(chartArea6);
+            chartArea3.Name = "ChartArea1";
+            this.chartCurrentResult.ChartAreas.Add(chartArea3);
             this.chartCurrentResult.Location = new System.Drawing.Point(185, 60);
             this.chartCurrentResult.Name = "chartCurrentResult";
             this.chartCurrentResult.Size = new System.Drawing.Size(520, 400);
@@ -848,19 +905,11 @@
             this.buttonTestCurrent.Text = "Current Test";
             this.buttonTestCurrent.UseVisualStyleBackColor = true;
             // 
-            // ribbonButtonChangeShape
-            // 
-            this.ribbonButtonChangeShape.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonChangeShape.Image")));
-            this.ribbonButtonChangeShape.MinimumSize = new System.Drawing.Size(60, 0);
-            this.ribbonButtonChangeShape.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonChangeShape.SmallImage")));
-            this.ribbonButtonChangeShape.Text = "Change Shape";
-            this.ribbonButtonChangeShape.Click += new System.EventHandler(this.ribbonButtonChangeShape_Click);
-            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1084, 862);
+            this.ClientSize = new System.Drawing.Size(1084, 861);
             this.Controls.Add(this.splitContainerRight);
             this.Controls.Add(this.splitterHorizontal);
             this.Controls.Add(this.splitContainerLeft);
@@ -879,6 +928,8 @@
             this.splitContainerRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).EndInit();
             this.splitContainerRight.ResumeLayout(false);
+            this.panelEmpty.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).EndInit();
             this.panelForce.ResumeLayout(false);
             this.panelForce.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).EndInit();
@@ -983,6 +1034,10 @@
         private System.Windows.Forms.RibbonButton ribbonButtonShowShape;
         private System.Windows.Forms.RibbonButton ribbonButtonDonation;
         private System.Windows.Forms.RibbonButton ribbonButtonChangeShape;
+        private System.Windows.Forms.Label labelProgressForce;
+        private System.Windows.Forms.ProgressBar progressBarForce;
+        private System.Windows.Forms.PictureBox pictureBoxOpenActuator;
+        private System.Windows.Forms.Button buttonPlotDensity;
     }
 }
 

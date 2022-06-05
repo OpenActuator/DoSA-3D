@@ -9,7 +9,7 @@ namespace gtLibrary
 {
     public class MessageListView : ListView
     {
-        const int iLimitLine = 100;
+        const int iLimitLine = 200;
         
         /// <summary>
         /// Required designer variable.
@@ -35,7 +35,7 @@ namespace gtLibrary
         }
         #endregion
 
-        public void addItem(string message)
+        public void addMessage(string message)
         {
             message = ">> " + message;
 
@@ -56,9 +56,12 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
-                //throw;
             }
+        }
 
+        public void clearMessage()
+        {
+            this.Items.Clear();
         }
     }
 }

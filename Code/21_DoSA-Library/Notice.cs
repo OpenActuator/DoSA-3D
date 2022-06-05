@@ -66,6 +66,13 @@ namespace gtLibrary
             }
         }
 
+        /// <summary>
+        /// 사용자 메시지 창으로 문자열을 출력한다.
+        /// 
+        /// [주의사항]
+        ///  - Thread 안에서는 사용이 불가능하다.
+        /// </summary>
+        /// <param name="strMSG"></param>
         public static void printUserMessage(string strMSG)
         {
             if (Notice != null)

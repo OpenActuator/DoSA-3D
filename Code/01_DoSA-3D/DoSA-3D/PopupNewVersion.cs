@@ -20,7 +20,7 @@ namespace DoSA
 
             this.labelNewVersionDisplay.Text = strNewVersion;
             this.labelProductVersionDisplay.Text = strProductVersion;
-            this.labelMainUpdateContents.Text = strMainUpdateContents;
+            this.richTextBoxUpdateContents.Text = strMainUpdateContents;
 
             if (CSettingData.m_emLanguage == EMLanguage.Korean)
             {

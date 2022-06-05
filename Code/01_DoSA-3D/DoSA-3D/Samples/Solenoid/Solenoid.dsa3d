@@ -1,17 +1,17 @@
 $begin "DoSA_3D_Project"
-	Writed=2022-05-29 오전 12:44:18
-	DoSA_Version=1.1.1.0
-	File_Version=1.1.1.0
+	Writed=2022-06-05 오전 11:46:52
+	DoSA_Version=1.2.0.0
+	File_Version=1.2.0.0
 	$begin "Design"
 		DesignName=Solenoid
 		AllShapeName=Armature,Core,Coil,Case,
 		RemainedShapeName=
-		ShapeMinX=-15.6
+		ShapeMinX=-15.5858032659112
 		ShapeMaxX=15.6
 		ShapeMinY=-12
 		ShapeMaxY=19.2
-		ShapeMinZ=-15.5484822307177
-		ShapeMaxZ=15.597385795154
+		ShapeMinZ=-15.5910348491585
+		ShapeMaxZ=15.5990948959009
 	$begin "Coil"
 		NodeName=Coil
 		KindKey=COIL

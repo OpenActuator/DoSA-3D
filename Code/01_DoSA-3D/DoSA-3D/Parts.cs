@@ -162,7 +162,7 @@ namespace Parts
        
         public CCoil()
         {
-            m_kindKey = EMKind.COIL;
+            KindKey = EMKind.COIL;
             m_strMaterial = "Copper";            
                         
             CurrentDirection = EMCurrentDirection.IN;
@@ -402,7 +402,7 @@ namespace Parts
 
                 // CNode
                 writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", KindKey, nLevel + 1);
 
                 // CParts
                 writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, nLevel + 1);
@@ -456,7 +456,7 @@ namespace Parts
 
             bool bShapeLine = false;
 
-            if (m_kindKey != EMKind.COIL)
+            if (KindKey != EMKind.COIL)
             {
                 CNotice.printLogID("YATT7");
                 return false;
@@ -497,7 +497,7 @@ namespace Parts
                             break;
 
                         case "KindKey":
-                            m_kindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
+                            KindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
                             break;
 
                         // CParts
@@ -619,7 +619,7 @@ namespace Parts
 
         public CMagnet()
         {   
-            m_kindKey = EMKind.MAGNET;
+            KindKey = EMKind.MAGNET;
 
             Material = "NdFeB_40";
             emMagnetRotationAxis = EMMagnetRotationAxis.Z_AXIS;
@@ -642,7 +642,7 @@ namespace Parts
 
                 // CNode
                 writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", KindKey, nLevel + 1);
 
                 // CParts
                 writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, nLevel + 1);
@@ -677,7 +677,7 @@ namespace Parts
 
             bool bShapeLine = false;
 
-            if (m_kindKey != EMKind.MAGNET)
+            if (KindKey != EMKind.MAGNET)
             {
                 CNotice.printLogID("YATT5");
                 return false;
@@ -723,7 +723,7 @@ namespace Parts
                             break;
 
                         case "KindKey":
-                            m_kindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
+                            KindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
                             break;
 
                         // CParts
@@ -790,7 +790,7 @@ namespace Parts
 
         public CSteel()
         {
-            m_kindKey = EMKind.STEEL;
+            KindKey = EMKind.STEEL;
             Material = "1010_Steel";
         }
         
@@ -806,7 +806,7 @@ namespace Parts
 
                 // CNode
                 writeFile.writeDataLine(writeStream, "NodeName", NodeName, nLevel + 1);
-                writeFile.writeDataLine(writeStream, "KindKey", m_kindKey, nLevel + 1);
+                writeFile.writeDataLine(writeStream, "KindKey", KindKey, nLevel + 1);
 
                 // CParts
                 writeFile.writeDataLine(writeStream, "MovingParts", MovingPart, nLevel + 1);
@@ -843,7 +843,7 @@ namespace Parts
 
             bool bShapeLine = false;
 
-            if (m_kindKey != EMKind.STEEL)
+            if (KindKey != EMKind.STEEL)
             {
                 CNotice.printLogID("YATT6");
                 return false;
@@ -889,7 +889,7 @@ namespace Parts
                             break;
 
                         case "KindKey":
-                            m_kindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
+                            KindKey = (EMKind)Enum.Parse(typeof(EMKind), arrayString[1]);
                             break;
 
                         // CParts

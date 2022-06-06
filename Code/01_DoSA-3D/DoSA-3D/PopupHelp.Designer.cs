@@ -30,10 +30,10 @@
         {
             this.buttonHelpClose = new System.Windows.Forms.Button();
             this.groupBoxHelp = new System.Windows.Forms.GroupBox();
+            this.buttonOpenHelpDirectory = new System.Windows.Forms.Button();
             this.buttonDrawingGuide = new System.Windows.Forms.Button();
             this.buttonSolenoidGuide = new System.Windows.Forms.Button();
             this.buttonVCMGuide = new System.Windows.Forms.Button();
-            this.buttonOpenHelpDirectory = new System.Windows.Forms.Button();
             this.labelNotice2 = new System.Windows.Forms.Label();
             this.labelNotice1 = new System.Windows.Forms.Label();
             this.groupBoxHelp.SuspendLayout();
@@ -61,6 +61,16 @@
             this.groupBoxHelp.TabIndex = 4;
             this.groupBoxHelp.TabStop = false;
             this.groupBoxHelp.Text = "Help";
+            // 
+            // buttonOpenHelpDirectory
+            // 
+            this.buttonOpenHelpDirectory.Location = new System.Drawing.Point(33, 172);
+            this.buttonOpenHelpDirectory.Name = "buttonOpenHelpDirectory";
+            this.buttonOpenHelpDirectory.Size = new System.Drawing.Size(233, 31);
+            this.buttonOpenHelpDirectory.TabIndex = 8;
+            this.buttonOpenHelpDirectory.Text = "Open the help directory";
+            this.buttonOpenHelpDirectory.UseVisualStyleBackColor = true;
+            this.buttonOpenHelpDirectory.Click += new System.EventHandler(this.buttonOpenHelpDirectory_Click);
             // 
             // buttonDrawingGuide
             // 
@@ -92,16 +102,6 @@
             this.buttonVCMGuide.UseVisualStyleBackColor = true;
             this.buttonVCMGuide.Click += new System.EventHandler(this.buttonVCMGuide_Click);
             // 
-            // buttonOpenHelpDirectory
-            // 
-            this.buttonOpenHelpDirectory.Location = new System.Drawing.Point(33, 172);
-            this.buttonOpenHelpDirectory.Name = "buttonOpenHelpDirectory";
-            this.buttonOpenHelpDirectory.Size = new System.Drawing.Size(233, 31);
-            this.buttonOpenHelpDirectory.TabIndex = 8;
-            this.buttonOpenHelpDirectory.Text = "Open the help directory";
-            this.buttonOpenHelpDirectory.UseVisualStyleBackColor = true;
-            this.buttonOpenHelpDirectory.Click += new System.EventHandler(this.buttonOpenHelpDirectory_Click);
-            // 
             // labelNotice2
             // 
             this.labelNotice2.AutoSize = true;
@@ -124,7 +124,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(322, 346);
+            this.ClientSize = new System.Drawing.Size(322, 359);
             this.Controls.Add(this.labelNotice2);
             this.Controls.Add(this.labelNotice1);
             this.Controls.Add(this.groupBoxHelp);

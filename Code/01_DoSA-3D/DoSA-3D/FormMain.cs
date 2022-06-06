@@ -121,7 +121,7 @@ namespace DoSA
             m_bFinishThread = false;
             
             progressBarForce.Maximum = 20;
-            progressBarForce.Minimum = 0;
+            progressBarForce.Minimum = 1;
             progressBarForce.Step = 1;
 
             progressBarForce.Hide();
@@ -132,6 +132,9 @@ namespace DoSA
         // - WiFi 를 연결하고, AssemblyInfo 에서 버전을 임의로 낮춘다.
         private void checkDoSAVersion()
         {
+            // 버전을 숫자로 변환할 때 DIGIT 의 기본 단위
+            const double DIGIT_BASE_NUMBER = 100.0;
+
             try
             {
                 // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
@@ -170,8 +173,8 @@ namespace DoSA
                 // ex) 0.9.4.2 -> 마지막 2가 버려지고 94 가 된다.
                 for(int i=0; i < 3; i++)
                 {
-                    iNewVersion += (int)(Convert.ToInt32(arrayNewVersion[i]) * Math.Pow(100.0, (double)(2 - i)));
-                    iProductVersion += (int)(Convert.ToInt32(arrayProductVersion[i]) * Math.Pow(100.0, (double)(2 - i)));
+                    iNewVersion += (int)(Convert.ToInt32(arrayNewVersion[i]) * Math.Pow(DIGIT_BASE_NUMBER, (double)(2 - i)));
+                    iProductVersion += (int)(Convert.ToInt32(arrayProductVersion[i]) * Math.Pow(DIGIT_BASE_NUMBER, (double)(2 - i)));
                 }
 
                 bool bVersionCheckDialog = false;
@@ -200,7 +203,7 @@ namespace DoSA
 
                         // 업그레이드 확인은 셋째 자리수로 결정된다. (마지막 자리수는 사용되지 않는다.)
                         for (int i = 0; i < 3; i++)
-                            iPassVersion += (int)(Convert.ToInt32(arrayPassVersion[i]) * Math.Pow(10.0, (double)(2 - i)));
+                            iPassVersion += (int)(Convert.ToInt32(arrayPassVersion[i]) * Math.Pow(DIGIT_BASE_NUMBER, (double)(2 - i)));
 
                         // 저장된 보지 않기를 원하는 버전보다 신규버전이 높을 때만 신규버전 알림창을 띄운다.
                         if (iNewVersion > iPassVersion)
@@ -584,7 +587,7 @@ namespace DoSA
                         CNotice.noticeWarning("3차원 형상을 보여줄 디자인이 없습니다.");
                     else
                         CNotice.noticeWarning("There is no working design to show 3D shape.");
-                    
+
                     return;
                 }
 
@@ -592,7 +595,7 @@ namespace DoSA
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
                 // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
                 string strDesignDirPath = m_design.m_strDesignDirPath;
-                
+
                 string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
 
                 // 형상 디렉토리 
@@ -601,85 +604,32 @@ namespace DoSA
                 string strShapeModelFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
 
                 // CheckStep Script 는 형상 디렉토리에서 작업을 한다.
-                string strRunScriptFileFullName = Path.Combine(strShapeDirName, "Show.geo");
-              
+                string strRunScriptFileFullName = Path.Combine(strShapeDirName, "Part.geo");
+
                 double dMovingX, dMovingY, dMovingZ;
+                int nPartIndexInSTEP;
 
-                dMovingX = 0;
-                dMovingY = 0;
-                dMovingZ = 0;
-
-                CNode nodeCheck = (CNode)propertyGridMain.SelectedObject;
-                CForceTest forceTest;
-
-                if (nodeCheck.KindKey == EMKind.FORCE_TEST)
-                {
-                    forceTest = (CForceTest)nodeCheck;
-                    
-                    dMovingX = forceTest.MovingX;
-                    dMovingY = forceTest.MovingY;
-                    dMovingZ = forceTest.MovingZ;
-                }
-
-                string strNodeName, strTemp;
-                string strMovingPartNames = string.Empty;
-                string strMovingPartName = string.Empty;
-
-                foreach (CNode node in m_design.GetNodeList)
-                {
-                    strNodeName = node.NodeName;
-                    strTemp = strNodeName.ToUpper();
-
-                    if (node.GetType().BaseType.Name == "CParts")
-                    {
-                        if (((CParts)node).MovingPart == EMMoving.MOVING)
-                        {
-                            strMovingPartNames += String.Format("vol{0}, ", strNodeName);
-                            strMovingPartName = strNodeName;
-
-                            // 하나의 구동파트만 지원한다.
-                            break;
-                        }
-                    }
-                }
-
-                int nIndex = 0;
-
-                if (strMovingPartNames.Length > 2)
-                {
-                    // 마지막 ", " 를 제거한다.
-                    nIndex = strMovingPartNames.Length - 2;
-                    strMovingPartNames = strMovingPartNames.Remove(nIndex);
-                }
-
-                int nPartIndexInSTEP = 0;
-                int nCount = 0;
-
-                foreach (string strName in m_design.AllShapeNameList)
-                {
-                    if (strName == strMovingPartName)
-                        nPartIndexInSTEP = nCount;
-
-                    nCount++;
-                }
-
+                getMovingPartInfomation(out nPartIndexInSTEP, out dMovingX, out dMovingY, out dMovingZ);
+                
                 CScriptContents scriptContents = new CScriptContents();
+                string strOrgStriptContents = scriptContents.m_str02_Show_Part_Script;
 
-                string strOrgStriptContents = scriptContents.m_str02_Show_Shape_Script;
-
-                listScriptString.Add(strShapeModelFileFullName); 
+                listScriptString.Add(strShapeModelFileFullName);
                 // 구동 파트의 이동량을 고려해서 형상 확인이 가능하다.
                 listScriptString.Add(nPartIndexInSTEP.ToString());
                 listScriptString.Add(dMovingX.ToString());
                 listScriptString.Add(dMovingY.ToString());
                 listScriptString.Add(dMovingZ.ToString());
 
+                if (m_manageFile.isExistFile(strShapeModelFileFullName) == false) return;
+                if (m_manageFile.isExistFile(strRunScriptFileFullName) == false) return;
+
                 if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
                 {
                     // Process 의 Arguments 에서 스페이스 문제가 발생한다.
                     // 아래와 같이 묶음처리를 사용한다.
                     string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
-       
+
                     if (false == m_manageFile.isExistFile(strShapeModelFileFullName))
                     {
                         CNotice.printLog("형상 파일을 찾지 못했다.");
@@ -688,13 +638,15 @@ namespace DoSA
 
                     // Gmsh 를 종료할 때까지 기다리지 않는다.
                     CScript.runScript(strGmshExeFileFullName, strArguments, false);
+
+                    // Script 결과 파일이 없이 때문에 Gmsh 를 기다리지 않는다.
                 }
                 else
                 {
                     CNotice.printLog("Shape Script 파일 생성에 문제가 발생했다.");
                     return;
                 }
-                
+
                 Thread.Sleep(500);
 
                 //m_manageFile.deleteFile(strRunScriptFileFullName);
@@ -706,6 +658,69 @@ namespace DoSA
                 return;
             }
 
+        }
+
+        private void getMovingPartInfomation(out int nPartIndexInSTEP, out double dMovingX, out double dMovingY, out double dMovingZ)
+        {
+            dMovingX = 0;
+            dMovingY = 0;
+            dMovingZ = 0;
+            nPartIndexInSTEP = 0;
+
+            CNode nodeCheck = (CNode)propertyGridMain.SelectedObject;
+            CForceTest forceTest;
+
+            if (nodeCheck.KindKey == EMKind.FORCE_TEST)
+            {
+                forceTest = (CForceTest)nodeCheck;
+
+                dMovingX = forceTest.MovingX;
+                dMovingY = forceTest.MovingY;
+                dMovingZ = forceTest.MovingZ;
+            }
+            else
+                return;
+
+            string strNodeName, strTemp;
+            string strMovingPartNames = string.Empty;
+            string strMovingPartName = string.Empty;
+
+            foreach (CNode node in m_design.GetNodeList)
+            {
+                strNodeName = node.NodeName;
+                strTemp = strNodeName.ToUpper();
+
+                if (node.GetType().BaseType.Name == "CParts")
+                {
+                    if (((CParts)node).MovingPart == EMMoving.MOVING)
+                    {
+                        strMovingPartNames += String.Format("vol{0}, ", strNodeName);
+                        strMovingPartName = strNodeName;
+
+                        // 하나의 구동파트만 지원한다.
+                        break;
+                    }
+                }
+            }
+
+            int nIndex = 0;
+
+            if (strMovingPartNames.Length > 2)
+            {
+                // 마지막 ", " 를 제거한다.
+                nIndex = strMovingPartNames.Length - 2;
+                strMovingPartNames = strMovingPartNames.Remove(nIndex);
+            }
+
+            int nCount = 0;
+
+            foreach (string strName in m_design.AllShapeNameList)
+            {
+                if (strName == strMovingPartName)
+                    nPartIndexInSTEP = nCount;
+
+                nCount++;
+            }
         }
 
         private void ribbonButtonNew_Click(object sender, EventArgs e)
@@ -803,7 +818,7 @@ namespace DoSA
 
                 CScriptContents scriptContents = new CScriptContents();
 
-                string strOrgStriptContents = scriptContents.m_str01_CheckSTEP_Script;
+                string strOrgStriptContents = scriptContents.m_str01_Show_STEP_Script;
 
                 // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
                 listScriptString.Add(strShapeModelFileFullName);
@@ -815,19 +830,21 @@ namespace DoSA
                 {
                     // Process 의 Arguments 에서 스페이스 문제가 발생한다.
                     // 아래와 같이 묶음처리를 사용한다.
-                    string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
-       
+                    string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);       
 
                     // Gmsh 를 종료할 때까지 기다리지 않는다.
                     // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
                     CScript.runScript(strGmshExeFileFullName, strArguments, false);
 
-                    while(false == m_manageFile.isExistFile(strPartNamesFileFullName))
+                    // 최대 5초를 기다린다.
+                    int nCount = 0;
+
+                    while (false == m_manageFile.isExistFile(strPartNamesFileFullName) && nCount < 100)
                     {
                         // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
-                        Thread.Sleep(500);
+                        Thread.Sleep(50);
+                        nCount++;
                     }
-
 
                     // 순서 주의
                     //  - closeDesign() 뒤에 호출되어야 한다.
@@ -1406,7 +1423,6 @@ namespace DoSA
 
             try
             {
-
                 if (m_design.m_strDesignName.Length == 0)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
@@ -1484,7 +1500,7 @@ namespace DoSA
 
                 CScriptContents scriptContents = new CScriptContents();
 
-                string strOrgStriptContents = scriptContents.m_str01_CheckSTEP_Script;
+                string strOrgStriptContents = scriptContents.m_str01_Show_STEP_Script;
 
                 // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
                 listScriptString.Add(strShapeModelFileFullName);
@@ -1502,10 +1518,29 @@ namespace DoSA
                     // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
                     CScript.runScript(strGmshExeFileFullName, strArguments, false);
 
-                    while (false == m_manageFile.isExistFile(strPartNamesFileFullName))
+                    // 최대 5초를 기다린다.
+                    int nCount = 0;
+
+                    while (false == m_manageFile.isExistFile(strPartNamesFileFullName) && nCount < 100)
                     {
                         // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
-                        Thread.Sleep(500);
+                        Thread.Sleep(50);
+                        nCount++;
+                    }
+
+
+                    DialogResult result = DialogResult.No;
+
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        result = CNotice.noticeWarningYesNo("형상 파일을 교체 하시겠습니까?", "Notice");
+                    else
+                        result = CNotice.noticeWarningYesNo("Do you replace shapefiles?", "Notice");
+
+                    if (result == DialogResult.No)
+                    {
+                        // 취소되면 신규 형상 디렉토리를 삭제한다.
+                        m_manageFile.deleteDirectory(strShapeNewDirPath);
+                        return;
                     }
 
                     if (true == m_manageFile.isExistFile(strPartNamesFileFullName))
@@ -1619,74 +1654,6 @@ namespace DoSA
 
         #region----------------------- Button -------------------------------
 
-        private void buttonMagnetUp_Click(object sender, EventArgs e)
-        {
-            CNode node = (CNode)propertyGridMain.SelectedObject;
-
-            if (node == null) return;
-
-            if ("CMagnet" != node.GetType().Name)
-            {
-                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetUp_Click");
-                return;
-            }
-
-            ((CMagnet)node).MagnetRotationAngle = 90.0;
-
-            propertyGridMain.Refresh();
-        }
-
-        private void buttonMagnetDown_Click(object sender, EventArgs e)
-        {
-            CNode node = (CNode)propertyGridMain.SelectedObject;
-
-            if (node == null) return;
-
-            if ("CMagnet" != node.GetType().Name)
-            {
-                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetDown_Click");
-                return;
-            }
-
-            ((CMagnet)node).MagnetRotationAngle = 270.0;
-
-            propertyGridMain.Refresh();
-        }
-
-        private void buttonMagnetLeft_Click(object sender, EventArgs e)
-        {
-            CNode node = (CNode)propertyGridMain.SelectedObject;
-
-            if (node == null) return;
-
-            if ("CMagnet" != node.GetType().Name)
-            {
-                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetLeft_Click");
-                return;
-            }
-
-            ((CMagnet)node).MagnetRotationAngle = 180.0;
-
-            propertyGridMain.Refresh();
-        }
-
-        private void buttonMagnetRight_Click(object sender, EventArgs e)
-        {
-            CNode node = (CNode)propertyGridMain.SelectedObject;
-
-            if (node == null) return;
-
-            if ("CMagnet" != node.GetType().Name)
-            {
-                Trace.WriteLine("Type mismatch in the FormMain:buttonMagnetRight_Click");
-                return;
-            }
-
-            ((CMagnet)node).MagnetRotationAngle = 0.0;
-
-            propertyGridMain.Refresh();
-        }
-
         private void buttonDesignCoil_Click(object sender, EventArgs e)
         {
             CCoil coil = (CCoil)propertyGridMain.SelectedObject;
@@ -1772,7 +1739,7 @@ namespace DoSA
                 // 전류가 인가된 자속밀도 Vector 결과를 확인한다.
                 // 순서 주의 
                 // - VCM 자기력 보정 해석전에 호출해야 한다.
-                showMagneticDensityVector(strTestDirName);
+                showSectionMagneticDensity(strTestDirName);
 
                 /// 영구자석이 포함된 VCM 방식인 경우는 자기력의 정확도가 크게 떨어진다.
                 /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
@@ -1781,11 +1748,14 @@ namespace DoSA
                     startSolveForceThread(forceTest, true);
                 }
 
+                Thread.Sleep(500);
+
                 // 자기력 결과를 읽어드린다.
                 plotForceResult(forceTest);
 
                 // Result 버튼이 동작하게 한다.
-                buttonPlotDensity.Enabled = true;
+                buttonPlotSectionDensity.Enabled = true;
+                buttonPlotFullDensity.Enabled = true;
                 buttonLoadForceResult.Enabled = true;
 
             }
@@ -1795,7 +1765,7 @@ namespace DoSA
             }
         }
 
-        private bool showMagneticDensityVector(string strTestDirName)            
+        private bool showSectionMagneticDensity(string strTestDirName)            
         {
             string strArguments;
 
@@ -1808,15 +1778,84 @@ namespace DoSA
             {
                 if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
                 if ( m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
-                if (m_manageFile.isExistFile(strOptionFileFullName) == false) return false;
 
-                // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                // 아래와 같이 묶음처리를 사용한다.
-                strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
-                                   + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
-                                   + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
+                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
+                }
+                else
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
+                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+                }
 
-                CScript.runScript(strGmshExeFileFullName, strArguments, true);
+                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
+                CScript.runScript(strGmshExeFileFullName, strArguments, false);
+
+                CScript.resizeGmsh();
+
+                // 최대 5초를 기다린다.
+                int nCount = 0;
+
+                while (false == m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) && nCount < 100)
+                {
+                    // Gmsh 의 Script 를 실행해서 Density Vector가 생성될 때 까지 기다린다.
+                    Thread.Sleep(50);
+                    nCount++;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
+
+            return true;
+        }
+
+        private bool showFullMagneticDensity(string strTestDirName)
+        {
+            string strArguments;
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Part.geo");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b.pos");
+            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+
+            try
+            {
+                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
+                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+
+                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
+                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
+                }
+                else
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
+                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+                }
+
+                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
+                CScript.runScript(strGmshExeFileFullName, strArguments, false);
+
+                // Script 결과 파일이 없이 때문에 Gmsh 를 기다리지 않는다.
+
             }
             catch (Exception ex)
             {
@@ -1878,7 +1917,7 @@ namespace DoSA
                             // 해석중 오류가 발생했음을 알린다.
                             return true;
                         }
-                        else if(true == strLine.Contains("Done meshing 3D"))
+                        else if(true == strLine.Contains("Done optimizing mesh"))
                         {
                             // 다음줄을 읽어낸다.
                             strLine = streamReader.ReadLine();
@@ -2046,7 +2085,7 @@ namespace DoSA
 
                 int nStartLineNumber = 0;
                 int nProgressBarValue = 0;
-                int nProgressIncreaseValue = 0;
+                int nProgressIncreaseValue = 1;
 
                 // 사용자 메시지를 초기화 한다.
                 messageListView.clearMessage();
@@ -2076,10 +2115,10 @@ namespace DoSA
                     //else
                     //    progressBarSolving.Value = nPogressBarValue;
 
-                    if (nProgressIncreaseValue >= progressBarForce.Maximum)
+                    if (nProgressIncreaseValue > progressBarForce.Maximum)
                     {
-                        nProgressIncreaseValue = 0;
-                        progressBarForce.Value = 0;                        
+                        nProgressIncreaseValue = 1;
+                        progressBarForce.Value = progressBarForce.Minimum;                        
                     }                        
                     else
                         progressBarForce.PerformStep();
@@ -2190,6 +2229,7 @@ namespace DoSA
 
             string strArguments;
 
+            // Script 에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
             if ( bAutoRun == false )
                 strArguments = " -log " + m_manageFile.solveDirectoryNameInPC(strLogFileFullName)
                                 + " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
@@ -2197,12 +2237,11 @@ namespace DoSA
                 strArguments = " -run -log " + m_manageFile.solveDirectoryNameInPC(strLogFileFullName)
                                 + " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
 
-            // 종료될 때 가지 툴킷을 기다린다.
-            // Script 삭제에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
+            // 해석이 종료될 때 까지 Gmsh 를 기다려야 한다. --> true 옵션 사용
             CScript.runScript(strGmshExeFileFullName, strArguments, true);
 
-            // 종료시간을 기다려준다.
-            Thread.Sleep(500);
+            // 해석을 종료하고 데이터의 저장시간을 충분히 주어야 자속밀도를 읽어드리는데 문제가 없다.
+            Thread.Sleep(1000);
 
             return true;
         }
@@ -2250,14 +2289,6 @@ namespace DoSA
                 // 아래의 m_str13_PostOperation_Script 에서도 coil name 을 사용하기 때문에 이름을 그대로 유지한다.
                 //listScriptString.Clear();
 
-
-                strOrgStriptContents = scriptContents.m_str42_PostOperation_Script;                       
-
-                // [주의 사항]
-                //
-                // 형상 작업의 값과 일치해야 한다.
-                int iOuterPaddingPercent = 150;
-
                 double dProductLengthX = Math.Abs(m_design.MaxX - m_design.MinX);
                 double dProductLengthY = Math.Abs(m_design.MaxY - m_design.MinY);
                 double dProductLengthZ = Math.Abs(m_design.MaxZ - m_design.MinZ);
@@ -2268,34 +2299,54 @@ namespace DoSA
                 listProductLength.Add(dProductLengthY);
                 listProductLength.Add(dProductLengthZ);
 
-                double dAverageProductLength = listProductLength.Average();
-
-                // X,Y,Z 의 제품 폭 중에 최대 폭으로 모든 방향의 Region 크기를 결정한다.
-                double dOuterPaddingLength = dAverageProductLength * (iOuterPaddingPercent / 100.0f);
-
-                // 회전에 사요되는 길이는 중심점에서 편측의 길이이다.
-                double dRotationBaseLength = dOuterPaddingLength / 2.0;
+                double dMaxProductLength = listProductLength.Max();
 
                 //// 제품이 Y 축에 위치해서 X, Z 는 사용하지 않는다.
-                //double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
+                double dRegionCenterX = (m_design.MinX + m_design.MaxX) / 2.0f;
                 double dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f;
-                //double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
+                double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f;
 
                 // XY 평면에서 직사각형의 좌하단과 우상단의 좌표값을 저장한다.
                 double dSectionBMinX, dSectionBMinY, dSectionBMinZ;
                 double dSectionBMaxX, dSectionBMaxY, dSectionBMaxZ;
 
-                // Y 축에 제품의 중심이 위치하기 때문에 XZ 면의 중심을 기준으로 XZ 면에서 회전이 일어난다.
-                //
-                // 1. X 좌표
+                // 회전에 사용하는 길이는 dOuterBoxWidth 의 1/2 을 사용한다.
+                double dHalfProductLength = dMaxProductLength / 2.0f;
+
+                // 45도 회전을 하면 대각모서리는 sqrt(2) 만큼 더 길수 있기 때문에 여유있게 1.5 를 곱한다.
+                double dRotationBaseLength = dHalfProductLength * 1.5f;
+
+                // 1. 기준 Section 면 회전
+                //  - 주변 해석영역까지 자속밀도가 표시되도록 Section 면을 확장한다.
+                //  - 기준 Section 면의 중심은 원점에 있고, XY 면에 있다고 가정한다.
+                //  - Z 값은 모두 0이라고 기준 Section 면 회전에는 사용하지 않는다.
+                // 
+                // [의문사항]
+                //  - Z 는 반대로 부호를 넣어야 원하는 방향으로 회전하는지 모르겠다.
+                // 
+                // [주의사항]
+                //  - 해상도는 Section 면의 X, Z 길이와 Section 면의 Y 길이을 동일하게 나누기 때문에
+                //    Section 면의 X, Z 의 길이와 Section 면의 Y 길이는 비슷해야 한다.
+                //  - Section 면을 벗어나면 제품 안이라도 출력이 안된다.
+                // 가. X 좌표
                 dSectionBMinX = -dRotationBaseLength * Math.Cos(forceTest.B_RotationAngle * Math.PI / 180.0f);
                 dSectionBMaxX = dRotationBaseLength * Math.Cos(forceTest.B_RotationAngle * Math.PI / 180.0f);
-                // 2. Z 좌표
+                // 나. Z 좌표
                 dSectionBMinZ = dRotationBaseLength * Math.Sin(forceTest.B_RotationAngle * Math.PI / 180.0f);
                 dSectionBMaxZ = -dRotationBaseLength * Math.Sin(forceTest.B_RotationAngle * Math.PI / 180.0f);
-                // 3. Y 좌표
-                dSectionBMinY = -dRotationBaseLength + dRegionCenterY;
-                dSectionBMaxY = dRotationBaseLength + dRegionCenterY;
+                // 다. Y 좌표
+                // 회전과 상관이 없기 때문에 dRotationBaseLength 를 사용하지 않는다.
+                dSectionBMinY = dRegionCenterY - dHalfProductLength;
+                dSectionBMaxY = dRegionCenterY + dHalfProductLength;
+
+                // 2. Section 면 이동
+                //  - 회전된 Section 면을 제품 중심으로 이동한다.
+                // 가. X 좌표
+                dSectionBMinX = dSectionBMinX + dRegionCenterX;
+                dSectionBMaxX = dSectionBMaxX + dRegionCenterX;
+                // 나. Z 좌표
+                dSectionBMinZ = dSectionBMinZ + dRegionCenterZ;
+                dSectionBMaxZ = dSectionBMaxZ + dRegionCenterZ;
 
                 // 자속밀도 면을 설정하기 위해서는 아래의 세 좌표의 정보가 필요하다.
                 // - 좌하단점
@@ -2316,8 +2367,9 @@ namespace DoSA
                 listScriptString.Add(dSectionBMaxX.ToString());
                 listScriptString.Add(dSectionBMaxZ.ToString());
                 listScriptString.Add(dSectionBMaxY.ToString());
-
                 listScriptString.Add(forceTest.B_VectorResolution.ToString());
+
+                strOrgStriptContents = scriptContents.m_str42_PostOperation_Script;
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
                 listScriptString.Clear();
@@ -2653,16 +2705,32 @@ namespace DoSA
 
             string strSTEPFileFullName = Path.Combine(strShapeDirName, m_design.m_strDesignName + ".step");
             string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
+            string strPartScriptFileFullName = Path.Combine(strTestDirName, "Part.geo");
 
             try
             {
+                double dMovingX, dMovingY, dMovingZ;
+                int nPartIndexInSTEP;
 
-                strOrgStriptContents = scriptContents.m_str51_Image_Script;
+                getMovingPartInfomation(out nPartIndexInSTEP, out dMovingX, out dMovingY, out dMovingZ);
 
                 listScriptString.Add(strSTEPFileFullName);
+                // 구동 파트의 이동량을 고려해서 형상 확인이 가능하다.
+                listScriptString.Add(nPartIndexInSTEP.ToString());
+                listScriptString.Add(dMovingX.ToString());
+                listScriptString.Add(dMovingY.ToString());
+                listScriptString.Add(dMovingZ.ToString());
+
+                // 섹션 자속밀도 벡터를 출력하기 위한 파트형상 출력 스크립트를 생성한다.
+                strOrgStriptContents = scriptContents.m_str51_Print_Image_Script;
 
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strImageScriptFileFullName, listScriptString);
-                listScriptString.Clear();
+
+                // 전체 자속밀도 벡터를 출력하기 위한 파트형상 출력 스크립트를 생성한다.
+                strOrgStriptContents = scriptContents.m_str02_Show_Part_Script;
+
+                writeFile.createScriptFileUsingString(strOrgStriptContents, strPartScriptFileFullName, listScriptString);
+
             }
             catch (Exception ex)
             {
@@ -2701,12 +2769,18 @@ namespace DoSA
                 listScriptString.Clear();
 
                 strOrgStriptContents = string.Empty;
-                int nPartIndexInSTEP = 0;
                 string strTemp;
 
-                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
-                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
-                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
+                // [주의 사항]
+                // STEP 안의 형상과 Gmsh 에서 사용되는 형상은 순서로 이름이 아니라 일치시키고 있다.
+                // STEP 형상 순서는 NoteList 가 아니라 Volume 이 순서대로 저장한 AllShapeNameList 를 사용해서 찾아낸다.
+                //
+                // 문제는
+                // - STEP 안의 볼률을 읽어낼때는 0 부터 읽어내야 하고, Gmsh 안의 Volume() 의 인덱스는 1 부터 사용해야 한다.
+                // 
+                // 여기서 인덱스는 Gmsh 안의 STEP 의 Volumes 에서 사용하는 인덱스이기 때문에 0부터 시작한다.
+                int nPartIndexInSTEP = 0;
+
                 foreach (string strName in m_design.AllShapeNameList)
                 {
                     strOrgStriptContents += String.Format("vol{0} = STEP_Volumes[{1}];\n", strName, nPartIndexInSTEP);
@@ -2990,17 +3064,22 @@ namespace DoSA
             try
             {
                 strOrgStriptContents = scriptContents.m_str11_Define_Script;
-
-                // GetDP 에서 사용하는 파트 번호는
-                // STEP 파일안의 파트 인덱스 번호와 맞추기 위해 0 부터 시작한다.
-                int nDefineNumber = 0;
                 string strTemp;
 
-                // STEP 에서 읽어낸 Volume 들의 인덱스와 이름이 일치해야 하기 때문에 
-                // NoteList 에서 읽어내지 않고 Volume 이 순서대로 저장된 AllShapeNameList 를 사용해서 인덱스 순서대로 이름을 지정하고 있다.
-                // ( 상기 저장순서를 사용해서 Script 간의 순서를 일치 시킴 )
+                // [주의 사항]
+                // STEP 안의 형상과 Gmsh 에서 사용되는 형상은 순서로 이름이 아니라 일치시키고 있다.
+                // STEP 형상 순서는 NoteList 가 아니라 Volume 이 순서대로 저장한 AllShapeNameList 를 사용해서 찾아낸다.
+                //
+                // 문제는
+                // - STEP 안의 볼률을 읽어낼때는 0 부터 읽어내야 하고, Gmsh 안의 Volume() 의 인덱스는 1 부터 사용해야 한다.
+                // 
+                // Define 에서 AllShapeNameList 을 사용하여 Gmsh 에 사용하는 각부품들의 인덱스를 정의한다.
+                // 여기서 인덱스는 Gmsh 안의 Volume() 에서 사용하는 인덱스이기 때문에 1부터 시작한다.
+                int nDefineNumber = 1;
+
                 foreach (string strName in m_design.AllShapeNameList)
                 {
+                    // 대소문자 구분을 없앤다.
                     strTemp = strName.ToUpper();
 
                     strOrgStriptContents += String.Format("{0} = {1};\n", strTemp, nDefineNumber);
@@ -3029,6 +3108,26 @@ namespace DoSA
                 {
                     saveDesignFile();
                 }
+            }
+
+            // Thread 가 동작중이면 동작을 멈춘다.
+            if (m_bFinishThread == true)
+                stopSolveForceThread();
+
+            int nCount = 0;
+
+            // Thread 가 동작을 멈추지 않았다면 5초 동안 기다린다.
+            do
+            {
+                Thread.Sleep(50);
+                nCount++;
+
+            } while (m_bFinishThread == true && nCount < 100);
+
+            // 그래도 종료하지 않은 getdp 가 있다면 강제로 종료한다.
+            if (CManageProcess.isRunProcesses("getdp") == true)
+            {
+                CManageProcess.killProcesses("getdp");
             }
         }
 
@@ -3855,7 +3954,8 @@ namespace DoSA
                         case EMKind.FORCE_TEST:
  
                             string strFieldImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
-                            string strMagneticDensityFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+                            string strSectionDensityFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+                            string strFullDensityFileFullName = Path.Combine(strTestDirName, "b.pos");
 
                             // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
                             if (m_manageFile.isExistFile(strFieldImageFileFullName) == true)
@@ -3864,10 +3964,16 @@ namespace DoSA
                                 buttonLoadForceResult.Enabled = false;
 
                             // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
-                            if (m_manageFile.isExistFile(strMagneticDensityFileFullName) == true)
-                                buttonPlotDensity.Enabled = true;
+                            if (m_manageFile.isExistFile(strSectionDensityFileFullName) == true)
+                                buttonPlotSectionDensity.Enabled = true;
                             else
-                                buttonPlotDensity.Enabled = false;
+                                buttonPlotSectionDensity.Enabled = false;
+
+                            // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
+                            if (m_manageFile.isExistFile(strFullDensityFileFullName) == true)
+                                buttonPlotFullDensity.Enabled = true;
+                            else
+                                buttonPlotFullDensity.Enabled = false;
 
                             splitContainerRight.Panel1.Controls.Add(this.panelForce);
 
@@ -4299,7 +4405,7 @@ namespace DoSA
             }
         }
 
-        private void buttonPlotMagneticDensity_Click(object sender, EventArgs e)
+        private void buttonPlotSectionDensity_Click(object sender, EventArgs e)
         {
             CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
 
@@ -4307,7 +4413,7 @@ namespace DoSA
 
             string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
 
-            showMagneticDensityVector(strTestDirName);
+            showSectionMagneticDensity(strTestDirName);
         }
 
         private void pictureBoxOpenActuator_MouseLeave(object sender, EventArgs e)
@@ -4318,6 +4424,17 @@ namespace DoSA
         private void pictureBoxOpenActuator_MouseEnter(object sender, EventArgs e)
         {
             this.Cursor = Cursors.Hand;
+        }
+
+        private void buttonPlotFullDensity_Click(object sender, EventArgs e)
+        {
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
+
+            if (forceTest == null) return;
+
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
+
+            showFullMagneticDensity(strTestDirName);
         }
     }
 }

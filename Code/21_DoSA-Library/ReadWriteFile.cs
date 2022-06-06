@@ -30,8 +30,6 @@ namespace gtLibrary
         {
             string[] arrayString = new string[listString.Count];
 
-
-
             try
             {
                 if (true == m_manageFile.isExistFile(strFileFullName) && bOverwrite == false)

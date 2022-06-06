@@ -156,7 +156,7 @@ namespace Onelab
                 m_process = new System.Diagnostics.Process();
                 m_process.StartInfo.FileName = strCmd;
                 m_process.StartInfo.Arguments = strArgs;
-
+                
                 m_process.Start();
 
                 // 프로세스를 기다리게 설정된 경우만 사용된다.
@@ -185,14 +185,6 @@ namespace Onelab
                         }
                     }
                 }
-
-                // 약간의 지연시간이 있어야 창크기의 조절이 가능하다 
-                //Thread.Sleep(100);
-                //MoveWindow(m_process.MainWindowHandle, 300, 300, 1024, 768, true);
-
-                //const int SW_MAXIMIZE = 3;
-                //ShowWindow(m_process.MainWindowHandle, SW_MAXIMIZE);
-
             }
             catch (Exception ex)
             {
@@ -200,21 +192,35 @@ namespace Onelab
             }
         }
 
-        public static void moveGmshWindow(int iPosX, int iPosY, int iSizeX = 1024, int iSizeY = 768)
+        public static void resizeGmsh()
         {
-            Process[] processList = Process.GetProcessesByName("gmsh");
+            const int GMSH_WIDTH = 1200;
+            const int GMSH_HEIGHT = 710;
 
-            if (processList.Length > 1)
-            {
-                CNotice.noticeWarningID("OOFP");
-                return;
-            }
+            int iScreenWidth = Screen.PrimaryScreen.Bounds.Width;
+            int iScreenHeight = Screen.PrimaryScreen.Bounds.Height;
 
-            if (processList.Length != 1)
-                return;
+            int iLeftMargin, iTopMargin;
 
-            Thread.Sleep(100);
-            MoveWindow(m_process.MainWindowHandle, iPosX, iPosY, iSizeX, iSizeY, true);
+            // Gmsh 가 화면 중심에 위치하도록 좌측과 상측의 마진을 계산한다.
+            if (iScreenWidth > GMSH_WIDTH)
+                iLeftMargin = (int)((iScreenWidth - GMSH_WIDTH) / 2.0f);
+            else
+                iLeftMargin = 0;
+
+            if (iScreenHeight > GMSH_HEIGHT)
+                iTopMargin = (int)((iScreenHeight - GMSH_HEIGHT) / 2.0f);
+            else
+                iTopMargin = 0;
+
+            // 이미지의 XY 비율이 Gmsh 를 따라가기 때문에 Gmsh 의 크기를 강제로 결정한다.
+            // 이번 실행은 이미 위에서 이미지가 만들어져서 어쩔수 없지만
+            // 다음번 실행때부터 크기 문제가 없도록 매번 자속밀도 보기 실행때 마다 크기를 재 설정한다.
+
+            // 약간의 지연시간이 있어야 창크기의 조절이 가능하다
+            // (100 ms 는 부족하여 안전하게 500 ms 를 사용한다)
+            Thread.Sleep(500);
+            MoveWindow(m_process.MainWindowHandle, iLeftMargin, iTopMargin, 1200, 710, true);
         }
     }
 
@@ -230,9 +236,10 @@ namespace Onelab
         // - 내부에 사용되는 { 기호와 {{}} 는 분리하여 꼭 사용하라.
         // - 메쉬 후에 파트명을 읽어낸다. (파트명 파일의 생성 유무를 사용해서 Gmsh 자동동작을 기다리기 때문이다.
 
-        #region ---------------------------- 01_Read Part Name ----------------------------
+        #region ---------------------------- 01 Show STEP (DesignName.geo or Change.geo in Shape Directory) ----------------------------
+        // New Design 과 Change Shape 기능에 사용된다.
 
-        public string m_str01_CheckSTEP_Script =
+        public string m_str01_Show_STEP_Script =
         @"#CHECK_STEP,2
 # 1 : Step File Full Name
 # 2 : Part Name File Full Name
@@ -255,28 +262,30 @@ For k In {0 : #STEP_Volumes[]-1}
 
 EndFor
 
-Geometry.Points = 0;
-Geometry.Curves = 0;
-Geometry.Surfaces = 1;
-Geometry.Volumes = 0;
+Geometry.Volumes = 1;
 Geometry.VolumeLabels = 1;
+Geometry.Color.Volumes = {125,125,125};
 
-Geometry.SurfaceType = 2;
-
-Mesh.SurfaceEdges = 0;
-Mesh.VolumeEdges = 0;
+# 면처리가 화면은 예쁘지만 내부를 볼 수 없어서 사용하지 않는다.
+#Geometry.Points = 0;
+#Geometry.Curves = 0;
+#Geometry.Surfaces = 1;
+#Geometry.SurfaceType = 2;
 
 # 해석목적이 아니라 제품 크기를 계산하기 위해 2D Mesh 진행하고 파일을 보관한다.
 Mesh 2;
+Mesh.SurfaceEdges = 0;
+Mesh.VolumeEdges = 0;
 
 Save ""{{3}}.msh"";
 
 ";
         #endregion
 
-        #region ---------------------------- 02 Show Shape  ----------------------------
+        #region ---------------------------- 02 Show Part (Part.geo in Shape or Force Directory) ----------------------------
+        // Show Part 와 Full B Vector 기능에 사용된다.
 
-        public string m_str02_Show_Shape_Script =
+        public string m_str02_Show_Part_Script =
         @"#CHECK_STEP,1
 # 1 : Step File Full Name
 # 2 : Moving Part Index Number
@@ -284,9 +293,12 @@ Save ""{{3}}.msh"";
 # 4 : Moving Y
 # 5 : Moving Z
 
-mm = 1e-3;
+# Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
+# Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
 SetFactory(""OpenCASCADE"");
+
+mm = 1e-3;
 
 Merge ""{{1}}"";
 
@@ -298,16 +310,19 @@ volMovingPart = STEP_Volumes[{{2}}];
 
 Translate { {{3}} * mm , {{4}} * mm, {{5}} * mm } { Volume{ volMovingPart }; }
 
-Geometry.Points = 0;
-Geometry.Curves = 0;
-Geometry.Surfaces = 1;
-Geometry.Volumes = 0;
+Geometry.Volumes = 1;
 Geometry.VolumeLabels = 1;
+Geometry.Color.Volumes = {125,125,125};
 
-Geometry.SurfaceType = 2;
+# 방향을 보기 좋게 틀어 준다
+General.Trackball = 0;
+General.RotationX = 20; General.RotationY = -20; General.RotationZ = 0;
 
-Mesh.SurfaceEdges = 0;
-Mesh.VolumeEdges = 0;
+# 면처리가 화면은 예쁘지만 내부를 볼 수 없어서 사용하지 않는다.
+#Geometry.Points = 0;
+#Geometry.Curves = 0;
+#Geometry.Surfaces = 1;
+#Geometry.SurfaceType = 2;
 
 ";
         #endregion
@@ -382,16 +397,16 @@ SKIN_STEEL = 302;
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
 
-Mat_{{1}}_B2() = Mat_{{1}}_B()^2;
-Mat_{{1}}_nu() = Mat_{{1}}_H() / Mat_{{1}}_B();
-Mat_{{1}}_nu(0) = Mat_{{1}}_nu(1);
+    Mat_{{1}}_B2() = Mat_{{1}}_B()^2;
+    Mat_{{1}}_nu() = Mat_{{1}}_H() / Mat_{{1}}_B();
+    Mat_{{1}}_nu(0) = Mat_{{1}}_nu(1);
 
-Mat_{{1}}_nu_B2() = ListAlt[Mat_{{1}}_B2(), Mat_{{1}}_nu()];
-nu_{{1}}[] = InterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
-dnudb2_{{1}}[] = dInterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
-H_{{1}}[] = nu_{{1}}[$1] * $1 ;
-dhdb_{{1}}[] = TensorDiag[1,1,1] * nu_{{1}}[$1#1] + 2 * dnudb2_{{1}}[#1] * SquDyadicProduct[#1];
-dhdb_{{1}}_NL[] = 2 * dnudb2_{{1}}[$1] * SquDyadicProduct[$1] ;
+    Mat_{{1}}_nu_B2() = ListAlt[Mat_{{1}}_B2(), Mat_{{1}}_nu()];
+    nu_{{1}}[] = InterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
+    dnudb2_{{1}}[] = dInterpolationLinear[SquNorm[$1]]{ Mat_{{1}}_nu_B2() };
+    H_{{1}}[] = nu_{{1}}[$1] * $1 ;
+    dhdb_{{1}}[] = TensorDiag[1,1,1] * nu_{{1}}[$1#1] + 2 * dnudb2_{{1}}[#1] * SquDyadicProduct[#1];
+    dhdb_{{1}}_NL[] = 2 * dnudb2_{{1}}[$1] * SquDyadicProduct[$1] ;
 
 ";
         #endregion
@@ -729,26 +744,26 @@ PostProcessing {
 PostOperation {
     { Name poMagStatic_A ; NameOfPostProcessing ppMagStatic_A;
         Operation {            
-
-            Echo[ Str[
-                ""nView = 1;"",
-                ""View[nView].RangeType = 2;"",
-                ""View[nView].CustomMax = 1.7;"",
-                ""View[nView].CustomMin = 0.0;"",
-                ""View[nView].Name = StrCat['Magnetic Density'];"",
-                ""Mesh.SurfaceEdges = 0;"" ],
-                File ""maps.opt"" ];
             
             Print[ js, OnElementsOf vol{{1}}, File ""js.pos"" ] ;
-# 전체 출력은 용량이 너무커서 사용하지 않는다.            
-            //Print[ b, OnElementsOf domainALL, File ""b.pos"" ] ;
+            Print[ b, OnElementsOf domainALL, File ""b.pos"" ] ;
             
 # OnPlane 은 {좌하단점}, {우하단점}, {좌상단점} 순서로 좌표를 입력하고 뒤이어서 {가로 해상도, 세로 해상도} 를 지정한다.
 # mm 은 단위 환산이다. ( mm = 1e-3 )
             Print[ b, OnPlane { { {{2}}*mm, {{3}}*mm, {{4}}*mm } { {{5}}*mm, {{3}}*mm, {{6}}*mm } { {{2}}*mm, {{7}}*mm, {{4}}*mm } } { {{8}}, {{8}} }, File ""b_cut.pos"" ];
-# Print 수 만큼 View 가 생긴다. 따라서 View 인덱스는 0 부터 시작해서 1이다.
 
-            DeleteFile[""F.dat""];
+# Print 수 만큼 View 가 생긴다. 따라서 View 인덱스는 0 부터 시작해서 2이다.
+            Echo[ Str[
+                ""nView = 2;"",
+                ""View[nView].RangeType = 2;"",
+                ""View[nView].CustomMax = 1.7;"",
+                ""View[nView].CustomMin = 0.0;"",
+                ""View[nView].SaturateValues = 1;"",
+                ""View[nView].Name = StrCat['Magnetic Density'];"",
+                ""Mesh.SurfaceEdges = 0;"" ],
+                File ""maps.opt"" ];
+
+            DeleteFile [""F.dat""];
             DeleteFile [""Fx.dat""];
             DeleteFile [""Fy.dat""];
             DeleteFile [""Fz.dat""];
@@ -771,11 +786,16 @@ PostOperation {
         #endregion
 
 
-        #region ---------------------------- 51_Magnetic Density Vector Image (Image.geo) ----------------------------
+        #region ---------------------------- 51 Print Image (Image.geo in Force Directory) ----------------------------
+        // Secton B Vector 기능에 사용된다.
 
-        public string m_str51_Image_Script =
-        @"#IMPORT,1
-# 1 : STEP File Name
+        public string m_str51_Print_Image_Script =
+        @"#CHECK_STEP,1
+# 1 : Step File Full Name
+# 2 : Moving Part Index Number
+# 3 : Moving X
+# 4 : Moving Y
+# 5 : Moving Z
 
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
@@ -790,16 +810,18 @@ STEP_Volumes[] = Volume '*';
 
 Dilate { {0, 0, 0}, {mm, mm, mm} } { Volume{STEP_Volumes[]}; }
 
+volMovingPart = STEP_Volumes[{{2}}];
+
+Translate { {{3}} * mm , {{4}} * mm, {{5}} * mm } { Volume{ volMovingPart }; }
+
+
+# 방향을 보기 좋게 틀어 준다
 General.Trackball = 0;
 General.RotationX = 20; General.RotationY = -20; General.RotationZ = 0;
 
 Print ""Image.gif"";
 
-//Exit;
-
 ";
         #endregion
-
-
     }
 }

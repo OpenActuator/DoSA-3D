@@ -78,7 +78,7 @@ namespace Tests
         public double B_RotationAngle { get; set; }
 
         // 제품 크기를 기준으로 해상도 등분이다.
-        [DisplayNameAttribute("B Vector Resolution"), CategoryAttribute("\tPost-Processing Fields"), DescriptionAttribute("B Vector Resolution")]
+        [DisplayNameAttribute("B Vector Resolution"), CategoryAttribute("\tPost-Processing Fields"), DescriptionAttribute("Resolution of Section B Vector")]
         public double B_VectorResolution { get; set; }
 
         public CForceTest()
@@ -86,7 +86,7 @@ namespace Tests
             KindKey = EMKind.FORCE_TEST;
             Voltage = 5.0;
 
-            B_VectorResolution = 50;
+            B_VectorResolution = 100;
         }
 
         // 파일스트림 객체에 코일 정보를 기록한다.

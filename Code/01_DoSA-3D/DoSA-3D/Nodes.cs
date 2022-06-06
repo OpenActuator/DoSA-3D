@@ -37,6 +37,10 @@ namespace Nodes
 
         private string m_nodeName;
 
+        // DoSA-3D 에서 사용하는 파트명은 STEP 파일의 명칭과 일치해야 하기 때문에 수정이 불가한다.
+        // [향후 계획]
+        // - 이름을 변경하고 싶다면 STEP 안의 이름까지 같이 변경해야 한다.
+        [ReadOnlyAttribute(true)]
         ///  \t\t\t 갯수가 많을수록 해당 카테고리가 상측으로 올라간다.
         [DisplayNameAttribute("Node Name"), CategoryAttribute("\t\t\tCommon Fields"), DescriptionAttribute("Part or Test name")]
         public string NodeName

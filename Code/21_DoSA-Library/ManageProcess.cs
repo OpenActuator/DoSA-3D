@@ -35,5 +35,92 @@ namespace gtLibrary
                 return 0;
             }
         }
+
+        /// <summary>
+        /// - 메모리에 하나라도 해당 이름의 Process 가 동작하고 있는지 확인한다.
+        /// </summary>
+        /// <param name="strProcessName"></param>  
+        public static bool isRunProcesses(string strProcessName)
+        {
+            try
+            {
+                Process[] processList = Process.GetProcessesByName(strProcessName);
+
+                if (processList.Length == 0)
+                    return false;
+                else
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// - 동일 이름의 Process 를 메모리에서 모두 삭제한다.
+        /// </summary>
+        /// <param name="strProcessName"></param>
+        public static void killProcesses(string strProcessName, int idException = 0)
+        {
+            try
+            {
+                int nCount = 0;
+                int nLimitProcessCount;
+                int indexProcess = 0;
+
+                // 예외 프로세스가 있는 경우는 한개의 프로세스는 남긴다.
+                if (idException == 0)
+                    nLimitProcessCount = 0;
+                else
+                    nLimitProcessCount = 1;
+
+                Process[] processList = null;
+
+                do
+                {
+                    processList = Process.GetProcessesByName(strProcessName);
+
+                    if (processList.Length > 0)
+                    {
+                        // 예외 프로세스가 있는 경우는 예외 프로세스를 제외한다.
+                        if (idException == 0)
+                            processList[indexProcess].Kill();
+                        else
+                        {
+                            if (processList[indexProcess].Id == idException)
+                            {
+                                // 예외 프로세스는 0번 인덱스로 남겨두고 다음 인텍스들을 삭제하기 위해 1로 변경한다.
+                                indexProcess = 1;
+                            }
+                            else
+                            {
+                                processList[indexProcess].Kill();
+                            }
+                        }
+                    }
+
+                    // 프로세스가 사라지는 시간을 확보한다.
+                    Thread.Sleep(100);
+
+                    // 무한 루프를 방지한다.
+                    if (nCount > 50)
+                        return;
+
+                    nCount++;
+
+                    // 프로세스를 Kill 할때 processList.Length 가 바로 변경되지 않아서 while 비교전에 다시 processList 를 얻어온다
+                    // 중복 호출되는 아쉬움이 있다.
+                    processList = Process.GetProcessesByName(strProcessName);
+
+                } while (processList.Length > nLimitProcessCount);
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+                return;
+            }
+        }
     }
 }

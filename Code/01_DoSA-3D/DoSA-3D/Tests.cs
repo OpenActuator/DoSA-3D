@@ -43,6 +43,7 @@ namespace Tests
         {
             // MeshSizePercent 와 Type 이 없는 이전 파일버전 인 경우는 아래의 값으로 초기화된다.
             MeshSizePercent = 7;
+
             ActuatorType = EMActuatorType.Solenoid;
         }
 
@@ -87,6 +88,7 @@ namespace Tests
             Voltage = 5.0;
 
             B_VectorResolution = 100;
+            B_RotationAngle = 0;
         }
 
         // 파일스트림 객체에 코일 정보를 기록한다.

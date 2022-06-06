@@ -159,6 +159,8 @@ namespace Onelab
                 
                 m_process.Start();
 
+                const int TIME_STEP_ms = 500;
+
                 // 프로세스를 기다리게 설정된 경우만 사용된다.
                 if (bWaiting == true)
                 {
@@ -181,7 +183,7 @@ namespace Onelab
                             if (progressBar.Value == progressBar.Maximum)
                                 progressBar.Value = 0;
 
-                            Thread.Sleep(500);
+                            Thread.Sleep(TIME_STEP_ms);
                         }
                     }
                 }

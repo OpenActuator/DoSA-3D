@@ -4,7 +4,7 @@ Gi-Tae Kweon
 zgitae@gmail.com
 
 2022-06-06 Ver(1.2.1)
- - Added plot of total magnetic density vector
+ - Added plot of full magnetic density vector
  - Bug Fix : Plot of sectional magnetic density vector 
 
 2022-06-05 Ver(1.2.0)

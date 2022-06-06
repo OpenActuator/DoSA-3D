@@ -13,6 +13,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Resources;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace gtLibrary
 {
@@ -270,5 +271,43 @@ namespace gtLibrary
 
         #endregion
 
+
+        /// <summary>
+        /// 특정 파일이 생성될때 까지 기다린다. 
+        /// (단, 생성 종료가 아니라 생성 시작을 감지함을 주의하라)
+        /// </summary>
+        /// <param name="strFileFullName">감지할 파일명</param>
+        /// <param name="dMaxTime_ms">최대 시간 : ms 단위</param>
+        public bool waitForFileInOtherThread(string strFileFullName, double dMaxTime_ms = 5000)
+        {
+            const int STEP_TIME_ms = 50;
+            int nMaxCount = (int)(dMaxTime_ms / (float)STEP_TIME_ms);
+
+            int nCount = 0;
+
+            do
+            {
+                // 감지 최대시간을 초과해서 리턴하는 경우
+                if (nCount > nMaxCount)
+                    return false;
+
+                // 파일을 감지해서 리턴하는 경우
+                if (true == isExistFile(strFileFullName))
+                {
+                    // 파일 생성을 감지했기 때문에 저장시간을 기다려 준다.
+                    // 
+                    // 문제점
+                    // - 파일의 생성 완료 시간을 알 수 없어서 고정된 1초를 기다리고 있다.
+                    Thread.Sleep(1000);
+                    return true;
+                }
+
+                Thread.Sleep(STEP_TIME_ms);
+
+                nCount++;
+            }
+            while (true);
+
+        }
     }
 }

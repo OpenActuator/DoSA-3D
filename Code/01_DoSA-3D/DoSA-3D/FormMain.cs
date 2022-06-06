@@ -622,7 +622,6 @@ namespace DoSA
                 listScriptString.Add(dMovingZ.ToString());
 
                 if (m_manageFile.isExistFile(strShapeModelFileFullName) == false) return;
-                if (m_manageFile.isExistFile(strRunScriptFileFullName) == false) return;
 
                 if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
                 {
@@ -647,9 +646,9 @@ namespace DoSA
                     return;
                 }
 
+                // Script 동작에 사용한 geo 파일의 삭제를 위해 Gmsh 에서 geo 파일을 사용하는 시간을 기다린다.
                 Thread.Sleep(500);
-
-                //m_manageFile.deleteFile(strRunScriptFileFullName);
+                m_manageFile.deleteFile(strRunScriptFileFullName);
 
             }
             catch (Exception ex)
@@ -836,15 +835,13 @@ namespace DoSA
                     // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
                     CScript.runScript(strGmshExeFileFullName, strArguments, false);
 
-                    // 최대 5초를 기다린다.
-                    int nCount = 0;
+                    // Gmsh 가 실행되고 기다리지 않기 때문에 
+                    // Gmsh Script 실행 후 5 초 동안 Part 명의 생성을 기다린다.
+                    m_manageFile.waitForFileInOtherThread(strPartNamesFileFullName, 5000);
 
-                    while (false == m_manageFile.isExistFile(strPartNamesFileFullName) && nCount < 100)
-                    {
-                        // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
-                        Thread.Sleep(50);
-                        nCount++;
-                    }
+                    // 안전한 스크립트 파일을 삭제하기 위해 지연시간을 부여한다.
+                    Thread.Sleep(500);
+                    m_manageFile.deleteFile(strRunScriptFileFullName);
 
                     // 순서 주의
                     //  - closeDesign() 뒤에 호출되어야 한다.
@@ -880,7 +877,6 @@ namespace DoSA
 
                             if (null != strFindRet)
                             {
-                                
                                 if (CSettingData.m_emLanguage == EMLanguage.Korean)
                                     CNotice.noticeWarning(strPartName + "의 파트명에 중복 사용되고 있습니다.");
                                 else
@@ -903,9 +899,6 @@ namespace DoSA
                         m_design.AllShapeNameList = listAllPartNames;
 
 
-                        // 정상적으로 스크립트 파일이 동작했다면 스크립트파일은 삭제한다.
-                        //m_manageFile.deleteFile(strRunScriptFileFullName);
-
                         // 단지 리스트를 확인하기 위한 창임을 구분하기 위해 SHOW_LIST 항목을 사용하고 있다.
                         PopupAddNode dlgFormNodeName = new PopupAddNode(EMKind.SHOW_LIST, m_design.RemainedShapeNameList);
 
@@ -915,7 +908,6 @@ namespace DoSA
                             m_manageFile.deleteDirectory(strDesignDirPath);
                             return;
                         }
-                            
                     }
                     else
                     {
@@ -1059,7 +1051,8 @@ namespace DoSA
                 strNewDesignFileFullName = Path.Combine(strDesignDirectory, strDesignName + ".dsa3d");
                 
                 m_manageFile.copyFile(strDesignFileFullName, strNewDesignFileFullName);
-                Thread.Sleep(10);
+                Thread.Sleep(200);
+
                 m_manageFile.deleteFile(strDesignFileFullName);
 
                 // 확장자가 변경되면 디자인 파일 전체경로는 신규 확장자를 사용하는 경로로 변경한다.
@@ -1095,11 +1088,13 @@ namespace DoSA
                         return false;
 
                     m_manageFile.copyFile(strDesignFileFullName, strNewDesignFileFullName);
-                    Thread.Sleep(10);
+                    Thread.Sleep(200);
+
                     m_manageFile.deleteFile(strDesignFileFullName);
 
                     m_manageFile.copyDirectory(Path.Combine(strDesignDirectory, "Shape"), Path.Combine(Path.Combine(strDesignDirectory, strDesignName, "Shape")));
-                    Thread.Sleep(10);
+                    Thread.Sleep(200);
+
                     m_manageFile.deleteDirectory(Path.Combine(strDesignDirectory, "Shape"));
 
                     // 수정된 디렉토리로 Design 파일의 풀 패스를 변경한다.
@@ -1419,7 +1414,6 @@ namespace DoSA
             List<string> listScriptString = new List<string>();
             List<string> listTempNames = new List<string>();
             List<string> listNewAllPartNames = new List<string>();
-            //List<string> listRemainedPartNames = new List<string>();
 
             try
             {
@@ -1518,16 +1512,13 @@ namespace DoSA
                     // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
                     CScript.runScript(strGmshExeFileFullName, strArguments, false);
 
-                    // 최대 5초를 기다린다.
-                    int nCount = 0;
+                    // Gmsh 가 실행되고 기다리지 않기 때문에 
+                    // Gmsh Script 실행 후 5 초 동안 Part 명의 생성을 기다린다.
+                    m_manageFile.waitForFileInOtherThread(strPartNamesFileFullName, 5000);
 
-                    while (false == m_manageFile.isExistFile(strPartNamesFileFullName) && nCount < 100)
-                    {
-                        // Gmsh 의 Script 를 실행해서 Part 명이 생성될 때 까지 기다린다.
-                        Thread.Sleep(50);
-                        nCount++;
-                    }
-
+                    // 안전한 스크립트 파일을 삭제하기 위해 지연시간을 부여한다.
+                    Thread.Sleep(500);
+                    m_manageFile.deleteFile(strRunScriptFileFullName);
 
                     DialogResult result = DialogResult.No;
 
@@ -1611,10 +1602,10 @@ namespace DoSA
 
                         // 정상적으로 신규형상을 읽어드리면 기존 형상을 삭제한다.
                         m_manageFile.deleteDirectory(strShapeDirPath);
-                        Thread.Sleep(50);
+                        Thread.Sleep(200);
 
                         m_manageFile.copyDirectory(strShapeNewDirPath, strShapeDirPath);
-                        Thread.Sleep(50);
+                        Thread.Sleep(200);
 
                         // 복사후에 신규 디렉토리를 삭제한다.
                         m_manageFile.deleteDirectory(strShapeNewDirPath);
@@ -1704,16 +1695,14 @@ namespace DoSA
                         return;
 
                     m_manageFile.deleteDirectory(strTestDirName);
-
-                    // 삭제되는 시간이 필요한 듯 한다.
-                    Thread.Sleep(1000);
+                    Thread.Sleep(200);
 
                     /// VCM Type 으로 해석이 되어 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
-                    if (m_manageFile.isExistDirectory(strTestZeroDirName ) == true)
+                    if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
+                    {
                         m_manageFile.deleteDirectory(strTestZeroDirName);
-                
-                    // 삭제되는 시간이 필요한 듯 한다.
-                    Thread.Sleep(1000);
+                        Thread.Sleep(200);
+                    }
                 }
 
                 // 시험 디렉토리를 생성한다.
@@ -1722,8 +1711,12 @@ namespace DoSA
                 // 해석전 현 설정을 저장한다.
                 saveDesignFile();
 
+                // 함수 내부에서 오류가 있으면 알림이 발생하기 때문에 여기서는 알림없이 바로 리턴한다.
                 if (false == startSolveForceThread(forceTest, false))
                     return;
+
+                // Density Vector 파일이 없으면 최대 3초까지 기다린다.
+                m_manageFile.waitForFileInOtherThread(strMagneticDensityVectorFileFullName, 3000);
 
                 // 해석 결과 이미지가 있다면 후처리를 진행한다.
                 if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false)
@@ -1745,10 +1738,25 @@ namespace DoSA
                 /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
                 if (forceTest.ActuatorType == EMActuatorType.VCM)
                 {
-                    startSolveForceThread(forceTest, true);
-                }
+                    // 함수 내부에서 오류가 있으면 알림이 발생하기 때문에 여기서는 알림없이 바로 리턴한다.  
+                    if (false == startSolveForceThread(forceTest, true))
+                        return;
 
-                Thread.Sleep(500);
+                    string strForceYFileFullName = Path.Combine(strTestZeroDirName, "Fy.dat");
+
+                    // Fy 파일이 없으면 최대 3초까지 기다린다.
+                    m_manageFile.waitForFileInOtherThread(strForceYFileFullName, 3000);
+
+                    if (m_manageFile.isExistFile(strForceYFileFullName) == false)
+                    {
+                        if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                            CNotice.noticeError("자기력 해석(current=0) 결과가 존재하지 않습니다.\n메시지 창에서 확인하세요.", "오류 발생");
+                        else
+                            CNotice.noticeError("Magnetic force analysis(current=0) result does not exist.\nCheck in the message window.", "Error");
+
+                        return;
+                    }
+                }
 
                 // 자기력 결과를 읽어드린다.
                 plotForceResult(forceTest);
@@ -1771,6 +1779,7 @@ namespace DoSA
 
             string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
             string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
+            string strImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
             string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
             string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
 
@@ -1801,15 +1810,14 @@ namespace DoSA
 
                 CScript.resizeGmsh();
 
-                // 최대 5초를 기다린다.
-                int nCount = 0;
+                // Gmsh 가 실행되고 기다리지 않기 때문에 
+                // Gmsh Script 실행 후 3 초 동안 Density Vector 이미지 파일이 생성될 때 까지 기다린다.
+                m_manageFile.waitForFileInOtherThread(strImageFileFullName, 3000);
 
-                while (false == m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) && nCount < 100)
-                {
-                    // Gmsh 의 Script 를 실행해서 Density Vector가 생성될 때 까지 기다린다.
-                    Thread.Sleep(50);
-                    nCount++;
-                }
+                // [주의사항]
+                // Image.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
+                //Thread.Sleep(500);
+                //m_manageFile.deleteFile(strImageScriptFileFullName);
 
             }
             catch (Exception ex)
@@ -1856,6 +1864,11 @@ namespace DoSA
 
                 // Script 결과 파일이 없이 때문에 Gmsh 를 기다리지 않는다.
 
+                // [주의사항]
+                // Part.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
+                //Thread.Sleep(500);
+                //m_manageFile.deleteFile(strImageScriptFileFullName);
+
             }
             catch (Exception ex)
             {
@@ -1895,6 +1908,7 @@ namespace DoSA
 
             int nLineCount = 0;
             string strMessage = string.Empty;
+            bool bOccuredError = false;
 
             try
             {
@@ -1904,26 +1918,20 @@ namespace DoSA
                     nLineCount++;
 
                     if (nLineCount > nStartLineNumber)
-                    { 
+                    {
+                        // [주의사항]
+                        // - 지금 줄에서 특정 신호를 Parsing 하고 다음줄을 읽어서 정보를 읽어내는 방법은 사용하지 말라
+                        //   특정 신호를 파악하는 줄고 정보을 읽어내는 다음줄이 나누어지는 다른 시간에 저장되는 경우 오류가 발생한다.
                         if (true == strLine.Contains("Error"))
                         {
                             CNotice.printUserMessage(strLine);
-
-                            streamReader.Close();
-                            readFile.Close();
-
-                            nStartLineNumber = nLineCount;
-
-                            // 해석중 오류가 발생했음을 알린다.
-                            return true;
+                            bOccuredError = true;
                         }
-                        else if(true == strLine.Contains("Done optimizing mesh"))
+                        else if (true == strLine.Contains("nodes") && true == strLine.Contains("elements"))
                         {
-                            // 다음줄을 읽어낸다.
-                            strLine = streamReader.ReadLine();
                             arrayString = strLine.Split(':');
 
-                            if(arrayString.Length >= 2)
+                            if (arrayString.Length >= 2)
                                 CNotice.printUserMessage("Done 3D mesh (" + arrayString[1] + ")");
 
                             nProgressBarValue = 2;
@@ -1945,17 +1953,17 @@ namespace DoSA
                             // + 2 : 시작과 Mesh 작업을 포함한다.
                             nProgressBarValue = Convert.ToInt32(strMessage) + 2;
                         }
-                        else if (true == strLine.Contains("E n d   P o s t - P r o c e s s i n g"))
+                        // 두 번의 GetDP - Stopped 가 발생한다.
+                        // 구분을 위해 초기에 발생하는 GetDP - Stopped 를 제외하고 있다.
+                        else if (true == strLine.Contains("GetDP - Stopped") && nLineCount > 100)
                         {
-                            // 다음줄을 읽어낸다.
-                            strLine = streamReader.ReadLine();
                             arrayString = strLine.Split(',');
 
                             if (arrayString.Length >= 5)
                                 CNotice.printUserMessage("Done Solving (" + arrayString[1] + ", " + arrayString[2] + ", " + arrayString[3] + ")");
 
                             nProgressBarValue = nProgressBarValue++;
-                        }
+                        } 
 
                     }
                 }
@@ -1970,8 +1978,12 @@ namespace DoSA
                 CNotice.printLog(ex.Message);
             }
 
-            // 해석중 오류가 발생하지 않음을 리턴한다.
-            return false;
+            if (bOccuredError == true)
+                // 해석중 오류가 발생 했음을 리턴한다.
+                return true;
+            else
+                // 해석중 오류가 발생하지 않음을 리턴한다.
+                return false;
         }
 
         // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
@@ -1999,11 +2011,10 @@ namespace DoSA
                 // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
                 solveForce(forceTestZeroCurrent, true);
 
-                // log 를 마지막까지 출력하도록 시간을 준다.
-                //
-                // [순서 주의]
-                //  - m_bFinishThread = false; 앞에서 사용해야 한다.
-                Thread.Sleep(3000);
+                // - m_bFinishThread = false 전에
+                //   solveForce() 안 GetDP 의 Log 파일이나 해석 결과 저장을 여유있게 할 시간을 부여한다.
+                // - 여기서는 사용하지 않고 solveForce() 안에서 부여한다.
+                //Thread.Sleep(3000);
 
                 m_bFinishThread = false;
             }
@@ -2031,11 +2042,10 @@ namespace DoSA
                 // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
                 solveForce(forceTest, true);
 
-                // log 를 마지막까지 출력하도록 시간을 준다.
-                //
-                // [순서 주의]
-                //  - m_bFinishThread = false; 앞에서 사용해야 한다.
-                Thread.Sleep(3000);
+                // - m_bFinishThread = false 전에
+                //   solveForce() 안 GetDP 의 Log 파일이나 해석 결과 저장을 여유있게 할 시간을 부여한다.
+                // - 여기서는 사용하지 않고 solveForce() 안에서 부여한다.
+                //Thread.Sleep(3000);
 
                 m_bFinishThread = false;
             }
@@ -2100,9 +2110,12 @@ namespace DoSA
                 m_addedThreadInMain.IsBackground = true;
                 m_addedThreadInMain.Start();
 
+                const int TIME_STEP_ms = 500;
+
                 do
                 {
-                    Thread.Sleep(500);
+                    // 모니터링을 위한 반복적 지연 시간
+                    Thread.Sleep(TIME_STEP_ms);
 
                     // 한번이라도 오류가 발생하면 저장해 둔다.
                     if (true == printLogMessage(strTestDirName, ref nStartLineNumber, ref nProgressBarValue))
@@ -2135,8 +2148,9 @@ namespace DoSA
                 progressBarForce.Hide();
                 labelProgressForce.Hide();
 
-                // 해석이 종료된 이후에 추가로 출력된 오류가 있는 경우를 대비해서 다시한번 오류를 확인한다.
-                Thread.Sleep(500);
+                // 해석 종료 이후에도 일정시간을 기다리고
+                // 다시 한번 추가 메시지가 있는지 확인하고 추가 메시지가 있다면 사용자 메시지 창에 출력한다.
+                Thread.Sleep(500);                
                 if (true == printLogMessage(strTestDirName, ref nStartLineNumber, ref nProgressBarValue))
                     bErrorOccurred = true;
 
@@ -2240,8 +2254,11 @@ namespace DoSA
             // 해석이 종료될 때 까지 Gmsh 를 기다려야 한다. --> true 옵션 사용
             CScript.runScript(strGmshExeFileFullName, strArguments, true);
 
-            // 해석을 종료하고 데이터의 저장시간을 충분히 주어야 자속밀도를 읽어드리는데 문제가 없다.
-            Thread.Sleep(1000);
+            // [중요사항]
+            // - GetDP 가 종료되고 함수를 빠져나가서
+            //   m_bFinishThread = false 전에 GetDP 의 Log 파일이나 해석 결과 저장을 여유있게 할 시간을 부여한다.
+            // - 시간이 충분하지 않으면 Log 파일의 마지막까지 분석이 되지 않는다.
+            Thread.Sleep(3000);
 
             return true;
         }
@@ -3116,10 +3133,12 @@ namespace DoSA
 
             int nCount = 0;
 
+            const int TIME_STEP_ms = 50;
+
             // Thread 가 동작을 멈추지 않았다면 5초 동안 기다린다.
             do
             {
-                Thread.Sleep(50);
+                Thread.Sleep(TIME_STEP_ms);
                 nCount++;
 
             } while (m_bFinishThread == true && nCount < 100);
@@ -3717,9 +3736,7 @@ namespace DoSA
                                 return;
 
                             m_manageFile.deleteDirectory(strTestDirName);
-
-                            // 삭제되는 시간이 필요한 듯 한다.
-                            Thread.Sleep(1000);
+                            Thread.Sleep(200);
                         }
                     }
 

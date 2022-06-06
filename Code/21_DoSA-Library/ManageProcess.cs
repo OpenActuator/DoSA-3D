@@ -78,6 +78,8 @@ namespace gtLibrary
 
                 Process[] processList = null;
 
+                const int TIME_STEP_ms = 100;
+
                 do
                 {
                     processList = Process.GetProcessesByName(strProcessName);
@@ -102,7 +104,7 @@ namespace gtLibrary
                     }
 
                     // 프로세스가 사라지는 시간을 확보한다.
-                    Thread.Sleep(100);
+                    Thread.Sleep(TIME_STEP_ms);
 
                     // 무한 루프를 방지한다.
                     if (nCount > 50)

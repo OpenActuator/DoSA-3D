@@ -50,7 +50,7 @@ namespace gtLibrary
                 if (m_manageFile.isExistFile(strFileFullName) == true)
                 {
                     m_manageFile.deleteFile(strFileFullName);
-                    Thread.Sleep(50);
+                    Thread.Sleep(100);
                 }
 
                 for (int i = 0; i < listString.Count; i++)
@@ -1256,7 +1256,7 @@ namespace gtLibrary
 
     }
 
-    public class CParsing
+    public static class CParsing
     {
         #region ------------------------------- Line Parsing --------------------------------
 

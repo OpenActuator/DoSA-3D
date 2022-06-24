@@ -276,7 +276,7 @@ Geometry.Color.Volumes = {125,125,125};
 
 # 해석목적이 아니라 제품 크기를 계산하기 위해 2D Mesh 진행하고 파일을 보관한다.
 Mesh 2;
-Mesh.SurfaceEdges = 0;
+Mesh.SurfaceEdges = 1;
 Mesh.VolumeEdges = 0;
 
 Save ""{{3}}.msh"";
@@ -822,6 +822,8 @@ General.Trackball = 0;
 General.RotationX = 20; General.RotationY = -20; General.RotationZ = 0;
 
 Print ""Image.gif"";
+
+Exit;
 
 ";
         #endregion

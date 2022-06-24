@@ -3,6 +3,10 @@ https://solenoid.or.kr/index_dosa_open_3d_eng.html
 Gi-Tae Kweon
 zgitae@gmail.com
 
+
+2022-06-13 Ver(1.2.2)
+ - Stable Version of magnetic density plot and the new analysis process
+
 2022-06-06 Ver(1.2.1)
  - Added plot of full magnetic density vector
  - Bug Fix : Plot of sectional magnetic density vector 

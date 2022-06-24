@@ -67,7 +67,12 @@
             this.propertyGridMain = new System.Windows.Forms.PropertyGrid();
             this.splitterHorizontal = new System.Windows.Forms.Splitter();
             this.splitContainerRight = new System.Windows.Forms.SplitContainer();
+            this.panelMagnet = new System.Windows.Forms.Panel();
+            this.pictureBoxMagnet = new System.Windows.Forms.PictureBox();
+            this.messageListView = new gtLibrary.MessageListView();
+            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panelForce = new System.Windows.Forms.Panel();
+            this.buttonPlotFullDensity = new System.Windows.Forms.Button();
             this.buttonPlotSectionDensity = new System.Windows.Forms.Button();
             this.labelProgressForce = new System.Windows.Forms.Label();
             this.progressBarForce = new System.Windows.Forms.ProgressBar();
@@ -83,10 +88,6 @@
             this.textBoxForceX = new System.Windows.Forms.TextBox();
             this.pictureBoxForce = new System.Windows.Forms.PictureBox();
             this.buttonTestForce = new System.Windows.Forms.Button();
-            this.messageListView = new gtLibrary.MessageListView();
-            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.panelMagnet = new System.Windows.Forms.Panel();
-            this.pictureBoxMagnet = new System.Windows.Forms.PictureBox();
             this.panelEmpty = new System.Windows.Forms.Panel();
             this.pictureBoxOpenActuator = new System.Windows.Forms.PictureBox();
             this.panelSteel = new System.Windows.Forms.Panel();
@@ -108,7 +109,6 @@
             this.buttonLoadCurrentResult = new System.Windows.Forms.Button();
             this.pictureBoxCurrent = new System.Windows.Forms.PictureBox();
             this.buttonTestCurrent = new System.Windows.Forms.Button();
-            this.buttonPlotFullDensity = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerLeft)).BeginInit();
             this.splitContainerLeft.Panel1.SuspendLayout();
             this.splitContainerLeft.Panel2.SuspendLayout();
@@ -117,10 +117,10 @@
             this.splitContainerRight.Panel1.SuspendLayout();
             this.splitContainerRight.Panel2.SuspendLayout();
             this.splitContainerRight.SuspendLayout();
-            this.panelForce.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).BeginInit();
             this.panelMagnet.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMagnet)).BeginInit();
+            this.panelForce.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).BeginInit();
             this.panelEmpty.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).BeginInit();
             this.panelSteel.SuspendLayout();
@@ -450,6 +450,44 @@
             this.splitContainerRight.SplitterDistance = 557;
             this.splitContainerRight.TabIndex = 3;
             // 
+            // panelMagnet
+            // 
+            this.panelMagnet.Controls.Add(this.pictureBoxMagnet);
+            this.panelMagnet.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelMagnet.Location = new System.Drawing.Point(0, 0);
+            this.panelMagnet.Name = "panelMagnet";
+            this.panelMagnet.Size = new System.Drawing.Size(742, 553);
+            this.panelMagnet.TabIndex = 0;
+            // 
+            // pictureBoxMagnet
+            // 
+            this.pictureBoxMagnet.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBoxMagnet.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxMagnet.Image")));
+            this.pictureBoxMagnet.Location = new System.Drawing.Point(185, 60);
+            this.pictureBoxMagnet.Name = "pictureBoxMagnet";
+            this.pictureBoxMagnet.Size = new System.Drawing.Size(520, 400);
+            this.pictureBoxMagnet.TabIndex = 1;
+            this.pictureBoxMagnet.TabStop = false;
+            // 
+            // messageListView
+            // 
+            this.messageListView.BackColor = System.Drawing.Color.Ivory;
+            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderMessage});
+            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.messageListView.HideSelection = false;
+            this.messageListView.Location = new System.Drawing.Point(0, 0);
+            this.messageListView.Name = "messageListView";
+            this.messageListView.Size = new System.Drawing.Size(742, 178);
+            this.messageListView.TabIndex = 1;
+            this.messageListView.UseCompatibleStateImageBehavior = false;
+            this.messageListView.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeaderMessage
+            // 
+            this.columnHeaderMessage.Width = 732;
+            // 
             // panelForce
             // 
             this.panelForce.Controls.Add(this.buttonPlotFullDensity);
@@ -473,6 +511,16 @@
             this.panelForce.Name = "panelForce";
             this.panelForce.Size = new System.Drawing.Size(742, 553);
             this.panelForce.TabIndex = 0;
+            // 
+            // buttonPlotFullDensity
+            // 
+            this.buttonPlotFullDensity.Location = new System.Drawing.Point(25, 150);
+            this.buttonPlotFullDensity.Name = "buttonPlotFullDensity";
+            this.buttonPlotFullDensity.Size = new System.Drawing.Size(130, 45);
+            this.buttonPlotFullDensity.TabIndex = 22;
+            this.buttonPlotFullDensity.Text = "Plot Full B";
+            this.buttonPlotFullDensity.UseVisualStyleBackColor = true;
+            this.buttonPlotFullDensity.Click += new System.EventHandler(this.buttonPlotFullDensity_Click);
             // 
             // buttonPlotSectionDensity
             // 
@@ -606,44 +654,6 @@
             this.buttonTestForce.Text = "Force Test";
             this.buttonTestForce.UseVisualStyleBackColor = true;
             this.buttonTestForce.Click += new System.EventHandler(this.buttonTestForce_Click);
-            // 
-            // messageListView
-            // 
-            this.messageListView.BackColor = System.Drawing.Color.Ivory;
-            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderMessage});
-            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.messageListView.HideSelection = false;
-            this.messageListView.Location = new System.Drawing.Point(0, 0);
-            this.messageListView.Name = "messageListView";
-            this.messageListView.Size = new System.Drawing.Size(742, 178);
-            this.messageListView.TabIndex = 1;
-            this.messageListView.UseCompatibleStateImageBehavior = false;
-            this.messageListView.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeaderMessage
-            // 
-            this.columnHeaderMessage.Width = 732;
-            // 
-            // panelMagnet
-            // 
-            this.panelMagnet.Controls.Add(this.pictureBoxMagnet);
-            this.panelMagnet.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelMagnet.Location = new System.Drawing.Point(0, 0);
-            this.panelMagnet.Name = "panelMagnet";
-            this.panelMagnet.Size = new System.Drawing.Size(742, 553);
-            this.panelMagnet.TabIndex = 0;
-            // 
-            // pictureBoxMagnet
-            // 
-            this.pictureBoxMagnet.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBoxMagnet.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxMagnet.Image")));
-            this.pictureBoxMagnet.Location = new System.Drawing.Point(185, 60);
-            this.pictureBoxMagnet.Name = "pictureBoxMagnet";
-            this.pictureBoxMagnet.Size = new System.Drawing.Size(520, 400);
-            this.pictureBoxMagnet.TabIndex = 1;
-            this.pictureBoxMagnet.TabStop = false;
             // 
             // panelEmpty
             // 
@@ -858,16 +868,6 @@
             this.buttonTestCurrent.Text = "Current Test";
             this.buttonTestCurrent.UseVisualStyleBackColor = true;
             // 
-            // buttonPlotFullDensity
-            // 
-            this.buttonPlotFullDensity.Location = new System.Drawing.Point(25, 150);
-            this.buttonPlotFullDensity.Name = "buttonPlotFullDensity";
-            this.buttonPlotFullDensity.Size = new System.Drawing.Size(130, 45);
-            this.buttonPlotFullDensity.TabIndex = 22;
-            this.buttonPlotFullDensity.Text = "Plot Full B";
-            this.buttonPlotFullDensity.UseVisualStyleBackColor = true;
-            this.buttonPlotFullDensity.Click += new System.EventHandler(this.buttonPlotFullDensity_Click);
-            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -891,11 +891,11 @@
             this.splitContainerRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).EndInit();
             this.splitContainerRight.ResumeLayout(false);
+            this.panelMagnet.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMagnet)).EndInit();
             this.panelForce.ResumeLayout(false);
             this.panelForce.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).EndInit();
-            this.panelMagnet.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMagnet)).EndInit();
             this.panelEmpty.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).EndInit();
             this.panelSteel.ResumeLayout(false);

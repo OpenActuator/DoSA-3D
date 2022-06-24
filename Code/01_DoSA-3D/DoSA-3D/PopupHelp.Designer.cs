@@ -41,7 +41,7 @@
             // 
             // buttonHelpClose
             // 
-            this.buttonHelpClose.Location = new System.Drawing.Point(199, 314);
+            this.buttonHelpClose.Location = new System.Drawing.Point(223, 300);
             this.buttonHelpClose.Name = "buttonHelpClose";
             this.buttonHelpClose.Size = new System.Drawing.Size(111, 31);
             this.buttonHelpClose.TabIndex = 3;
@@ -57,7 +57,7 @@
             this.groupBoxHelp.Controls.Add(this.buttonVCMGuide);
             this.groupBoxHelp.Location = new System.Drawing.Point(13, 13);
             this.groupBoxHelp.Name = "groupBoxHelp";
-            this.groupBoxHelp.Size = new System.Drawing.Size(298, 222);
+            this.groupBoxHelp.Size = new System.Drawing.Size(321, 222);
             this.groupBoxHelp.TabIndex = 4;
             this.groupBoxHelp.TabStop = false;
             this.groupBoxHelp.Text = "Help";
@@ -66,7 +66,7 @@
             // 
             this.buttonOpenHelpDirectory.Location = new System.Drawing.Point(33, 172);
             this.buttonOpenHelpDirectory.Name = "buttonOpenHelpDirectory";
-            this.buttonOpenHelpDirectory.Size = new System.Drawing.Size(233, 31);
+            this.buttonOpenHelpDirectory.Size = new System.Drawing.Size(260, 31);
             this.buttonOpenHelpDirectory.TabIndex = 8;
             this.buttonOpenHelpDirectory.Text = "Open the help directory";
             this.buttonOpenHelpDirectory.UseVisualStyleBackColor = true;
@@ -76,7 +76,7 @@
             // 
             this.buttonDrawingGuide.Location = new System.Drawing.Point(33, 24);
             this.buttonDrawingGuide.Name = "buttonDrawingGuide";
-            this.buttonDrawingGuide.Size = new System.Drawing.Size(233, 30);
+            this.buttonDrawingGuide.Size = new System.Drawing.Size(260, 30);
             this.buttonDrawingGuide.TabIndex = 7;
             this.buttonDrawingGuide.Text = "Drawing Guide";
             this.buttonDrawingGuide.UseVisualStyleBackColor = true;
@@ -86,7 +86,7 @@
             // 
             this.buttonSolenoidGuide.Location = new System.Drawing.Point(33, 122);
             this.buttonSolenoidGuide.Name = "buttonSolenoidGuide";
-            this.buttonSolenoidGuide.Size = new System.Drawing.Size(233, 30);
+            this.buttonSolenoidGuide.Size = new System.Drawing.Size(260, 30);
             this.buttonSolenoidGuide.TabIndex = 5;
             this.buttonSolenoidGuide.Text = "Solenoid Example";
             this.buttonSolenoidGuide.UseVisualStyleBackColor = true;
@@ -96,7 +96,7 @@
             // 
             this.buttonVCMGuide.Location = new System.Drawing.Point(33, 73);
             this.buttonVCMGuide.Name = "buttonVCMGuide";
-            this.buttonVCMGuide.Size = new System.Drawing.Size(233, 30);
+            this.buttonVCMGuide.Size = new System.Drawing.Size(260, 30);
             this.buttonVCMGuide.TabIndex = 4;
             this.buttonVCMGuide.Text = "VCM Example";
             this.buttonVCMGuide.UseVisualStyleBackColor = true;
@@ -105,7 +105,7 @@
             // labelNotice2
             // 
             this.labelNotice2.AutoSize = true;
-            this.labelNotice2.Location = new System.Drawing.Point(25, 276);
+            this.labelNotice2.Location = new System.Drawing.Point(25, 271);
             this.labelNotice2.Name = "labelNotice2";
             this.labelNotice2.Size = new System.Drawing.Size(74, 12);
             this.labelNotice2.TabIndex = 8;
@@ -124,7 +124,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(322, 359);
+            this.ClientSize = new System.Drawing.Size(346, 343);
             this.Controls.Add(this.labelNotice2);
             this.Controls.Add(this.labelNotice1);
             this.Controls.Add(this.groupBoxHelp);

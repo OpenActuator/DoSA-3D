@@ -38,8 +38,6 @@
             this.buttonSettingOK = new System.Windows.Forms.Button();
             this.buttonSettingCancel = new System.Windows.Forms.Button();
             this.groupBoxETC = new System.Windows.Forms.GroupBox();
-            this.comboBoxActuatorType = new System.Windows.Forms.ComboBox();
-            this.labelActuatorType = new System.Windows.Forms.Label();
             this.comboBoxLanguage = new System.Windows.Forms.ComboBox();
             this.labelPercent = new System.Windows.Forms.Label();
             this.textBoxMeshSizePercent = new System.Windows.Forms.TextBox();
@@ -124,7 +122,7 @@
             // 
             // buttonSettingOK
             // 
-            this.buttonSettingOK.Location = new System.Drawing.Point(401, 213);
+            this.buttonSettingOK.Location = new System.Drawing.Point(401, 176);
             this.buttonSettingOK.Name = "buttonSettingOK";
             this.buttonSettingOK.Size = new System.Drawing.Size(114, 36);
             this.buttonSettingOK.TabIndex = 12;
@@ -134,7 +132,7 @@
             // 
             // buttonSettingCancel
             // 
-            this.buttonSettingCancel.Location = new System.Drawing.Point(401, 259);
+            this.buttonSettingCancel.Location = new System.Drawing.Point(401, 225);
             this.buttonSettingCancel.Name = "buttonSettingCancel";
             this.buttonSettingCancel.Size = new System.Drawing.Size(114, 36);
             this.buttonSettingCancel.TabIndex = 11;
@@ -144,8 +142,6 @@
             // 
             // groupBoxETC
             // 
-            this.groupBoxETC.Controls.Add(this.comboBoxActuatorType);
-            this.groupBoxETC.Controls.Add(this.labelActuatorType);
             this.groupBoxETC.Controls.Add(this.comboBoxLanguage);
             this.groupBoxETC.Controls.Add(this.labelPercent);
             this.groupBoxETC.Controls.Add(this.textBoxMeshSizePercent);
@@ -154,32 +150,10 @@
             this.groupBoxETC.Controls.Add(this.labelMeshSizePercent);
             this.groupBoxETC.Location = new System.Drawing.Point(12, 123);
             this.groupBoxETC.Name = "groupBoxETC";
-            this.groupBoxETC.Size = new System.Drawing.Size(346, 172);
+            this.groupBoxETC.Size = new System.Drawing.Size(346, 138);
             this.groupBoxETC.TabIndex = 13;
             this.groupBoxETC.TabStop = false;
             this.groupBoxETC.Text = "ETC";
-            // 
-            // comboBoxActuatorType
-            // 
-            this.comboBoxActuatorType.FormattingEnabled = true;
-            this.comboBoxActuatorType.Items.AddRange(new object[] {
-            "Solenoid",
-            "VCM",
-            "PMA"});
-            this.comboBoxActuatorType.Location = new System.Drawing.Point(158, 132);
-            this.comboBoxActuatorType.Name = "comboBoxActuatorType";
-            this.comboBoxActuatorType.Size = new System.Drawing.Size(105, 20);
-            this.comboBoxActuatorType.TabIndex = 8;
-            this.comboBoxActuatorType.Text = "Solenoid";
-            // 
-            // labelActuatorType
-            // 
-            this.labelActuatorType.AutoSize = true;
-            this.labelActuatorType.Location = new System.Drawing.Point(24, 135);
-            this.labelActuatorType.Name = "labelActuatorType";
-            this.labelActuatorType.Size = new System.Drawing.Size(92, 12);
-            this.labelActuatorType.TabIndex = 7;
-            this.labelActuatorType.Text = "Actuator Type :";
             // 
             // comboBoxLanguage
             // 
@@ -243,7 +217,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(527, 309);
+            this.ClientSize = new System.Drawing.Size(527, 271);
             this.Controls.Add(this.groupBoxETC);
             this.Controls.Add(this.groupBoxSetting);
             this.Controls.Add(this.buttonSettingOK);
@@ -278,7 +252,5 @@
         private System.Windows.Forms.Label labelMeshSize;
         private System.Windows.Forms.ComboBox comboBoxLanguage;
         private System.Windows.Forms.Label labelLanguage;
-        private System.Windows.Forms.ComboBox comboBoxActuatorType;
-        private System.Windows.Forms.Label labelActuatorType;
     }
 }

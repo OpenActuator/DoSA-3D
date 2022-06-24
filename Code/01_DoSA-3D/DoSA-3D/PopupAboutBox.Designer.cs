@@ -36,8 +36,8 @@
             this.labelCopyright = new System.Windows.Forms.Label();
             this.buttonClose = new System.Windows.Forms.Button();
             this.buttonLicense = new System.Windows.Forms.Button();
-            this.buttonDonation = new System.Windows.Forms.Button();
-            this.buttonHomepage = new System.Windows.Forms.Button();
+            this.buttonContribution = new System.Windows.Forms.Button();
+            this.buttonUpgrade = new System.Windows.Forms.Button();
             this.tableLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -166,36 +166,36 @@
             this.buttonLicense.UseVisualStyleBackColor = true;
             this.buttonLicense.Click += new System.EventHandler(this.buttonLicense_Click);
             // 
-            // buttonDonation
+            // buttonContribution
             // 
-            this.buttonDonation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonDonation.Font = new System.Drawing.Font("Gulim", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.buttonDonation.Location = new System.Drawing.Point(13, 446);
-            this.buttonDonation.Name = "buttonDonation";
-            this.buttonDonation.Size = new System.Drawing.Size(100, 35);
-            this.buttonDonation.TabIndex = 3;
-            this.buttonDonation.Text = "Donation";
-            this.buttonDonation.UseVisualStyleBackColor = true;
-            this.buttonDonation.Click += new System.EventHandler(this.buttonDonation_Click);
+            this.buttonContribution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonContribution.Font = new System.Drawing.Font("Gulim", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.buttonContribution.Location = new System.Drawing.Point(13, 446);
+            this.buttonContribution.Name = "buttonContribution";
+            this.buttonContribution.Size = new System.Drawing.Size(100, 35);
+            this.buttonContribution.TabIndex = 3;
+            this.buttonContribution.Text = "Contribution";
+            this.buttonContribution.UseVisualStyleBackColor = true;
+            this.buttonContribution.Click += new System.EventHandler(this.buttonDonation_Click);
             // 
-            // buttonHomepage
+            // buttonUpgrade
             // 
-            this.buttonHomepage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonHomepage.Location = new System.Drawing.Point(225, 446);
-            this.buttonHomepage.Name = "buttonHomepage";
-            this.buttonHomepage.Size = new System.Drawing.Size(100, 35);
-            this.buttonHomepage.TabIndex = 4;
-            this.buttonHomepage.Text = "Homepage";
-            this.buttonHomepage.UseVisualStyleBackColor = true;
-            this.buttonHomepage.Click += new System.EventHandler(this.buttonHomepage_Click);
+            this.buttonUpgrade.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonUpgrade.Location = new System.Drawing.Point(225, 446);
+            this.buttonUpgrade.Name = "buttonUpgrade";
+            this.buttonUpgrade.Size = new System.Drawing.Size(100, 35);
+            this.buttonUpgrade.TabIndex = 4;
+            this.buttonUpgrade.Text = "Upgrade";
+            this.buttonUpgrade.UseVisualStyleBackColor = true;
+            this.buttonUpgrade.Click += new System.EventHandler(this.buttonHomepage_Click);
             // 
             // PopupAboutBox
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(509, 492);
-            this.Controls.Add(this.buttonHomepage);
-            this.Controls.Add(this.buttonDonation);
+            this.Controls.Add(this.buttonUpgrade);
+            this.Controls.Add(this.buttonContribution);
             this.Controls.Add(this.buttonLicense);
             this.Controls.Add(this.buttonClose);
             this.Controls.Add(this.tableLayoutPanel);
@@ -225,7 +225,7 @@
         private System.Windows.Forms.TextBox textBoxOpenLicense;
         private System.Windows.Forms.Label labelVersion;
         private System.Windows.Forms.Label labelCopyright;
-        private System.Windows.Forms.Button buttonDonation;
-        private System.Windows.Forms.Button buttonHomepage;
+        private System.Windows.Forms.Button buttonContribution;
+        private System.Windows.Forms.Button buttonUpgrade;
     }
 }

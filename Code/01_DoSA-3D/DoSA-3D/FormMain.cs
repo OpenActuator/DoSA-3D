@@ -52,7 +52,7 @@ namespace DoSA
 
         public ResourceManager m_resManager = null;
         
-        private bool m_bFinishThread;
+        private bool m_bSolvingThread;
         private Thread m_addedThreadInMain;
 
         #endregion
@@ -118,7 +118,7 @@ namespace DoSA
                     m_strCommandLineDataFullName = strDataFileFullName;
             }
 
-            m_bFinishThread = false;
+            m_bSolvingThread = false;
             
             progressBarForce.Maximum = 20;
             progressBarForce.Minimum = 1;
@@ -135,10 +135,25 @@ namespace DoSA
             // 버전을 숫자로 변환할 때 DIGIT 의 기본 단위
             const double DIGIT_BASE_NUMBER = 100.0;
 
+            string strNewVersion = string.Empty;
+            bool bCheckMainSite = true;
+
             try
             {
-                // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
-                string strNewVersion = new WebClient().DownloadString("http://www.actuator.or.kr/DoSA_3D_Version.txt");
+                // 첫번째 버전 확인
+                strNewVersion = new WebClient().DownloadString("http://actuator.or.kr/DoSA_3D_Version.txt");
+            }
+            catch (WebException)
+            {
+                bCheckMainSite = false;
+            }
+
+            try
+            {
+                // 첫번째 버전 확인이 되지 않을 경우 두번째 버전 확인
+                // 두번째 버전 확인에서도 예외가 발생하면 버전 확인을 포기하고 프로그램이 실행된다.
+                if (bCheckMainSite == false)
+                    strNewVersion = new WebClient().DownloadString("https://solenoid.or.kr/openactuator/dosa_update/DoSA_3D_Version.txt");
 
                 string strAppDataPath = Environment.GetEnvironmentVariable("APPDATA");
                 string strSettingFilePath = Path.Combine(strAppDataPath, "DoSA-3D");
@@ -220,20 +235,25 @@ namespace DoSA
                 // 신규버전을 알리는 창을 띄운다.
                 if (bVersionCheckDialog == true)
                 {
-                    // 인터넷이 연결되지 않으면 예외가 발생하여 catch 로 넘어가고 프로그램이 실행된다.
-                    string strMainUpdateContents = new WebClient().DownloadString("http://www.actuator.or.kr/DoSA_3D_Update_Contents.txt");
+                    string strMainUpdateContents = string.Empty;
+
+                    if (bCheckMainSite == true)
+                        strMainUpdateContents = new WebClient().DownloadString("https://actuator.or.kr/DoSA_3D_Update_Contents.txt");
+                    else
+                        strMainUpdateContents = new WebClient().DownloadString("https://solenoid.or.kr/openactuator/dosa_update/DoSA_3D_Update_Contents.txt");
 
                     PopupNewVersion formNewVersion = new PopupNewVersion(strNewVersion, strProductVersion, strMainUpdateContents);
                     formNewVersion.StartPosition = FormStartPosition.CenterParent;
 
                     formNewVersion.ShowDialog();
 
-                    // 취소를 하면 버전 확인 상관없이 프로그램이 실행 된다.
+                    // 취소 버튼을 클릭 하는 경우
+                    // - 취소를 하면 버전 확인 상관없이 프로그램이 실행 된다.
                     if (formNewVersion.m_iStatus == 3)
                         return;
 
-                    // 프로그램을 종료 하고 다운로드 웹사이트로 이동한다.
-                    // 단, 프로그램을 업데이트하지 않으면 다시 알림 창이 뜬다.
+                    // 다운로드 페이지 버튼을 클릭하는 경우
+                    // - 프로그램을 종료 하고 다운로드 웹사이트로 이동한다. 단, 프로그램을 업데이트하지 않으면 다시 알림 창이 뜬다.
                     if (formNewVersion.m_iStatus == 1)
                     {
                         string target;
@@ -270,8 +290,9 @@ namespace DoSA
                         System.Windows.Forms.Application.ExitThread();
                         Environment.Exit(0);
                     }
-                    // formNewVersion.m_iStatus == 2 인 경우로 지금 New 버전에 대한 공지를 띄우지 않는 것이다.
-                    else
+                    // 해당 업데이트 알림 취소 버튼을 클릭하는 경우
+                    // - 해당 업데이트은 더 이상 알림을 띄우지 않는다
+                    else if (formNewVersion.m_iStatus == 2)
                     {
                         List<string> listStirng = new List<string>();
                         listStirng.Add(strNewVersion);
@@ -335,17 +356,20 @@ namespace DoSA
         {
             try
             {
+                string strAppDataDirPath = Environment.GetEnvironmentVariable("APPDATA");
+                string strSettingDirPath = Path.Combine(strAppDataDirPath, "DoSA-3D");
+
                 //-----------------------------------------------------------------------------
                 // Notice 동작을 위해 우선 실행한다.
                 //-----------------------------------------------------------------------------
                 // Log 디렉토리가 없으면 생성 한다.
-                string strLogDirName = Path.Combine(CSettingData.m_strProgramDirPath, "Log");
+                string strLogDirPath = Path.Combine(strSettingDirPath, "Log");
 
-                if (m_manageFile.isExistDirectory(strLogDirName) == false)
-                    m_manageFile.createDirectory(strLogDirName);
+                if (m_manageFile.isExistDirectory(strLogDirPath) == false)
+                    m_manageFile.createDirectory(strLogDirPath);
 
-                // 출력방향을 결정함 (아래 코드가 동작하면 파일 출력, 동작하지 않으면 Output 창 출력)
-                Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(CSettingData.m_strProgramDirPath, "Log", DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".Log")));
+                //출력방향을 결정함(아래 코드가 동작하면 파일 출력, 동작하지 않으면 Output 창 출력)
+                Trace.Listeners.Add(new TextWriterTraceListener(Path.Combine(strLogDirPath, DateTime.Now.ToString("yyyyMMdd_HH_mm_ss") + ".Log")));
 
                 // 이벤트 생성 부
                 // 
@@ -379,9 +403,6 @@ namespace DoSA
                     Environment.Exit(0);
                 }
 
-                // 설치버전을 확인 한다.
-                checkDoSAVersion();
-
                 //=====================================================================
                 // 2023-03-18일 까지 코드를 유지하고 이후는 삭제한다
                 //=====================================================================
@@ -403,9 +424,6 @@ namespace DoSA
                     Environment.Exit(0);
                 }
 
-
-                string strAppDataDirPath = Environment.GetEnvironmentVariable("APPDATA");
-                string strSettingDirPath = Path.Combine(strAppDataDirPath, "DoSA-3D");
 
                 if (m_manageFile.isExistDirectory(strSettingDirPath) == false)
                     m_manageFile.createDirectory(strSettingDirPath);
@@ -571,6 +589,7 @@ namespace DoSA
             propertyGridMain.SelectedObject = null;
         }
         #endregion
+
 
         #region--------------------- Ribbon Menu ---------------------------
 
@@ -1662,6 +1681,8 @@ namespace DoSA
 
             if (forceTest == null) return;
 
+            if (m_bSolvingThread == true) return;
+
             plotForceResult(forceTest);
         }
                 
@@ -1696,14 +1717,23 @@ namespace DoSA
 
                     m_manageFile.deleteDirectory(strTestDirName);
                     Thread.Sleep(200);
-
-                    /// VCM Type 으로 해석이 되어 자기력 정확도 개선용으로 사용되는 전류가 0인 시험이 있다면 같이 삭제한다.
-                    if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
-                    {
-                        m_manageFile.deleteDirectory(strTestZeroDirName);
-                        Thread.Sleep(200);
-                    }
                 }
+
+                /// 정확도 개선 전류 Zero 디렉토리가 있다면 위에서 해석을 지우는 것으로 결정했기 때문에 무조건 삭제한다.
+                if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
+                {
+                    m_manageFile.deleteDirectory(strTestZeroDirName);
+                    Thread.Sleep(200);
+                }
+
+                // 사용자 메시지를 초기화 한다.
+                messageListView.clearMessage();
+
+                // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.printUserMessage(strTestName + "의 자기력 실험을 시작합니다.");
+                else
+                    CNotice.printUserMessage("The magnetic force test of " + strTestName + " begins.");
 
                 // 시험 디렉토리를 생성한다.
                 m_manageFile.createDirectory(strTestDirName);
@@ -1729,14 +1759,8 @@ namespace DoSA
                     return;
                 }
 
-                // 전류가 인가된 자속밀도 Vector 결과를 확인한다.
-                // 순서 주의 
-                // - VCM 자기력 보정 해석전에 호출해야 한다.
-                showSectionMagneticDensity(strTestDirName);
-
-                /// 영구자석이 포함된 VCM 방식인 경우는 자기력의 정확도가 크게 떨어진다.
-                /// 정확도를 높이는 방안으로 전류가 인가되었을 때와 인가되지 않았을 때의 자기력차로 자기력을 표현한다.
-                if (forceTest.ActuatorType == EMActuatorType.VCM)
+                // 영구자석이 포함된 경우는 정확도 개선을 위해서 무조건 전류 Zero 해석을 진행한다.
+                if (m_design.isExistMagnet() == true)
                 {
                     // 함수 내부에서 오류가 있으면 알림이 발생하기 때문에 여기서는 알림없이 바로 리턴한다.  
                     if (false == startSolveForceThread(forceTest, true))
@@ -1758,14 +1782,17 @@ namespace DoSA
                     }
                 }
 
-                // 자기력 결과를 읽어드린다.
+                saveSectionMagneticDensityImage(strTestDirName);
+
+                // 영구자석이 포함되어 있다면 수정된 자기력이 표시된다.
+                // 순서 주의
+                // saveSectionMagneticDensityImage() 사용 후에 호출해야 한다.
                 plotForceResult(forceTest);
 
                 // Result 버튼이 동작하게 한다.
                 buttonPlotSectionDensity.Enabled = true;
                 buttonPlotFullDensity.Enabled = true;
                 buttonLoadForceResult.Enabled = true;
-
             }
             catch (Exception ex)
             {
@@ -1773,7 +1800,7 @@ namespace DoSA
             }
         }
 
-        private bool showSectionMagneticDensity(string strTestDirName)            
+        private bool saveSectionMagneticDensityImage(string strTestDirName)
         {
             string strArguments;
 
@@ -1813,6 +1840,54 @@ namespace DoSA
                 // Gmsh 가 실행되고 기다리지 않기 때문에 
                 // Gmsh Script 실행 후 3 초 동안 Density Vector 이미지 파일이 생성될 때 까지 기다린다.
                 m_manageFile.waitForFileInOtherThread(strImageFileFullName, 3000);
+
+                // [주의사항]
+                // Image.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
+                //Thread.Sleep(500);
+                //m_manageFile.deleteFile(strImageScriptFileFullName);
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+            }
+
+            return true;
+        }
+
+        private bool showSectionMagneticDensity(string strTestDirName)
+        {
+            string strArguments;
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Part.geo");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+
+            try
+            {
+                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
+                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+
+                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
+                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
+                }
+                else
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
+                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+                }
+
+                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
+                CScript.runScript(strGmshExeFileFullName, strArguments, false);
 
                 // [주의사항]
                 // Image.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
@@ -1999,7 +2074,7 @@ namespace DoSA
                 if (false == isForceTestOK(forceTest))
                     return;
 
-                m_bFinishThread = true;
+                m_bSolvingThread = true;
 
                 /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
                 CForceTest forceTestZeroCurrent = forceTest.Clone();
@@ -2016,7 +2091,7 @@ namespace DoSA
                 // - 여기서는 사용하지 않고 solveForce() 안에서 부여한다.
                 //Thread.Sleep(3000);
 
-                m_bFinishThread = false;
+                m_bSolvingThread = false;
             }
             catch (Exception ex)
             {
@@ -2037,7 +2112,7 @@ namespace DoSA
                 if (false == isForceTestOK(forceTest))
                     return;
 
-                m_bFinishThread = true;
+                m_bSolvingThread = true;
 
                 // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
                 solveForce(forceTest, true);
@@ -2047,7 +2122,7 @@ namespace DoSA
                 // - 여기서는 사용하지 않고 solveForce() 안에서 부여한다.
                 //Thread.Sleep(3000);
 
-                m_bFinishThread = false;
+                m_bSolvingThread = false;
             }
             catch (Exception ex)
             {
@@ -2097,16 +2172,6 @@ namespace DoSA
                 int nProgressBarValue = 0;
                 int nProgressIncreaseValue = 1;
 
-                // 사용자 메시지를 초기화 한다.
-                messageListView.clearMessage();
-
-                // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
-                if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                    CNotice.printUserMessage(strTestName + "의 자기력 실험이 시작 됩니다.");
-                else
-                    CNotice.printUserMessage("The magnetic force test of " + strTestName + " begins.");
-
-                m_bFinishThread = true;
                 m_addedThreadInMain.IsBackground = true;
                 m_addedThreadInMain.Start();
 
@@ -2140,7 +2205,7 @@ namespace DoSA
 
                     nProgressIncreaseValue++;
 
-                } while (m_bFinishThread == true);
+                } while (m_bSolvingThread == true);
 
                 stopSolveForceThread();
 
@@ -2206,6 +2271,33 @@ namespace DoSA
                 m_addedThreadInMain.Interrupt();
                 m_addedThreadInMain = null;
             }
+        }
+
+        private void buttonPlotSectionDensity_Click(object sender, EventArgs e)
+        {
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
+
+            if (forceTest == null) return;
+
+            if (m_bSolvingThread == true) return;
+
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
+
+            showSectionMagneticDensity(strTestDirName);
+        }
+
+
+        private void buttonPlotFullDensity_Click(object sender, EventArgs e)
+        {
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
+
+            if (forceTest == null) return;
+
+            if (m_bSolvingThread == true) return;
+
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
+
+            showFullMagneticDensity(strTestDirName);
         }
 
         #endregion
@@ -3128,7 +3220,7 @@ namespace DoSA
             }
 
             // Thread 가 동작중이면 동작을 멈춘다.
-            if (m_bFinishThread == true)
+            if (m_bSolvingThread == true)
                 stopSolveForceThread();
 
             int nCount = 0;
@@ -3141,7 +3233,7 @@ namespace DoSA
                 Thread.Sleep(TIME_STEP_ms);
                 nCount++;
 
-            } while (m_bFinishThread == true && nCount < 100);
+            } while (m_bSolvingThread == true && nCount < 100);
 
             // 그래도 종료하지 않은 getdp 가 있다면 강제로 종료한다.
             if (CManageProcess.isRunProcesses("getdp") == true)
@@ -3154,6 +3246,14 @@ namespace DoSA
         {
             try
             {
+                // 설치버전을 확인 한다.
+                // - 버전 확인은 프로그램 동작과 상관없이 진행되기 때문에 Thread 로 실행한다.
+                // - FormMain_Shown() 에서 실행해서 
+                //   Main 화면이 열린 후 동작함으로써 메시지 창이 앞으로 위치하도록 한다
+                Thread threadVersionCheck = new Thread(new ThreadStart(checkDoSAVersion));
+                threadVersionCheck.IsBackground = true;
+                threadVersionCheck.Start();
+
                 // 커멘드 파라메터로 디자인 파일명이 넘어오지 않은 경우는 바로 리턴한다.
                 if (m_strCommandLineDesignFullName == string.Empty)
                     return;
@@ -3204,7 +3304,36 @@ namespace DoSA
             }
         }
 
+        private void pictureBoxOpenActuator_Click(object sender, EventArgs e)
+        {
+            string target = "http://openactuator.org";
+
+            try
+            {
+                System.Diagnostics.Process.Start(target);
+            }
+            catch (System.ComponentModel.Win32Exception noBrowser)
+            {
+                if (noBrowser.ErrorCode == -2147467259)
+                    CNotice.printLog(noBrowser.Message);
+            }
+            catch (System.Exception other)
+            {
+                CNotice.printLog(other.Message);
+            }
+        }
+        private void pictureBoxOpenActuator_MouseLeave(object sender, EventArgs e)
+        {
+            this.Cursor = Cursors.Default;
+        }
+
+        private void pictureBoxOpenActuator_MouseEnter(object sender, EventArgs e)
+        {
+            this.Cursor = Cursors.Hand;
+        }
+
         #endregion
+
 
         #region----------------------- 가상시험 관련 -------------------------------
 
@@ -3284,45 +3413,25 @@ namespace DoSA
 
             try
             {
+                // 전류 인가 해석 결과
                 if (false == getForceResult(strTestName, ref dForceX, ref dForceY, ref dForceZ))
                     return;
 
-                if(forceTest.ActuatorType == EMActuatorType.VCM)
+                // 만약 전류 zero 해석 결과가 있으면 자기력을 수정하여 정확도를 높인다.
+                if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
                 {
-                    bool bVCMSolveError = false;
-
-                    /// 영구자석이 포함된 자기회로의 정확도를 높이기위한 전류 0 시험이 존재하는 지를 확인한다.
-                    /// 전류를 인가했을 때와 하지 않았을 때의 자기력 차를 자기력으로 사용한다.
-                    if (m_manageFile.isExistDirectory(strTestZeroDirName) == true)
+                    // 전류 zero 해석 결과
+                    if (true == getForceResult(strTestZeroName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ))
                     {
-                        if (true == getForceResult(strTestZeroName, ref dZeroForceX, ref dZeroForceY, ref dZeroForceZ))
-                        {
-                            dForceX = dForceX - dZeroForceX;
-                            dForceY = dForceY - dZeroForceY;
-                            dForceZ = dForceZ - dZeroForceZ;
-                        }
-                        else
-                            bVCMSolveError = true;
-
+                        dForceX = dForceX - dZeroForceX;
+                        dForceY = dForceY - dZeroForceY;
+                        dForceZ = dForceZ - dZeroForceZ;
                     }
-                    else
-                        bVCMSolveError = true;
-
-                    if(bVCMSolveError == true)
-                    {
-                        if(CSettingData.m_emLanguage == EMLanguage.Korean)
-                            CNotice.noticeWarning("VCM Type 는\nZero Current를 포함해 2회 해석을 진행해야 합니다.");
-                        else
-                            CNotice.noticeWarning("VCM Type\nshould be analyzed twice including Zero Current.");
-
-                        return;
-                    }                
                 }
 
                 textBoxForceX.Text = string.Format("{0:0.0000}", dForceX);
                 textBoxForceY.Text = string.Format("{0:0.0000}", dForceY);
                 textBoxForceZ.Text = string.Format("{0:0.0000}", dForceZ);
-
 
                 if (m_manageFile.isExistFile(strDensityImageFileFullName) == true)
                 {
@@ -3339,8 +3448,7 @@ namespace DoSA
                 {
                     CNotice.noticeWarningID("TINR");
                     return;
-                }
- 
+                } 
             }
             catch (Exception ex)
             {
@@ -3832,7 +3940,6 @@ namespace DoSA
                         
                         // 생성될 때 환경설정의 조건으로 초기화한다.
                         forceTest.MeshSizePercent = CSettingData.m_dMeshLevelPercent;
-                        forceTest.ActuatorType = CSettingData.m_emActuatorType;
                         
                         bRet = m_design.addNode(forceTest);
                         break;
@@ -4403,55 +4510,5 @@ namespace DoSA
 
         #endregion
 
-        private void pictureBoxOpenActuator_Click(object sender, EventArgs e)
-        {
-            string target = "http://openactuator.org";
-
-            try
-            {
-                System.Diagnostics.Process.Start(target);
-            }
-            catch (System.ComponentModel.Win32Exception noBrowser)
-            {
-                if (noBrowser.ErrorCode == -2147467259)
-                    CNotice.printLog(noBrowser.Message);
-            }
-            catch (System.Exception other)
-            {
-                CNotice.printLog(other.Message);
-            }
-        }
-
-        private void buttonPlotSectionDensity_Click(object sender, EventArgs e)
-        {
-            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
-
-            if (forceTest == null) return;
-
-            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
-
-            showSectionMagneticDensity(strTestDirName);
-        }
-
-        private void pictureBoxOpenActuator_MouseLeave(object sender, EventArgs e)
-        {
-            this.Cursor = Cursors.Default;
-        }
-
-        private void pictureBoxOpenActuator_MouseEnter(object sender, EventArgs e)
-        {
-            this.Cursor = Cursors.Hand;
-        }
-
-        private void buttonPlotFullDensity_Click(object sender, EventArgs e)
-        {
-            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
-
-            if (forceTest == null) return;
-
-            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
-
-            showFullMagneticDensity(strTestDirName);
-        }
     }
 }

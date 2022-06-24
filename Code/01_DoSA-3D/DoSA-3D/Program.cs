@@ -60,8 +60,6 @@ namespace DoSA
 
         public static EMLanguage m_emLanguage { get; set; }
 
-        public static EMActuatorType m_emActuatorType { get; set; }
-
 		// 내부 사용변수
 		// - 프로그램이 실행될때 초기화하여 내부에서 사용한다.
 		public static string m_strProgramDirPath { get; set; }
@@ -93,7 +91,12 @@ namespace DoSA
             if (bCheck == false)
             {
                 if (bOpenNoticeDialog == true)
-                    CNotice.noticeWarningID("TEFD");
+                {
+                    if(CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("Gmsh.exe 가 존재하지 않습니다.");
+                    else
+                        CNotice.noticeWarning("Gmsh.exe does not exist.");
+                }                    
                 else
                     CNotice.printLogID("TEFD");
 
@@ -149,15 +152,12 @@ namespace DoSA
         public double m_dMeshLevelPercent { get; set; }
         public EMLanguage m_emLanguage { get; set; }
 
-        public EMActuatorType m_emActuatorType { get; set; }
-
         public void copyCloneToSettingData()
         {
             CSettingData.m_strBaseWorkingDirPath = m_strWorkingDirName;
             CSettingData.m_strGmshExeFileFullName = m_strGmshExeFileFullName;
             CSettingData.m_dMeshLevelPercent = m_dMeshLevelPercent;
             CSettingData.m_emLanguage = m_emLanguage;
-            CSettingData.m_emActuatorType = m_emActuatorType;
         }
 
         public void copySettingDataToClone()
@@ -166,7 +166,6 @@ namespace DoSA
             m_strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
             m_dMeshLevelPercent = CSettingData.m_dMeshLevelPercent;
             m_emLanguage = CSettingData.m_emLanguage;
-            m_emActuatorType = CSettingData.m_emActuatorType;
         }        
     }
 }

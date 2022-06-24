@@ -21,13 +21,6 @@ namespace Tests
         X_Force
     }
 
-    public enum EMActuatorType
-    {
-        Solenoid,
-        VCM,
-        PMA
-    };
-
     //------------------------------------------------------------------------------------------
     // 측정조건에 대해 Node 들을 만들고 성능결과를 얻고 싶을 때 개발자에게 측정 조건의 입력을 요청한다 
     //------------------------------------------------------------------------------------------
@@ -36,15 +29,10 @@ namespace Tests
         [DisplayNameAttribute("Mesh Size [%]"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Mesh Size / Shape Length * 100")]
         public double MeshSizePercent { get; set; }
 
-        [DisplayNameAttribute("Actuator Type"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Actuator Type")]
-        public EMActuatorType ActuatorType { get; set; }
-
         public CTest()
         {
             // MeshSizePercent 와 Type 이 없는 이전 파일버전 인 경우는 아래의 값으로 초기화된다.
             MeshSizePercent = 7;
-
-            ActuatorType = EMActuatorType.Solenoid;
         }
 
     }
@@ -107,7 +95,6 @@ namespace Tests
 
                 // CTest
                 writeFile.writeDataLine(writeStream, "MeshSizePercent", MeshSizePercent, nLevel + 1);
-                writeFile.writeDataLine(writeStream, "ActuatorType", ActuatorType, nLevel + 1);
 
                 // CForceTest
                 writeFile.writeDataLine(writeStream, "Voltage", Voltage, nLevel + 1);
@@ -169,10 +156,6 @@ namespace Tests
                             MeshSizePercent = Convert.ToDouble(arrayString[1]);
                             break;
 
-                        case "ActuatorType":
-                            ActuatorType = (EMActuatorType)Enum.Parse(typeof(EMActuatorType), arrayString[1]);
-                            break;
-
                         // CForceTest
                         case "Voltage":
                             Voltage = Convert.ToDouble(arrayString[1]);
@@ -228,7 +211,6 @@ namespace Tests
             forceTest.NodeName = this.NodeName;
             forceTest.Voltage = this.Voltage;
             forceTest.MeshSizePercent = this.MeshSizePercent;
-            forceTest.ActuatorType = this.ActuatorType;
 
             return forceTest;
         }

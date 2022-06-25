@@ -55,6 +55,8 @@ namespace DoSA
         private bool m_bSolvingThread;
         private Thread m_addedThreadInMain;
 
+        private CForceTest m_startedForceTest = null;
+
         #endregion
 
         #region----------------------- 프로그램 초기화 --------------------------
@@ -1773,6 +1775,8 @@ namespace DoSA
                     return;
                 }
 
+                saveSectionMagneticDensityImage(strTestDirName);
+
                 // 영구자석이 포함된 경우는 정확도 개선을 위해서 무조건 전류 Zero 해석을 진행한다.
                 if (m_design.isExistMagnet() == true)
                 {
@@ -1795,8 +1799,6 @@ namespace DoSA
                         return;
                     }
                 }
-
-                saveSectionMagneticDensityImage(strTestDirName);
 
                 // 영구자석이 포함되어 있다면 수정된 자기력이 표시된다.
                 // 순서 주의
@@ -2084,21 +2086,21 @@ namespace DoSA
         public void threadProcForZeroCurrent()
         {
             try 
-            { 
-                CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
-
-                if (forceTest == null) return;
+            {
+                // 트리에서 읽어서 사용하면 해석중에 변경이 가능하기 때문에
+                // 해석이 시작할 때 저장해둔 ForceTest 를 사용한다.
+                if (m_startedForceTest == null) return;
 
                 // 해석 전에 전처리 조건을 확인한다.
-                if (false == isForceTestOK(forceTest))
+                if (false == isForceTestOK(m_startedForceTest))
                     return;
 
                 m_bSolvingThread = true;
 
                 /// 얕은 복사가 되지 않고 깊은 복사가 되도록 Clone() 를 정의하고 사용했다.
-                CForceTest forceTestZeroCurrent = forceTest.Clone();
+                CForceTest forceTestZeroCurrent = m_startedForceTest.Clone();
 
-                forceTestZeroCurrent.NodeName = forceTest.NodeName + "_Zero";
+                forceTestZeroCurrent.NodeName = m_startedForceTest.NodeName + "_Zero";
                 // 해석에 사용되는 전류값은 전압과 저항으로 다시 계산되기 때문에 전류 값을 0으로 하지않고 전압 값을 0으로 설정한다.
                 forceTestZeroCurrent.Voltage = 0.0f;
 
@@ -2123,18 +2125,18 @@ namespace DoSA
         {
             try 
             {
-                CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
-
-                if (forceTest == null) return;
+                // 트리에서 읽어서 사용하면 해석중에 변경이 가능하기 때문에
+                // 해석이 시작할 때 저장해둔 ForceTest 를 사용한다.
+                if (m_startedForceTest == null) return;
 
                 // 해석 전에 전처리 조건을 확인한다.
-                if (false == isForceTestOK(forceTest))
+                if (false == isForceTestOK(m_startedForceTest))
                     return;
 
                 m_bSolvingThread = true;
 
                 // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
-                solveForce(forceTest, true);
+                solveForce(m_startedForceTest, true);
 
                 // - m_bFinishThread = false 전에
                 //   solveForce() 안 GetDP 의 Log 파일이나 해석 결과 저장을 여유있게 할 시간을 부여한다.
@@ -2191,6 +2193,9 @@ namespace DoSA
                 int nProgressBarValue = 0;
                 int nProgressIncreaseValue = 1;
 
+                // Thread 에서 사용할 forceTest 를 전역으로 저장해 둔다.
+                m_startedForceTest = forceTest;
+
                 m_addedThreadInMain.IsBackground = true;
                 m_addedThreadInMain.Start();
 
@@ -2228,6 +2233,9 @@ namespace DoSA
 
                 stopSolveForceThread();
 
+                // Thread 가 완료되면 전역으로 사용하는 force test 를 비워둔다.
+                m_startedForceTest = null;
+
                 progressBarForce.Value = progressBarForce.Minimum;
                 progressBarForce.Hide();
                 labelProgressForce.Hide();
@@ -2238,19 +2246,6 @@ namespace DoSA
                 if (true == printLogMessage(strTestDirName, ref nStartLineNumber, ref nProgressBarValue))
                     bErrorOccurred = true;
 
-                if (m_manageFile.isExistFile(strBVectorFileFullName) == false)
-                {
-                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeError("자기력 해석 결과가 존재하지 않습니다.\n메시지 창에서 확인하세요.", "오류 발생");
-                    else
-                        CNotice.noticeError("Magnetic force analysis result does not exist.\nCheck in the message window.", "Error");
-
-                    if (true == m_manageFile.isExistFile(strBVectorImageFileFullName))
-                        m_manageFile.deleteFile(strBVectorImageFileFullName);
-
-                    return false;
-                }
-
                 if(bErrorOccurred == true)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
@@ -2258,13 +2253,17 @@ namespace DoSA
                     else
                         CNotice.noticeError("An error occurred during magnetic force analysis.\nCheck in the message window.", "Error");
 
-                    // 해석 오류가 발생했는데도 B VectorFile 과 이미지 생성되면
-                    // B Vector 버튼과 Force 버튼이 활성화 되기 때문에 삭제한다. 
-                    if (true == m_manageFile.isExistFile(strBVectorFileFullName))
-                        m_manageFile.deleteFile(strBVectorFileFullName);
+                    // 전류 인가 해석에서만 사용된다.
+                    if(bZeroCurrent == false)
+                    {
+                        // 해석 오류가 발생했는데도 B VectorFile 과 이미지 생성되면
+                        // B Vector 버튼과 Force 버튼이 활성화 되기 때문에 삭제한다. 
+                        if (true == m_manageFile.isExistFile(strBVectorFileFullName))
+                            m_manageFile.deleteFile(strBVectorFileFullName);
 
-                    if (true == m_manageFile.isExistFile(strBVectorImageFileFullName))
-                        m_manageFile.deleteFile(strBVectorImageFileFullName);
+                        if (true == m_manageFile.isExistFile(strBVectorImageFileFullName))
+                            m_manageFile.deleteFile(strBVectorImageFileFullName);
+                    }
 
                     return false; 
                 }

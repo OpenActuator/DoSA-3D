@@ -22,8 +22,8 @@ namespace Parts
 
     public enum EMCurrentDirection
     {
-        IN,
-        OUT
+        CounterClockwise,   //IN,
+        Clockwise           //OUT
     };
 
     public enum EMMoving
@@ -165,7 +165,7 @@ namespace Parts
             KindKey = EMKind.COIL;
             m_strMaterial = "Copper";            
                         
-            CurrentDirection = EMCurrentDirection.IN;
+            CurrentDirection = EMCurrentDirection.CounterClockwise;
             CoilWireGrade = EMCoilWireGrade.Enameled_IEC_Grade_2;
 
             // double 형의 PropertyGrid 값을 float 형로 초기화 하면 소수점 문제가 발생한다.
@@ -487,7 +487,7 @@ namespace Parts
                     strTemp = strLine.Trim('\t');
 
                     arrayString = strTemp.Split('=');
-                  
+
 
                     switch (arrayString[0])
                     {
@@ -511,6 +511,10 @@ namespace Parts
                             break;
 
                         case "CurrentDirection":
+                            /// 2022-06-25 : 하위 호환 유지
+                            if (arrayString[1] == "IN") arrayString[1] = "CounterClockwise";
+                            else if (arrayString[1] == "OUT") arrayString[1] = "Clockwise";
+
                             CurrentDirection = (EMCurrentDirection)Enum.Parse(typeof(EMCurrentDirection), arrayString[1]);
                             break;
 

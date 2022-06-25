@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea5 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea6 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             this.ribbonToolbar = new System.Windows.Forms.Ribbon();
             this.ribbonOrbMenuItemNew = new System.Windows.Forms.RibbonOrbMenuItem();
             this.ribbonOrbMenuItemOpen = new System.Windows.Forms.RibbonOrbMenuItem();
@@ -67,10 +67,12 @@
             this.propertyGridMain = new System.Windows.Forms.PropertyGrid();
             this.splitterHorizontal = new System.Windows.Forms.Splitter();
             this.splitContainerRight = new System.Windows.Forms.SplitContainer();
-            this.panelMagnet = new System.Windows.Forms.Panel();
-            this.pictureBoxMagnet = new System.Windows.Forms.PictureBox();
+            this.panelEmpty = new System.Windows.Forms.Panel();
+            this.pictureBoxOpenActuator = new System.Windows.Forms.PictureBox();
             this.messageListView = new gtLibrary.MessageListView();
             this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.panelMagnet = new System.Windows.Forms.Panel();
+            this.pictureBoxMagnet = new System.Windows.Forms.PictureBox();
             this.panelForce = new System.Windows.Forms.Panel();
             this.buttonPlotFullDensity = new System.Windows.Forms.Button();
             this.buttonPlotSectionDensity = new System.Windows.Forms.Button();
@@ -88,8 +90,6 @@
             this.textBoxForceX = new System.Windows.Forms.TextBox();
             this.pictureBoxForce = new System.Windows.Forms.PictureBox();
             this.buttonTestForce = new System.Windows.Forms.Button();
-            this.panelEmpty = new System.Windows.Forms.Panel();
-            this.pictureBoxOpenActuator = new System.Windows.Forms.PictureBox();
             this.panelSteel = new System.Windows.Forms.Panel();
             this.chartBHCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.panelCoil = new System.Windows.Forms.Panel();
@@ -117,12 +117,12 @@
             this.splitContainerRight.Panel1.SuspendLayout();
             this.splitContainerRight.Panel2.SuspendLayout();
             this.splitContainerRight.SuspendLayout();
+            this.panelEmpty.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).BeginInit();
             this.panelMagnet.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMagnet)).BeginInit();
             this.panelForce.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).BeginInit();
-            this.panelEmpty.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).BeginInit();
             this.panelSteel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartBHCurve)).BeginInit();
             this.panelCoil.SuspendLayout();
@@ -450,24 +450,27 @@
             this.splitContainerRight.SplitterDistance = 557;
             this.splitContainerRight.TabIndex = 3;
             // 
-            // panelMagnet
+            // panelEmpty
             // 
-            this.panelMagnet.Controls.Add(this.pictureBoxMagnet);
-            this.panelMagnet.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelMagnet.Location = new System.Drawing.Point(0, 0);
-            this.panelMagnet.Name = "panelMagnet";
-            this.panelMagnet.Size = new System.Drawing.Size(742, 553);
-            this.panelMagnet.TabIndex = 0;
+            this.panelEmpty.Controls.Add(this.pictureBoxOpenActuator);
+            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
+            this.panelEmpty.Name = "panelEmpty";
+            this.panelEmpty.Size = new System.Drawing.Size(742, 553);
+            this.panelEmpty.TabIndex = 0;
+            this.panelEmpty.Resize += new System.EventHandler(this.panelEmpty_Resize);
             // 
-            // pictureBoxMagnet
+            // pictureBoxOpenActuator
             // 
-            this.pictureBoxMagnet.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pictureBoxMagnet.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxMagnet.Image")));
-            this.pictureBoxMagnet.Location = new System.Drawing.Point(185, 60);
-            this.pictureBoxMagnet.Name = "pictureBoxMagnet";
-            this.pictureBoxMagnet.Size = new System.Drawing.Size(520, 400);
-            this.pictureBoxMagnet.TabIndex = 1;
-            this.pictureBoxMagnet.TabStop = false;
+            this.pictureBoxOpenActuator.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxOpenActuator.Image")));
+            this.pictureBoxOpenActuator.Location = new System.Drawing.Point(197, 232);
+            this.pictureBoxOpenActuator.Name = "pictureBoxOpenActuator";
+            this.pictureBoxOpenActuator.Size = new System.Drawing.Size(348, 75);
+            this.pictureBoxOpenActuator.TabIndex = 1;
+            this.pictureBoxOpenActuator.TabStop = false;
+            this.pictureBoxOpenActuator.Click += new System.EventHandler(this.pictureBoxOpenActuator_Click);
+            this.pictureBoxOpenActuator.MouseEnter += new System.EventHandler(this.pictureBoxOpenActuator_MouseEnter);
+            this.pictureBoxOpenActuator.MouseLeave += new System.EventHandler(this.pictureBoxOpenActuator_MouseLeave);
             // 
             // messageListView
             // 
@@ -487,6 +490,25 @@
             // columnHeaderMessage
             // 
             this.columnHeaderMessage.Width = 732;
+            // 
+            // panelMagnet
+            // 
+            this.panelMagnet.Controls.Add(this.pictureBoxMagnet);
+            this.panelMagnet.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelMagnet.Location = new System.Drawing.Point(0, 0);
+            this.panelMagnet.Name = "panelMagnet";
+            this.panelMagnet.Size = new System.Drawing.Size(742, 553);
+            this.panelMagnet.TabIndex = 0;
+            // 
+            // pictureBoxMagnet
+            // 
+            this.pictureBoxMagnet.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pictureBoxMagnet.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxMagnet.Image")));
+            this.pictureBoxMagnet.Location = new System.Drawing.Point(185, 60);
+            this.pictureBoxMagnet.Name = "pictureBoxMagnet";
+            this.pictureBoxMagnet.Size = new System.Drawing.Size(520, 400);
+            this.pictureBoxMagnet.TabIndex = 1;
+            this.pictureBoxMagnet.TabStop = false;
             // 
             // panelForce
             // 
@@ -655,27 +677,6 @@
             this.buttonTestForce.UseVisualStyleBackColor = true;
             this.buttonTestForce.Click += new System.EventHandler(this.buttonTestForce_Click);
             // 
-            // panelEmpty
-            // 
-            this.panelEmpty.Controls.Add(this.pictureBoxOpenActuator);
-            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
-            this.panelEmpty.Name = "panelEmpty";
-            this.panelEmpty.Size = new System.Drawing.Size(742, 553);
-            this.panelEmpty.TabIndex = 0;
-            // 
-            // pictureBoxOpenActuator
-            // 
-            this.pictureBoxOpenActuator.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxOpenActuator.Image")));
-            this.pictureBoxOpenActuator.Location = new System.Drawing.Point(197, 232);
-            this.pictureBoxOpenActuator.Name = "pictureBoxOpenActuator";
-            this.pictureBoxOpenActuator.Size = new System.Drawing.Size(348, 75);
-            this.pictureBoxOpenActuator.TabIndex = 1;
-            this.pictureBoxOpenActuator.TabStop = false;
-            this.pictureBoxOpenActuator.Click += new System.EventHandler(this.pictureBoxOpenActuator_Click);
-            this.pictureBoxOpenActuator.MouseEnter += new System.EventHandler(this.pictureBoxOpenActuator_MouseEnter);
-            this.pictureBoxOpenActuator.MouseLeave += new System.EventHandler(this.pictureBoxOpenActuator_MouseLeave);
-            // 
             // panelSteel
             // 
             this.panelSteel.Controls.Add(this.chartBHCurve);
@@ -689,8 +690,8 @@
             // 
             this.chartBHCurve.BorderlineColor = System.Drawing.Color.Black;
             this.chartBHCurve.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea1.Name = "ChartArea1";
-            this.chartBHCurve.ChartAreas.Add(chartArea1);
+            chartArea4.Name = "ChartArea1";
+            this.chartBHCurve.ChartAreas.Add(chartArea4);
             this.chartBHCurve.Location = new System.Drawing.Point(185, 60);
             this.chartBHCurve.Name = "chartBHCurve";
             this.chartBHCurve.Size = new System.Drawing.Size(520, 400);
@@ -762,8 +763,8 @@
             // 
             this.chartStrokeResult.BorderlineColor = System.Drawing.Color.Black;
             this.chartStrokeResult.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea2.Name = "ChartArea1";
-            this.chartStrokeResult.ChartAreas.Add(chartArea2);
+            chartArea5.Name = "ChartArea1";
+            this.chartStrokeResult.ChartAreas.Add(chartArea5);
             this.chartStrokeResult.Location = new System.Drawing.Point(185, 60);
             this.chartStrokeResult.Name = "chartStrokeResult";
             this.chartStrokeResult.Size = new System.Drawing.Size(520, 400);
@@ -832,8 +833,8 @@
             // 
             this.chartCurrentResult.BorderlineColor = System.Drawing.Color.Black;
             this.chartCurrentResult.BorderlineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.Solid;
-            chartArea3.Name = "ChartArea1";
-            this.chartCurrentResult.ChartAreas.Add(chartArea3);
+            chartArea6.Name = "ChartArea1";
+            this.chartCurrentResult.ChartAreas.Add(chartArea6);
             this.chartCurrentResult.Location = new System.Drawing.Point(185, 60);
             this.chartCurrentResult.Name = "chartCurrentResult";
             this.chartCurrentResult.Size = new System.Drawing.Size(520, 400);
@@ -891,13 +892,13 @@
             this.splitContainerRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).EndInit();
             this.splitContainerRight.ResumeLayout(false);
+            this.panelEmpty.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).EndInit();
             this.panelMagnet.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMagnet)).EndInit();
             this.panelForce.ResumeLayout(false);
             this.panelForce.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).EndInit();
-            this.panelEmpty.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).EndInit();
             this.panelSteel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.chartBHCurve)).EndInit();
             this.panelCoil.ResumeLayout(false);

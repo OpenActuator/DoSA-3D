@@ -628,6 +628,8 @@ namespace DoSA
                 double dMovingX, dMovingY, dMovingZ;
                 int nPartIndexInSTEP;
 
+                // 만약 자기력 실험을 선택하지 않는 경우라면
+                // Part Index 는 넘어오지만 이동량이 모두 0 이기 때문에 형상 변화는 없게 된다.
                 getMovingPartInfomation(out nPartIndexInSTEP, out dMovingX, out dMovingY, out dMovingZ);
                 
                 CScriptContents scriptContents = new CScriptContents();
@@ -677,7 +679,17 @@ namespace DoSA
             }
 
         }
-
+        /// <summary>
+        /// 목적 : 구동부 정보를 얻어온다.
+        /// - Tree 에서 자기력 실험을 선택한 경우 : 구동부 파트 인덱스와 이동량을 리턴해서 구동부가 이동한 형상을 표시하는데 사용된다.
+        /// - Tree 에서 자기력 실험을 선택하지 않은 경우 : 구동부 파트 인덱스가 넘어가지만 이동량이 모두 0 으로 리턴 되어서 형상 변화가 없다.
+        /// 
+        /// 가정 : 구동부 수는 하나만 지원한다.
+        /// </summary>
+        /// <param name="nPartIndexInSTEP"></param>
+        /// <param name="dMovingX"></param>
+        /// <param name="dMovingY"></param>
+        /// <param name="dMovingZ"></param>
         private void getMovingPartInfomation(out int nPartIndexInSTEP, out double dMovingX, out double dMovingY, out double dMovingZ)
         {
             dMovingX = 0;
@@ -685,61 +697,63 @@ namespace DoSA
             dMovingZ = 0;
             nPartIndexInSTEP = 0;
 
-            CNode nodeCheck = (CNode)propertyGridMain.SelectedObject;
-            CForceTest forceTest;
-
-            if (nodeCheck.KindKey == EMKind.FORCE_TEST)
+            try
             {
-                forceTest = (CForceTest)nodeCheck;
+                CNode nodeCheck = (CNode)propertyGridMain.SelectedObject;
+                CForceTest forceTest;
 
-                dMovingX = forceTest.MovingX;
-                dMovingY = forceTest.MovingY;
-                dMovingZ = forceTest.MovingZ;
-            }
-            else
-                return;
-
-            string strNodeName, strTemp;
-            string strMovingPartNames = string.Empty;
-            string strMovingPartName = string.Empty;
-
-            foreach (CNode node in m_design.GetNodeList)
-            {
-                strNodeName = node.NodeName;
-                strTemp = strNodeName.ToUpper();
-
-                if (node.GetType().BaseType.Name == "CParts")
+                // 자기력 실험을 선택한 경우만 이동량을 리턴한다.
+                if (nodeCheck != null)
                 {
-                    if (((CParts)node).MovingPart == EMMoving.MOVING)
+                    if (nodeCheck.KindKey == EMKind.FORCE_TEST)
                     {
-                        strMovingPartNames += String.Format("vol{0}, ", strNodeName);
-                        strMovingPartName = strNodeName;
+                        forceTest = (CForceTest)nodeCheck;
 
-                        // 하나의 구동파트만 지원한다.
-                        break;
+                        dMovingX = forceTest.MovingX;
+                        dMovingY = forceTest.MovingY;
+                        dMovingZ = forceTest.MovingZ;
                     }
                 }
+
+                string strNodeName, strTemp;
+                //string strMovingPartNames = string.Empty;
+                string strMovingPartName = string.Empty;
+
+                // 구동부 인덱스를 찾는다.
+                foreach (CNode node in m_design.GetNodeList)
+                {
+                    strNodeName = node.NodeName;
+                    strTemp = strNodeName.ToUpper();
+
+                    if (node.GetType().BaseType.Name == "CParts")
+                    {
+                        if (((CParts)node).MovingPart == EMMoving.MOVING)
+                        {
+                            strMovingPartName = strNodeName;
+
+                            // 하나의 구동파트만 지원한다.
+                            break;
+                        }
+                    }
+                }
+
+                int nIndex = 0;
+
+                foreach (string strName in m_design.AllShapeNameList)
+                {
+                    if (strName == strMovingPartName)
+                        nPartIndexInSTEP = nIndex;
+
+                    nIndex++;
+                }
+
             }
-
-            int nIndex = 0;
-
-            if (strMovingPartNames.Length > 2)
+            catch (Exception ex)
             {
-                // 마지막 ", " 를 제거한다.
-                nIndex = strMovingPartNames.Length - 2;
-                strMovingPartNames = strMovingPartNames.Remove(nIndex);
+                CNotice.printLog(ex.Message);
+                return;
             }
-
-            int nCount = 0;
-
-            foreach (string strName in m_design.AllShapeNameList)
-            {
-                if (strName == strMovingPartName)
-                    nPartIndexInSTEP = nCount;
-
-                nCount++;
-            }
-        }
+}
 
         private void ribbonButtonNew_Click(object sender, EventArgs e)
         {
@@ -1789,6 +1803,11 @@ namespace DoSA
                 // saveSectionMagneticDensityImage() 사용 후에 호출해야 한다.
                 plotForceResult(forceTest);
 
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.printUserMessage(strTestName + "의 자기력 실험이 완료 되었습니다.");
+                else
+                    CNotice.printUserMessage("The magnetic force test of " + strTestName + "  has been completed.");
+
                 // Result 버튼이 동작하게 한다.
                 buttonPlotSectionDensity.Enabled = true;
                 buttonPlotFullDensity.Enabled = true;
@@ -2249,12 +2268,6 @@ namespace DoSA
 
                     return false; 
                 }
-
-                if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                    CNotice.printUserMessage(strTestName + "의 자기력 실험이 완료 되었습니다.");
-                else
-                    CNotice.printUserMessage("The magnetic force test of " + strTestName + "  has been completed.");
-
             }
             catch (Exception ex)
             {
@@ -2613,7 +2626,7 @@ namespace DoSA
                             //double dRegionCenterY = (m_design.MinY + m_design.MaxY) / 2.0f * 0.001;       // Y 축과 평행한다는 가정에서 사용하지 않는다
                             double dRegionCenterZ = (m_design.MinZ + m_design.MaxZ) / 2.0f * 0.001;
 
-                            if (((CCoil)node).CurrentDirection == EMCurrentDirection.IN)
+                            if (((CCoil)node).CurrentDirection == EMCurrentDirection.CounterClockwise)
                                 strOrgStriptContents += String.Format("    vectorCurrent[] = Vector[ Cos[Atan2[X[]-({0}), Z[]-({1})]], 0, -Sin[Atan2[X[]-({0}), Z[]-({1})]]];\n\n", dRegionCenterX, dRegionCenterZ);
                             else
                                 strOrgStriptContents += String.Format("    vectorCurrent[] = - Vector[ Cos[Atan2[X[]-({0}), Z[]-({1})]], 0, -Sin[Atan2[X[]-({0}), Z[]-({1})]]];\n\n", dRegionCenterX, dRegionCenterZ);
@@ -2821,6 +2834,8 @@ namespace DoSA
                 double dMovingX, dMovingY, dMovingZ;
                 int nPartIndexInSTEP;
 
+                // 만약 자기력 실험을 선택하지 않는 경우라면
+                // Part Index 는 넘어오지만 이동량이 모두 0 이기 때문에 형상 변화는 없게 된다.
                 getMovingPartInfomation(out nPartIndexInSTEP, out dMovingX, out dMovingY, out dMovingZ);
 
                 listScriptString.Add(strSTEPFileFullName);
@@ -3330,6 +3345,12 @@ namespace DoSA
         private void pictureBoxOpenActuator_MouseEnter(object sender, EventArgs e)
         {
             this.Cursor = Cursors.Hand;
+        }
+
+        private void panelEmpty_Resize(object sender, EventArgs e)
+        {
+            pictureBoxOpenActuator.Location = new Point(panelEmpty.Width / 2 - pictureBoxOpenActuator.Width / 2 + panelEmpty.Location.X,
+                                                            panelEmpty.Height / 2 - pictureBoxOpenActuator.Height / 2 + panelEmpty.Location.Y);
         }
 
         #endregion
@@ -4506,7 +4527,6 @@ namespace DoSA
         {
             System.Diagnostics.Process.Start(strWebAddress);
         }
-
 
         #endregion
 

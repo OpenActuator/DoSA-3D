@@ -246,6 +246,7 @@ namespace Onelab
 # 1 : Step File Full Name
 # 2 : Part Name File Full Name
 # 3 : Design Name
+# 4 : getdp File Full Name
 
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
@@ -281,6 +282,11 @@ Mesh.VolumeEdges = 0;
 
 Save ""{{3}}.msh"";
 
+# Gmsh 가 Background 실행으로 바뀌고 부터 
+# 첫번째 실행때 getdp 경로 설정이 되지 않은 문제가 있어서 항상 강제로 지정한다.
+# 정상적인 경우는 %appdata% 의 gmshrc 파일에 추가 되고 그것을 사용하게 된다.
+Solver.Executable0 = ""{{4}}"";
+
 ";
         #endregion
 
@@ -294,6 +300,7 @@ Save ""{{3}}.msh"";
 # 3 : Moving X
 # 4 : Moving Y
 # 5 : Moving Z
+# 6 : getdp File Full Name
 
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
@@ -326,9 +333,13 @@ General.RotationX = 20; General.RotationY = -20; General.RotationZ = 0;
 #Geometry.Surfaces = 1;
 #Geometry.SurfaceType = 2;
 
+# Gmsh 가 Background 실행으로 바뀌고 부터 
+# 첫번째 실행때 getdp 경로 설정이 되지 않은 문제가 있어서 항상 강제로 지정한다.
+# 정상적인 경우는 %appdata% 의 gmshrc 파일에 추가 되고 그것을 사용하게 된다.
+Solver.Executable0 = ""{{6}}"";
+
 ";
         #endregion
-
 
         #region ---------------------------- 11_Define.geo ----------------------------
 
@@ -417,7 +428,7 @@ SKIN_STEEL = 302;
 
         public string m_str21_Import_Script =
         @"#IMPORT,1
-# 1 : STEP File Name
+# 1 : STEP File Full Name
 
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
@@ -786,7 +797,6 @@ PostOperation {
 
 ";
         #endregion
-
 
         #region ---------------------------- 51 Print Image (Image.geo in Force Directory) ----------------------------
         // Secton B Vector 기능에 사용된다.

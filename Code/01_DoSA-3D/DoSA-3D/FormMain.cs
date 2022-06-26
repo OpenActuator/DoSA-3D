@@ -597,21 +597,27 @@ namespace DoSA
 
         private void ribbonButtonShowShape_Click(object sender, EventArgs e)
         {
+            if (m_design.m_strDesignName.Length == 0)
+            {
+                if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                    CNotice.noticeWarning("3차원 형상을 보여줄 디자인이 없습니다.");
+                else
+                    CNotice.noticeWarning("There is no working design to show 3D shape.");
+
+                return;
+            }
+
+            showShapeModel();
+
+        }
+
+        private void showShapeModel()
+        {
             List<string> listScriptString = new List<string>();
             CWriteFile writeFile = new CWriteFile();
 
             try
             {
-                if (m_design.m_strDesignName.Length == 0)
-                {
-                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeWarning("3차원 형상을 보여줄 디자인이 없습니다.");
-                    else
-                        CNotice.noticeWarning("There is no working design to show 3D shape.");
-
-                    return;
-                }
-
                 // 생성을 할 때는 기본 작업 디렉토리를 사용해서 Actuator 작업파일의 절대 경로를 지정하고,
                 // 작업파일을 Open 할 때는 파일을 오픈하는 위치에서 작업 디렉토리를 얻어내어 다시 설정한다.
                 // 왜냐하면, 만약 작업 디렉토리를 수정하는 경우 기존의 작업파일을 열 수 없기 때문이다.
@@ -633,8 +639,10 @@ namespace DoSA
                 // 만약 자기력 실험을 선택하지 않는 경우라면
                 // Part Index 는 넘어오지만 이동량이 모두 0 이기 때문에 형상 변화는 없게 된다.
                 getMovingPartInfomation(out nPartIndexInSTEP, out dMovingX, out dMovingY, out dMovingZ);
-                
+
                 CScriptContents scriptContents = new CScriptContents();
+
+                string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
                 string strOrgStriptContents = scriptContents.m_str02_Show_Part_Script;
 
                 listScriptString.Add(strShapeModelFileFullName);
@@ -643,6 +651,7 @@ namespace DoSA
                 listScriptString.Add(dMovingX.ToString());
                 listScriptString.Add(dMovingY.ToString());
                 listScriptString.Add(dMovingZ.ToString());
+                listScriptString.Add(strGetDPFileFullName);
 
                 if (m_manageFile.isExistFile(strShapeModelFileFullName) == false) return;
 
@@ -679,8 +688,9 @@ namespace DoSA
                 CNotice.printLog(ex.Message);
                 return;
             }
-
         }
+
+
         /// <summary>
         /// 목적 : 구동부 정보를 얻어온다.
         /// - Tree 에서 자기력 실험을 선택한 경우 : 구동부 파트 인덱스와 이동량을 리턴해서 구동부가 이동한 형상을 표시하는데 사용된다.
@@ -852,12 +862,14 @@ namespace DoSA
 
                 CScriptContents scriptContents = new CScriptContents();
 
+                string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
                 string strOrgStriptContents = scriptContents.m_str01_Show_STEP_Script;
 
                 // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
                 listScriptString.Add(strShapeModelFileFullName);
                 listScriptString.Add(strPartNamesFileFullName);
                 listScriptString.Add(strDesignName);
+                listScriptString.Add(strGetDPFileFullName);
 
                 // Script 파일이 문제없이 만들어지면 아래 동작을 실시하다.
                 if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
@@ -1055,6 +1067,8 @@ namespace DoSA
 
             // 제목줄에 디자인명을 표시한다
             this.Text = "DoSA-3D - " + m_design.m_strDesignName;
+
+            showShapeModel();
 
             CNotice.printUserMessage(m_design.m_strDesignName + m_resManager.GetString("_DHBO"));    
         }
@@ -1529,12 +1543,14 @@ namespace DoSA
 
                 CScriptContents scriptContents = new CScriptContents();
 
+                string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
                 string strOrgStriptContents = scriptContents.m_str01_Show_STEP_Script;
 
                 // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
                 listScriptString.Add(strShapeModelFileFullName);
                 listScriptString.Add(strPartNamesFileFullName);
                 listScriptString.Add(strDesignName);
+                listScriptString.Add(strGetDPFileFullName);
 
                 // Script 파일이 문제없이 만들어지면 아래 동작을 실시하다.
                 if (true == writeFile.createScriptFileUsingString(strOrgStriptContents, strRunScriptFileFullName, listScriptString))
@@ -2316,7 +2332,7 @@ namespace DoSA
 
         #region------------------------- Script 작업 함수 ---------------------------
 
-        public bool solveForce(CForceTest forceTest, bool bAutoRun = false)
+        public bool solveForce(CForceTest forceTest, bool bAutoRun = true)
         {
             string strTestName = forceTest.NodeName;
             string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, strTestName);
@@ -2327,6 +2343,8 @@ namespace DoSA
             string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
 
             string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+
+            string strArguments = string.Empty;
 
             createDefineGeoFile(forceTest);
 
@@ -2345,7 +2363,6 @@ namespace DoSA
 
             createImageGeoFile(forceTest);
 
-            string strArguments;
 
             // Script 에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
             if ( bAutoRun == false )
@@ -2849,8 +2866,12 @@ namespace DoSA
 
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strImageScriptFileFullName, listScriptString);
 
+
+                string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
                 // 전체 자속밀도 벡터를 출력하기 위한 파트형상 출력 스크립트를 생성한다.
                 strOrgStriptContents = scriptContents.m_str02_Show_Part_Script;
+
+                listScriptString.Add(strGetDPFileFullName);
 
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strPartScriptFileFullName, listScriptString);
 

@@ -1,0 +1,4 @@
+Unnamed/Plate/Plate
+Unnamed/Magnet/Magnet
+Unnamed/Case/Case
+Unnamed/Coil/Coil

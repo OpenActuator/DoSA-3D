@@ -1,4 +1,0 @@
-Armature
-Core
-Coil
-Case

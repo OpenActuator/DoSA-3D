@@ -110,6 +110,7 @@ namespace Tests
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -186,6 +187,7 @@ namespace Tests
                             break;
 
                         default:
+                            // 해당사항이 없는 항목은 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                             break;
                     }
                 }
@@ -193,6 +195,7 @@ namespace Tests
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 

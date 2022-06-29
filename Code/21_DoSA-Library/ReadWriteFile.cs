@@ -64,6 +64,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -76,54 +77,81 @@ namespace gtLibrary
 
         internal void writeBeginLine(StreamWriter writeStream, string strCommand, int nTabCount)
         {
-            string strTab = string.Empty;
+            try
+            {
+                string strTab = string.Empty;
 
-            // 오류 방지
-            if (writeStream == null)
+                // 오류 방지
+                if (writeStream == null)
+                    return;
+
+                for (int i = 0; i < nTabCount; i++)
+                    strTab = strTab + "\t";
+
+                writeStream.Write(strTab + "$begin "); writeStream.WriteLine("\"" + strCommand + "\"");
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
                 return;
-
-            for (int i = 0; i < nTabCount; i++)
-                strTab = strTab + "\t";
-
-            writeStream.Write(strTab + "$begin "); writeStream.WriteLine("\"" + strCommand + "\"");
+            }
         }
 
         internal void writeEndLine(StreamWriter writeStream, string strCommand, int nTabCount)
         {
-            string strTab = string.Empty;
+            try
+            {
+                string strTab = string.Empty;
 
-            // 오류 방지
-            if (writeStream == null)
+                // 오류 방지
+                if (writeStream == null)
+                    return;
+
+                for (int i = 0; i < nTabCount; i++)
+                    strTab = strTab + "\t";
+
+                writeStream.Write(strTab + "$end "); writeStream.WriteLine("\"" + strCommand + "\"");
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
                 return;
-
-            for (int i = 0; i < nTabCount; i++)
-                strTab = strTab + "\t";
-
-            writeStream.Write(strTab + "$end "); writeStream.WriteLine("\"" + strCommand + "\"");
+            }
         }
 
         internal void writeDataLine(StreamWriter writeStream, string strCommand, object strData, int nTabCount)
         {
-            string strTab = string.Empty;
-
-            // 오류 방지
-            if (writeStream == null)
+            try
             {
-                CNotice.printLogID("TSWI");
+                string strTab = string.Empty;
+
+                // 오류 방지
+                if (writeStream == null)
+                {
+                    CNotice.printLogID("TSWI");
+                    return;
+                }
+
+                // 오류 방지
+                if (strData == null)
+                {
+                    CNotice.printLogID("TODI");
+                    return;
+                }
+
+                for (int i = 0; i < nTabCount; i++)
+                    strTab = strTab + "\t";
+
+                writeStream.WriteLine(strTab + strCommand + "=" + strData.ToString());
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
                 return;
             }
-
-            // 오류 방지
-            if (strData == null)
-            {
-                CNotice.printLogID("TODI");
-                return;
-            }
-
-            for (int i = 0; i < nTabCount; i++)
-                strTab = strTab + "\t";
-
-            writeStream.WriteLine(strTab + strCommand + "=" + strData.ToString());
         }
 
         #endregion
@@ -277,6 +305,8 @@ namespace gtLibrary
             {
                 CNotice.printLog(ex.Message);
                 CNotice.printLog("Script 파일 생성에서 예외가 발생하였다.");
+
+                return false;
             }
 
             return true;
@@ -438,6 +468,8 @@ namespace gtLibrary
             {
                 CNotice.printLog(ex.Message);
                 CNotice.printLog("Script 파일 추가에서 예외가 발생하였다.");
+
+                return false;
             }
 
             return true;
@@ -479,6 +511,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -498,6 +531,8 @@ namespace gtLibrary
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
                     CNotice.printLog(resManager.GetString("TIAA5") + strTargetFileFullName + resManager.GetString("_TDNE"));
+
+                    // null 대신에 "" 이 리턴 한다.
                     return "";
                 }
 
@@ -511,14 +546,18 @@ namespace gtLibrary
                     if (nLineCount == iLineNum)
                         return strLine;
                 }
+
+                // 원하는 라인보다 파일의 길이가 짧은 경우
+                // null 대신에 "" 이 리턴 한다.
+                return "";
             }
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
-            }
 
-            // 원하는 라인보다 파일의 길이가 짧은 경우 "" 이 리턴된다.
-            return "";
+                // null 대신에 "" 이 리턴 한다.
+                return "";
+            }
         }
 
         /// <summary>
@@ -576,6 +615,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -629,6 +669,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -682,6 +723,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -735,6 +777,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -806,6 +849,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -877,6 +921,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -898,7 +943,8 @@ namespace gtLibrary
             try
             {
                 if (File.Exists(strTargetFileFullName) == false)
-                    return null;
+                    // null 을 리턴하지 않고 "" 을 리턴한다.
+                    return "";
 
                 if (startPos >= endPos)
                     CNotice.printLog("The StartPos is greater then the EndPos in the GetData");
@@ -929,9 +975,13 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                // null 을 리턴하지 않고 "" 을 리턴한다.
+                return "";
             }
 
-            return null;
+            // null 을 리턴하지 않고 "" 을 리턴한다.
+            return "";
         }
 
         #endregion
@@ -947,6 +997,7 @@ namespace gtLibrary
 
             // 오류 방지
             if (strTemp.Length == 0)
+                // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                 return null;
 
             if (strTemp[0] == '$')
@@ -955,14 +1006,17 @@ namespace gtLibrary
 
                 // 오류 방지
                 if (arraySplit.Length <= 1)
+                    // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                     return null;
 
                 if (arraySplit[0] == "$begin ")
                     return arraySplit[1];
                 else
+                    // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                     return null;
             }
             else
+                // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                 return null;
         }
 
@@ -975,6 +1029,7 @@ namespace gtLibrary
 
             // 오류 방지
             if (strTemp.Length == 0)
+                // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                 return null;
 
             if (strTemp[0] == '$')
@@ -983,14 +1038,17 @@ namespace gtLibrary
 
                 // 오류 방지
                 if (arraySplit.Length <= 1)
+                    // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                     return null;
 
                 if (arraySplit[0] == "$end ")
                     return arraySplit[1];
                 else
+                    // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                     return null;
             }
             else
+                // null 을 리턴하고, 호출한 측에서 꼭 null 을 확인해야 한다.
                 return null;
         }
 
@@ -1097,6 +1155,7 @@ namespace gtLibrary
             {
                 CNotice.printLog(ex.Message);
                 CNotice.printLogID("AETT");
+
                 return false;
             }
 
@@ -1190,6 +1249,7 @@ namespace gtLibrary
             {
                 CNotice.printLog(ex.Message);
                 CNotice.printLogID("AETT");
+
                 return false;
             }
 
@@ -1245,6 +1305,7 @@ namespace gtLibrary
             {
                 CNotice.printLog(ex.Message);
                 CNotice.printLogID("AETT");
+
                 return false;
             }
 
@@ -1298,6 +1359,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -1331,6 +1393,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -1367,6 +1430,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -1401,6 +1465,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -1438,6 +1503,8 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return false;
             }
 
             return true;

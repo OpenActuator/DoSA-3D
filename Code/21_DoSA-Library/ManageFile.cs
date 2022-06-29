@@ -25,15 +25,18 @@ namespace gtLibrary
 
         public List<string> getFileList(string dirPath)
         {
+            List<string> lsFiles = new List<string>();
+
             try
             {
                 if (false == isExistDirectory(dirPath))
                 {
                     CNotice.printLog("존재하지 않는 " + dirPath + " 의 내부 파일정보를 얻으려고 합니다.");
-                    return null;
+
+                    // 오류가 발생해도 null 을 리턴하지 않고 항목없이 생성된 List 를 그대로 리턴 한다.
+                    return lsFiles;
                 }
 
-                List<string> lsFiles = new List<string>();
                 lsFiles = Directory.GetFiles(dirPath).Cast<string>().ToList();
 
                 return lsFiles;
@@ -41,7 +44,9 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
-                return null;
+
+                // 오류가 발생해도 null 을 리턴하지 않고 항목없이 생성된 List 를 그대로 리턴 한다.
+                return lsFiles;
             }
         }
 
@@ -58,12 +63,14 @@ namespace gtLibrary
                 }
 
                 File.Delete(strFileFullPathName);
+
                 return true;
 
             }
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
         }
@@ -77,6 +84,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
         }
@@ -114,6 +122,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
         }
@@ -134,6 +143,8 @@ namespace gtLibrary
 
         public List<string> getDirectoryList(string dirPath)
         {
+            List<string> lsDirs = new List<string>();
+
             try
             {
                 if (false == isExistDirectory(dirPath))
@@ -141,10 +152,11 @@ namespace gtLibrary
                     ResourceManager resManager = ResourceManager.CreateFileBasedResourceManager("LanguageResource", Application.StartupPath, null);
 
                     CNotice.printLog(resManager.GetString("TIAA3") + dirPath + resManager.GetString("_DITD"));
-                    return null;
+
+                    // 오류가 발생해도 null 을 리턴하지 않고 항목없이 생성된 List 를 그대로 리턴 한다.
+                    return lsDirs;
                 }
 
-                List<string> lsDirs = new List<string>();
                 lsDirs = Directory.GetDirectories(dirPath).Cast<string>().ToList();
 
                 return lsDirs;
@@ -152,7 +164,9 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
-                return null;
+
+                // 오류가 발생해도 null 을 리턴하지 않고 항목없이 생성된 List 를 그대로 리턴 한다.
+                return lsDirs;
             }
         }
 
@@ -165,6 +179,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
         }
@@ -179,6 +194,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
         }
@@ -202,6 +218,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
         }
@@ -224,6 +241,7 @@ namespace gtLibrary
 			catch (Exception ex)
 			{
 				CNotice.printLog(ex.Message);
+
 				return false;
 			}
         }
@@ -264,8 +282,8 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
-                return false;
 
+                return false;
             }
         }
 
@@ -285,29 +303,37 @@ namespace gtLibrary
 
             int nCount = 0;
 
-            do
+            try
             {
-                // 감지 최대시간을 초과해서 리턴하는 경우
-                if (nCount > nMaxCount)
-                    return false;
-
-                // 파일을 감지해서 리턴하는 경우
-                if (true == isExistFile(strFileFullName))
+                do
                 {
-                    // 파일 생성을 감지했기 때문에 저장시간을 기다려 준다.
-                    // 
-                    // 문제점
-                    // - 파일의 생성 완료 시간을 알 수 없어서 고정된 1초를 기다리고 있다.
-                    Thread.Sleep(1000);
-                    return true;
+                    // 감지 최대시간을 초과해서 리턴하는 경우
+                    if (nCount > nMaxCount)
+                        return false;
+
+                    // 파일을 감지해서 리턴하는 경우
+                    if (true == isExistFile(strFileFullName))
+                    {
+                        // 파일 생성을 감지했기 때문에 저장시간을 기다려 준다.
+                        // 
+                        // 문제점
+                        // - 파일의 생성 완료 시간을 알 수 없어서 고정된 1초를 기다리고 있다.
+                        Thread.Sleep(1000);
+                        return true;
+                    }
+
+                    Thread.Sleep(STEP_TIME_ms);
+
+                    nCount++;
                 }
-
-                Thread.Sleep(STEP_TIME_ms);
-
-                nCount++;
+                while (true);
             }
-            while (true);
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
 
+                return false;
+            }
         }
     }
 }

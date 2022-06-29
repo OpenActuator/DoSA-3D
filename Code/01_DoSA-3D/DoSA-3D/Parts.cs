@@ -258,10 +258,8 @@ namespace Parts
                     break;
                 
                 default:
-                    a = 0.0f;
-                    b = 0.0f;
-                    c = 0.0f;
-                    break;
+                    // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
+                    return 0;
             }
 
             return a * (Math.Pow(b, CopperDiameter) * Math.Pow(CopperDiameter, c));
@@ -386,8 +384,9 @@ namespace Parts
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
-            }
-       
+
+                return;
+            }       
         }
 
         // 파일스트림 객체에 코일 정보를 기록한다.
@@ -438,6 +437,7 @@ namespace Parts
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -579,6 +579,7 @@ namespace Parts
                             break;
 
                         default:
+                            // 해당사항이 없는 항목은 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                             break;
                     }
                 }
@@ -586,6 +587,7 @@ namespace Parts
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }  
 
@@ -663,6 +665,7 @@ namespace Parts
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -767,6 +770,7 @@ namespace Parts
                             break;
                         
                         default:
+                            // 해당사항이 없는 항목은 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                             break;
                     }
                 }
@@ -774,6 +778,7 @@ namespace Parts
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -829,6 +834,7 @@ namespace Parts
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -907,6 +913,7 @@ namespace Parts
                             break;                       
 
                         default:
+                            // 해당사항이 없는 항목은 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                             break;
                     }
                 }
@@ -914,6 +921,7 @@ namespace Parts
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 

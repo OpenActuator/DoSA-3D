@@ -50,12 +50,15 @@ namespace DoSA
 
         public CDesign m_design = new CDesign();
 
+        public COnelab m_onelab = new COnelab();
+
         public ResourceManager m_resManager = null;
         
         private bool m_bSolvingThread;
         private Thread m_addedThreadInMain;
 
         private CForceTest m_startedForceTest = null;
+
 
         #endregion
 
@@ -307,6 +310,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
 
         }
@@ -465,7 +470,7 @@ namespace DoSA
                 {
                     frmSetting.loadSettingFromFile();
 
-                    if (CSettingData.isDataOK(false) == false)
+                    if (CSettingData.isSettingDataOK(false) == false)
                     {
                         CNotice.noticeWarningID("TIAP7");
 
@@ -493,6 +498,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -561,6 +568,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
 
         }
@@ -668,7 +677,7 @@ namespace DoSA
                     }
 
                     // Gmsh 를 종료할 때까지 기다리지 않는다.
-                    CScript.runScript(strGmshExeFileFullName, strArguments, false);
+                    m_onelab.runScript(strGmshExeFileFullName, strArguments, false);
 
                     // Script 결과 파일이 없이 때문에 Gmsh 를 기다리지 않는다.
                 }
@@ -679,13 +688,15 @@ namespace DoSA
                 }
 
                 // Script 동작에 사용한 geo 파일의 삭제를 위해 Gmsh 에서 geo 파일을 사용하는 시간을 기다린다.
-                Thread.Sleep(500);
-                m_manageFile.deleteFile(strRunScriptFileFullName);
+                // [주의] 형상 모델에 따라 시간이 오래 걸리는 경우도 있어서 사용하지 않는다.
+                //Thread.Sleep(500);
+                //m_manageFile.deleteFile(strRunScriptFileFullName);
 
             }
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return;
             }
         }
@@ -763,9 +774,10 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return;
             }
-}
+        }
 
         private void ribbonButtonNew_Click(object sender, EventArgs e)
         {
@@ -876,11 +888,11 @@ namespace DoSA
                 {
                     // Process 의 Arguments 에서 스페이스 문제가 발생한다.
                     // 아래와 같이 묶음처리를 사용한다.
-                    string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);       
+                    string strArguments = " " + m_manageFile.solveDirectoryNameInPC(strRunScriptFileFullName);
 
                     // Gmsh 를 종료할 때까지 기다리지 않는다.
                     // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
-                    CScript.runScript(strGmshExeFileFullName, strArguments, false);
+                    m_onelab.runScript(strGmshExeFileFullName, strArguments, false);
 
                     // Gmsh 가 실행되고 기다리지 않기 때문에 
                     // Gmsh Script 실행 후 5 초 동안 Part 명의 생성을 기다린다.
@@ -924,13 +936,20 @@ namespace DoSA
 
                             if (null != strFindRet)
                             {
+                                // 메시지 창을 가려서 형상을 보여주는 Gmsh 를 먼저 종료한다.
+                                m_onelab.closeGmsh();
+
+                                Thread.Sleep(500);
+
                                 if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                                    CNotice.noticeWarning(strPartName + "의 파트명에 중복 사용되고 있습니다.");
+                                    CNotice.noticeWarning("STEP 파일 안의 파트명이 지정되지 않았습니다.\nSTEP 파일의 파트명을 설정하고 사용하세요.");
                                 else
-                                    CNotice.noticeWarning("It is used in duplicate with the part name called " + strPartName + ".");
+                                    CNotice.noticeWarning("The part names in the STEP file is not specified.\nPlease set the part name of the STEP file and use it.");
 
                                 // 취소되면 디자인 디렉토리를 삭제한다.
                                 m_manageFile.deleteDirectory(strDesignDirPath);
+
+                                m_design.clearDesign();
                                 return;
                             }
 
@@ -953,6 +972,8 @@ namespace DoSA
                         {
                             // 취소되면 디자인 디렉토리를 삭제한다.
                             m_manageFile.deleteDirectory(strDesignDirPath);
+
+                            m_design.clearDesign();
                             return;
                         }
                     }
@@ -962,9 +983,13 @@ namespace DoSA
 
                         // 생성된 Design 디렉토리를 내부파일과 같이 한꺼번에 삭제한다.
                         m_manageFile.deleteDirectory(strDesignDirPath);
+
+                        m_design.clearDesign();
                         return;
                     }
 
+                    // 거칠게 나눈 Mesh 정보를 사용해서
+                    // 내부 크기 변수들 (X,Y,Z 의 Min, Max 와 ShapeVolumeSize) 을 계산한다.
                     m_design.calcShapeSize(strMeshFileFullName);
                     
                      // 초기 파일을 저장한다.
@@ -976,6 +1001,8 @@ namespace DoSA
 
                     // 생성된 Design 디렉토리를 내부파일과 같이 한꺼번에 삭제한다.
                     m_manageFile.deleteDirectory(strDesignDirPath);
+
+                    m_design.clearDesign();
                     return;
                 }
 
@@ -997,6 +1024,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                m_design.clearDesign();
                 return;
             }
         }
@@ -1362,6 +1391,7 @@ namespace DoSA
                 catch (Exception ex)
                 {
                     CNotice.printLog(ex.Message);
+
                     return;
                 }
             }
@@ -1561,7 +1591,7 @@ namespace DoSA
 
                     // Gmsh 를 종료할 때까지 기다리지 않는다.
                     // 목적은 사용자들에게 Gmsh 에서 액추에이터의 형상 정보를 보게하면서 동시에 Part 이름 목록을 같이 보게 하기 위함이다.
-                    CScript.runScript(strGmshExeFileFullName, strArguments, false);
+                    m_onelab.runScript(strGmshExeFileFullName, strArguments, false);
 
                     // Gmsh 가 실행되고 기다리지 않기 때문에 
                     // Gmsh Script 실행 후 5 초 동안 Part 명의 생성을 기다린다.
@@ -1687,6 +1717,7 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return;
             }
         }
@@ -1731,7 +1762,7 @@ namespace DoSA
 
             string strTestZeroDirName = strTestDirName + "_Zero";
 
-            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+            string strSectionMagneticDensityFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
 
             try
             {
@@ -1773,25 +1804,33 @@ namespace DoSA
                 // 해석전 현 설정을 저장한다.
                 saveDesignFile();
 
+                string strForceYFileFullName = Path.Combine(strTestDirName, "Fy.dat");
+
                 // 함수 내부에서 오류가 있으면 알림이 발생하기 때문에 여기서는 알림없이 바로 리턴한다.
                 if (false == startSolveForceThread(forceTest, false))
                     return;
 
                 // Density Vector 파일이 없으면 최대 3초까지 기다린다.
-                m_manageFile.waitForFileInOtherThread(strMagneticDensityVectorFileFullName, 3000);
+                m_manageFile.waitForFileInOtherThread(strSectionMagneticDensityFileFullName, 3000);
 
                 // 해석 결과 이미지가 있다면 후처리를 진행한다.
-                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false)
+                if (m_manageFile.isExistFile(strSectionMagneticDensityFileFullName) == false)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeError("자기력 해석 결과가 존재하지 않습니다.\n메시지 창에서 확인하세요.", "오류 발생");
+                        CNotice.noticeError("자속밀도 해석 결과가 존재하지 않습니다.\n메시지 창에서 확인하세요.", "오류 발생");
                     else
-                        CNotice.noticeError("Magnetic force analysis result does not exist.\nCheck in the message window.", "Error");
+                        CNotice.noticeError("Magnetic density result does not exist.\nCheck in the message window.", "Error");
 
-                    return;
+                    // 자속밀도 파일 (b_cut.pos) 뿐만아니라 자기력 파일 (Fy.dat)도 존재한다면 리턴하지 않고 출력을 진행하도록 한다.
+                    if (m_manageFile.isExistFile(strForceYFileFullName) == false)
+                        return;
+                }
+                else
+                {
+                    saveSectionMagneticDensityImage(strTestDirName);
                 }
 
-                saveSectionMagneticDensityImage(strTestDirName);
+                string strZeroForceYFileFullName = Path.Combine(strTestZeroDirName, "Fy.dat");
 
                 // 영구자석이 포함된 경우는 정확도 개선을 위해서 무조건 전류 Zero 해석을 진행한다.
                 if (m_design.isExistMagnet() == true)
@@ -1800,12 +1839,10 @@ namespace DoSA
                     if (false == startSolveForceThread(forceTest, true))
                         return;
 
-                    string strForceYFileFullName = Path.Combine(strTestZeroDirName, "Fy.dat");
-
                     // Fy 파일이 없으면 최대 3초까지 기다린다.
-                    m_manageFile.waitForFileInOtherThread(strForceYFileFullName, 3000);
+                    m_manageFile.waitForFileInOtherThread(strZeroForceYFileFullName, 3000);
 
-                    if (m_manageFile.isExistFile(strForceYFileFullName) == false)
+                    if (m_manageFile.isExistFile(strZeroForceYFileFullName) == false)
                     {
                         if (CSettingData.m_emLanguage == EMLanguage.Korean)
                             CNotice.noticeError("자기력 해석(current=0) 결과가 존재하지 않습니다.\n메시지 창에서 확인하세요.", "오류 발생");
@@ -1834,162 +1871,40 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
-        private bool saveSectionMagneticDensityImage(string strTestDirName)
+        private void buttonPlotSectionDensity_Click(object sender, EventArgs e)
         {
-            string strArguments;
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
 
-            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
-            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
-            string strImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
-            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
-            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+            if (forceTest == null) return;
 
-            try
-            {
-                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
-                if ( m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+            if (m_bSolvingThread == true) return;
 
-                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
-                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
-                {
-                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                    // 아래와 같이 묶음처리를 사용한다.
-                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
-                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
-                }
-                else
-                {
-                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                    // 아래와 같이 묶음처리를 사용한다.
-                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
-                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
-                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
-                }
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
 
-                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
-                CScript.runScript(strGmshExeFileFullName, strArguments, false);
-
-                CScript.resizeGmsh();
-
-                // Gmsh 가 실행되고 기다리지 않기 때문에 
-                // Gmsh Script 실행 후 3 초 동안 Density Vector 이미지 파일이 생성될 때 까지 기다린다.
-                m_manageFile.waitForFileInOtherThread(strImageFileFullName, 3000);
-
-                // [주의사항]
-                // Image.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
-                //Thread.Sleep(500);
-                //m_manageFile.deleteFile(strImageScriptFileFullName);
-
-            }
-            catch (Exception ex)
-            {
-                CNotice.printLog(ex.Message);
-            }
-
-            return true;
+            showSectionMagneticDensity(strTestDirName);
         }
 
-        private bool showSectionMagneticDensity(string strTestDirName)
+        private void buttonPlotFullDensity_Click(object sender, EventArgs e)
         {
-            string strArguments;
+            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
 
-            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
-            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Part.geo");
-            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
-            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+            if (forceTest == null) return;
 
-            try
-            {
-                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
-                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+            if (m_bSolvingThread == true) return;
 
-                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
-                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
-                {
-                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                    // 아래와 같이 묶음처리를 사용한다.
-                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
-                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
-                }
-                else
-                {
-                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                    // 아래와 같이 묶음처리를 사용한다.
-                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
-                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
-                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
-                }
+            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
 
-                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
-                CScript.runScript(strGmshExeFileFullName, strArguments, false);
-
-                // [주의사항]
-                // Image.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
-                //Thread.Sleep(500);
-                //m_manageFile.deleteFile(strImageScriptFileFullName);
-
-            }
-            catch (Exception ex)
-            {
-                CNotice.printLog(ex.Message);
-            }
-
-            return true;
+            showFullMagneticDensity(strTestDirName);
         }
 
-        private bool showFullMagneticDensity(string strTestDirName)
-        {
-            string strArguments;
+        #endregion
 
-            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
-            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Part.geo");
-            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b.pos");
-            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
-
-            try
-            {
-                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
-                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
-
-                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
-                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
-                {
-                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                    // 아래와 같이 묶음처리를 사용한다.
-                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
-                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
-                }
-                else
-                {
-                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
-                    // 아래와 같이 묶음처리를 사용한다.
-                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
-                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
-                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
-                }
-
-                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
-                CScript.runScript(strGmshExeFileFullName, strArguments, false);
-
-                // Script 결과 파일이 없이 때문에 Gmsh 를 기다리지 않는다.
-
-                // [주의사항]
-                // Part.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
-                //Thread.Sleep(500);
-                //m_manageFile.deleteFile(strImageScriptFileFullName);
-
-            }
-            catch (Exception ex)
-            {
-                CNotice.printLog(ex.Message);
-            }
-
-            return true;
-        }
-
+        #region -------------------------- Thread 관련 ----------------------
         /// <summary>
         /// 해석 Log 파일을 분석하고 선별해서 사용자 메시지에 표시한다.
         /// </summary>
@@ -2075,7 +1990,7 @@ namespace DoSA
                                 CNotice.printUserMessage("Done Solving (" + arrayString[1] + ", " + arrayString[2] + ", " + arrayString[3] + ")");
 
                             nProgressBarValue = nProgressBarValue++;
-                        } 
+                        }
 
                     }
                 }
@@ -2088,6 +2003,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return false;
             }
 
             if (bOccuredError == true)
@@ -2101,7 +2018,7 @@ namespace DoSA
         // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
         public void threadProcForZeroCurrent()
         {
-            try 
+            try
             {
                 // 트리에서 읽어서 사용하면 해석중에 변경이 가능하기 때문에
                 // 해석이 시작할 때 저장해둔 ForceTest 를 사용한다.
@@ -2133,13 +2050,15 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
         // threadProcForCurrent() 안과 내부에 호출되는 solveForce() 안에서는 printUserMessage() 를 사용할 수 없다.
         public void threadProcForCurrent()
         {
-            try 
+            try
             {
                 // 트리에서 읽어서 사용하면 해석중에 변경이 가능하기 때문에
                 // 해석이 시작할 때 저장해둔 ForceTest 를 사용한다.
@@ -2164,6 +2083,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -2236,8 +2157,8 @@ namespace DoSA
                     if (nProgressIncreaseValue > progressBarForce.Maximum)
                     {
                         nProgressIncreaseValue = 1;
-                        progressBarForce.Value = progressBarForce.Minimum;                        
-                    }                        
+                        progressBarForce.Value = progressBarForce.Minimum;
+                    }
                     else
                         progressBarForce.PerformStep();
 
@@ -2258,35 +2179,26 @@ namespace DoSA
 
                 // 해석 종료 이후에도 일정시간을 기다리고
                 // 다시 한번 추가 메시지가 있는지 확인하고 추가 메시지가 있다면 사용자 메시지 창에 출력한다.
-                Thread.Sleep(500);                
+                Thread.Sleep(500);
                 if (true == printLogMessage(strTestDirName, ref nStartLineNumber, ref nProgressBarValue))
                     bErrorOccurred = true;
 
-                if(bErrorOccurred == true)
+                if (bErrorOccurred == true)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
                         CNotice.noticeError("자기력 해석 중에 오류가 발생 했습니다.\n메시지 창에서 확인하세요.", "오류 발생");
                     else
                         CNotice.noticeError("An error occurred during magnetic force analysis.\nCheck in the message window.", "Error");
 
-                    // 전류 인가 해석에서만 사용된다.
-                    if(bZeroCurrent == false)
-                    {
-                        // 해석 오류가 발생했는데도 B VectorFile 과 이미지 생성되면
-                        // B Vector 버튼과 Force 버튼이 활성화 되기 때문에 삭제한다. 
-                        if (true == m_manageFile.isExistFile(strBVectorFileFullName))
-                            m_manageFile.deleteFile(strBVectorFileFullName);
-
-                        if (true == m_manageFile.isExistFile(strBVectorImageFileFullName))
-                            m_manageFile.deleteFile(strBVectorImageFileFullName);
-                    }
-
-                    return false; 
+                    // Error 이 발생해도 해석 결과가 있는 경우가 있기 때문에 false 를 리턴하지 않는다.
+                    //return false;
                 }
             }
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return false;
             }
 
             return true;
@@ -2299,35 +2211,7 @@ namespace DoSA
                 m_addedThreadInMain.Interrupt();
                 m_addedThreadInMain = null;
             }
-        }
-
-        private void buttonPlotSectionDensity_Click(object sender, EventArgs e)
-        {
-            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
-
-            if (forceTest == null) return;
-
-            if (m_bSolvingThread == true) return;
-
-            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
-
-            showSectionMagneticDensity(strTestDirName);
-        }
-
-
-        private void buttonPlotFullDensity_Click(object sender, EventArgs e)
-        {
-            CForceTest forceTest = (CForceTest)propertyGridMain.SelectedObject;
-
-            if (forceTest == null) return;
-
-            if (m_bSolvingThread == true) return;
-
-            string strTestDirName = Path.Combine(m_design.m_strDesignDirPath, forceTest.NodeName);
-
-            showFullMagneticDensity(strTestDirName);
-        }
-
+        } 
         #endregion
 
         #region------------------------- Script 작업 함수 ---------------------------
@@ -2373,7 +2257,7 @@ namespace DoSA
                                 + " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
 
             // 해석이 종료될 때 까지 Gmsh 를 기다려야 한다. --> true 옵션 사용
-            CScript.runScript(strGmshExeFileFullName, strArguments, true);
+            m_onelab.runScript(strGmshExeFileFullName, strArguments, true);
 
             // [중요사항]
             // - GetDP 가 종료되고 함수를 빠져나가서
@@ -2516,6 +2400,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -2580,6 +2466,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -2698,7 +2586,7 @@ namespace DoSA
                             break;
 
                         default:
-
+                            // 해당사항이 없는 파트는 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                             break;
                     }
                 }
@@ -2716,6 +2604,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -2768,6 +2658,7 @@ namespace DoSA
                             break;
 
                         default:
+                            // 해당사항이 없는 파트는 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                             break;
                     }
 
@@ -2824,6 +2715,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -2879,6 +2772,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -2991,6 +2886,8 @@ namespace DoSA
 
                 double dMeshSize;
 
+                // 거칠게 나눈 Mesh 정보를 사용해서
+                // 내부 크기 변수들 (X,Y,Z 의 Min, Max 와 ShapeVolumeSize) 을 계산한다.
                 m_design.calcShapeSize(strMeshFileFullName);
 
                 if (forceTest.MeshSizePercent <= 0 || forceTest.MeshSizePercent > 100)
@@ -3104,6 +3001,7 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -3175,6 +3073,7 @@ namespace DoSA
                             break;
 
                         default:
+                            // 해당사항이 없는 파트는 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                             break;
                     }
                 }
@@ -3187,6 +3086,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
 
         }
@@ -3236,6 +3137,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -3260,21 +3163,23 @@ namespace DoSA
 
             int nCount = 0;
 
-            const int TIME_STEP_ms = 50;
-
             // Thread 가 동작을 멈추지 않았다면 5초 동안 기다린다.
             do
             {
-                Thread.Sleep(TIME_STEP_ms);
+                Thread.Sleep(50);
                 nCount++;
 
             } while (m_bSolvingThread == true && nCount < 100);
+
 
             // 그래도 종료하지 않은 getdp 가 있다면 강제로 종료한다.
             if (CManageProcess.isRunProcesses("getdp") == true)
             {
                 CManageProcess.killProcesses("getdp");
             }
+
+            CManageProcess.killProcesses("gmsh");
+
         }
 
         private void FormMain_Shown(object sender, EventArgs e)
@@ -3336,6 +3241,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -3380,56 +3287,65 @@ namespace DoSA
 
         private bool isForceTestOK(CForceTest forceTest)
         {
-            // 1. Moving Part 는 하나만 지원한다.
-            //
-            if (m_design.getMovingPartSize() != 1)
+            try
             {
-                if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                    CNotice.noticeWarning("현버전은 하나의 구동부 파트까지만 지원합니다.");
-                else
-                    CNotice.noticeWarning("This version supports only one Moving Part.");
+                // 1. Moving Part 는 하나만 지원한다.
+                //
+                if (m_design.getMovingPartSize() != 1)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("현버전은 하나의 구동부 파트까지만 지원합니다.");
+                    else
+                        CNotice.noticeWarning("This version supports only one Moving Part.");
+
+                    return false;
+                }
+
+                // 2. 코일은 하나만 지원한다.
+                if (m_design.getKindNodeSize(EMKind.COIL) != 1)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("현 버전은 하나의 코일까지만 지원합니다.");
+                    else
+                        CNotice.noticeWarning("This version supports only one Coil.");
+
+                    return false;
+                }
+
+                // 3. 코일형상 입력을 확인한다.
+                if (m_design.isCoilAreaOK() == false)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("코일형상 입력이 필요합니다.");
+                    else
+                        CNotice.noticeWarning("You need to enter the coil geometry dimensions.");
+
+                    return false;
+                }
+
+                // 4. 코일사양 계산을 확인한다.
+                if (m_design.isCoilSpecificationOK() == false)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("코일사양 계산이 필요합니다.");
+                    else
+                        CNotice.noticeWarning("You need to calculate the coil specification.");
+
+                    return false;
+                }
+
+                //if (m_design.isDesignShapeOK() == false)
+                //{
+                //    CNotice.printLogID("AEOI");
+                //    return false;
+                //}
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
 
                 return false;
             }
-
-            // 2. 코일은 하나만 지원한다.
-            if (m_design.getKindNodeSize(EMKind.COIL) != 1)
-            {
-                if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                    CNotice.noticeWarning("현 버전은 하나의 코일까지만 지원합니다.");
-                else
-                    CNotice.noticeWarning("This version supports only one Coil.");
-
-                return false;
-            }
-
-            // 3. 코일형상 입력을 확인한다.
-            if (m_design.isCoilAreaOK() == false)
-            {
-                if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                    CNotice.noticeWarning("코일형상 입력이 필요합니다.");
-                else
-                    CNotice.noticeWarning("You need to enter the coil geometry dimensions.");
-
-                return false;
-            }
-
-            // 4. 코일사양 계산을 확인한다.
-            if (m_design.isCoilSpecificationOK() == false)
-            {
-                if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                    CNotice.noticeWarning("코일사양 계산이 필요합니다.");
-                else
-                    CNotice.noticeWarning("You need to calculate the coil specification.");
-
-                return false;
-            }            
-            
-            //if (m_design.isDesignShapeOK() == false)
-            //{
-            //    CNotice.printLogID("AEOI");
-            //    return false;
-            //}
 
             return true;
         }
@@ -3494,6 +3410,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -3562,6 +3480,164 @@ namespace DoSA
             return true;
         }
 
+        private bool saveSectionMagneticDensityImage(string strTestDirName)
+        {
+            string strArguments;
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Image.geo");
+            string strImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+
+            try
+            {
+                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
+                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+
+                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
+                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
+                }
+                else
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
+                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+                }
+
+                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
+                m_onelab.runScript(strGmshExeFileFullName, strArguments, false);
+
+                // Gmsh 가 실행되고 기다리지 않기 때문에 
+                // Gmsh Script 실행 후 3 초 동안 Density Vector 이미지 파일이 생성될 때 까지 기다린다.
+                m_manageFile.waitForFileInOtherThread(strImageFileFullName, 3000);
+
+                // [주의사항]
+                // Image.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
+                //Thread.Sleep(500);
+                //m_manageFile.deleteFile(strImageScriptFileFullName);
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool showSectionMagneticDensity(string strTestDirName)
+        {
+            string strArguments;
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Part.geo");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+
+            try
+            {
+                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
+                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+
+                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
+                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
+                }
+                else
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
+                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+                }
+
+                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
+                m_onelab.runScript(strGmshExeFileFullName, strArguments, false);
+
+                // [주의사항]
+                // Image.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
+                //Thread.Sleep(500);
+                //m_manageFile.deleteFile(strImageScriptFileFullName);
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool showFullMagneticDensity(string strTestDirName)
+        {
+            string strArguments;
+
+            string strGmshExeFileFullName = CSettingData.m_strGmshExeFileFullName;
+            string strImageScriptFileFullName = Path.Combine(strTestDirName, "Part.geo");
+            string strMagneticDensityVectorFileFullName = Path.Combine(strTestDirName, "b.pos");
+            string strOptionFileFullName = Path.Combine(strTestDirName, "maps.opt");
+
+            try
+            {
+                if (m_manageFile.isExistFile(strImageScriptFileFullName) == false) return false;
+                if (m_manageFile.isExistFile(strMagneticDensityVectorFileFullName) == false) return false;
+
+                // maps.opt 를 테스트 중이라서 임시로 없을 때도 자속밀도 패턴을 표시하도록 하였다.
+                if (m_manageFile.isExistFile(strOptionFileFullName) == false)
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName);
+                }
+                else
+                {
+                    // Process 의 Arguments 에서 스페이스 문제가 발생한다.
+                    // 아래와 같이 묶음처리를 사용한다.
+                    strArguments = " " + m_manageFile.solveDirectoryNameInPC(strMagneticDensityVectorFileFullName)
+                                       + " " + m_manageFile.solveDirectoryNameInPC(strImageScriptFileFullName)
+                                       + " -option " + m_manageFile.solveDirectoryNameInPC(strOptionFileFullName);
+                }
+
+                // Gmsh 의 크기를 아래서 조절하기 위해 Waiting 을 사용하지 않았다.
+                m_onelab.runScript(strGmshExeFileFullName, strArguments, false);
+
+                // Script 결과 파일이 없이 때문에 Gmsh 를 기다리지 않는다.
+
+                // [주의사항]
+                // Part.geo 는 사용자가 버튼으로 실행을 하기 때문에 삭제하지 말아야 한다.
+                //Thread.Sleep(500);
+                //m_manageFile.deleteFile(strImageScriptFileFullName);
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
+                return false;
+            }
+
+            return true;
+        }
+
+
         #endregion        
 
         #region-------------------------- Save & Load Data -------------------------
@@ -3612,6 +3688,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return false;
             }
 
             return true;
@@ -3682,6 +3760,7 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 
@@ -3704,7 +3783,6 @@ namespace DoSA
 
             try
             {
-
                 foreach (string strLine in listStringDesignData)
                 {
                     // Design 구문 안의 내용만 listDesignActuator 담는다.
@@ -3748,6 +3826,7 @@ namespace DoSA
                                 break;
 
                             default:
+                                // 해당사항이 없는 항목은 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                                 break;
                         }
 
@@ -3825,10 +3904,10 @@ namespace DoSA
                                     // -1 : 문자열을 만드는 과정에서 마지막에 ','가 추가되어 있어서 문자열 배열의 마지막은 "" 이기 때문이다.
                                     for (int i = 0; i < arraySplit.Length - 1; i++)
                                         m_design.RemainedShapeNameList.Add(arraySplit[i]);
-
                                     break;
 
                                 default:
+                                    // 해당사항이 없는 항목은 아무것도 하지 않는다. foreach 가 동작하기 때문에 return 해서는 않된다.
                                     break;
                             }
                         }
@@ -3838,6 +3917,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -3901,6 +3982,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
 
         }
@@ -3987,6 +4070,8 @@ namespace DoSA
 
                     default:
                         CNotice.printLogID("YATT4");
+
+                        // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
                         return;
                 }
 
@@ -4008,6 +4093,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
 
         }
@@ -4038,6 +4125,7 @@ namespace DoSA
                         break;
 
                     default:
+                        // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
                         return;
                 }
 
@@ -4047,6 +4135,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -4075,92 +4165,97 @@ namespace DoSA
         {
             CNode node = m_design.getNode(nodeName);
 
+            if (node == null)
+            {
+                CNotice.printLogID("TDNI");
+                return;
+            }
+
             string strTestDirName = string.Empty;
 
             try
             {
-                if (node != null)
+                // 프로퍼티창을 변경한다.
+                propertyGridMain.SelectedObject = node;
+
+                // 프로퍼티창의 첫번째 Column 의 폭을 변경한다. (사용 포기함)
+                //setLabelColumnWidth(propertyGridMain, 160);
+
+                /// 프로퍼티창에서 이름을 변경할 때 기존에 이미 있는 이름을 선택하는 경우
+                /// 복구를 위해 저장해 둔다.
+                m_strBackupNodeName = node.NodeName;
+
+                // Expand Treeview when starting
+                foreach (TreeNode tn in treeViewMain.Nodes)
+                    tn.Expand();
+
+                splitContainerRight.Panel1.Controls.Clear();
+
+                strTestDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
+
+                switch (node.KindKey)
                 {
-                    // 프로퍼티창을 변경한다.
-                    propertyGridMain.SelectedObject = node;
+                    case EMKind.COIL:
+                        splitContainerRight.Panel1.Controls.Add(this.panelCoil);
+                        break;
 
-                    // 프로퍼티창의 첫번째 Column 의 폭을 변경한다. (사용 포기함)
-                    //setLabelColumnWidth(propertyGridMain, 160);
+                    case EMKind.MAGNET:
+                        splitContainerRight.Panel1.Controls.Add(this.panelMagnet);
+                        break;
 
-                    /// 프로퍼티창에서 이름을 변경할 때 기존에 이미 있는 이름을 선택하는 경우
-                    /// 복구를 위해 저장해 둔다.
-                    m_strBackupNodeName = node.NodeName;
+                    case EMKind.STEEL:
+                        splitContainerRight.Panel1.Controls.Add(this.panelSteel);
 
-                    // Expand Treeview when starting
-                    foreach (TreeNode tn in treeViewMain.Nodes)
-                        tn.Expand();
+                        CSteel steel = (CSteel)node;
+                        drawBHCurve(steel.Material);
+                        break;
 
-                    splitContainerRight.Panel1.Controls.Clear();
-
-                    strTestDirName = Path.Combine(m_design.m_strDesignDirPath, node.NodeName);
-
-                    switch (node.KindKey)
-                    {
-                        case EMKind.COIL:
-                            splitContainerRight.Panel1.Controls.Add(this.panelCoil);
-                            break;
-
-                        case EMKind.MAGNET:
-                            splitContainerRight.Panel1.Controls.Add(this.panelMagnet);
-                            break;
-
-                        case EMKind.STEEL:
-                            splitContainerRight.Panel1.Controls.Add(this.panelSteel);
-
-                            CSteel steel = (CSteel)node;
-                            drawBHCurve(steel.Material);
-                            break;
-
-                        case EMKind.FORCE_TEST:
+                    case EMKind.FORCE_TEST:
  
-                            string strFieldImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
-                            string strSectionDensityFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
-                            string strFullDensityFileFullName = Path.Combine(strTestDirName, "b.pos");
+                        string strFieldImageFileFullName = Path.Combine(strTestDirName, "Image.gif");
+                        string strSectionDensityFileFullName = Path.Combine(strTestDirName, "b_cut.pos");
+                        string strFullDensityFileFullName = Path.Combine(strTestDirName, "b.pos");
 
-                            // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
-                            if (m_manageFile.isExistFile(strFieldImageFileFullName) == true)
-                                buttonLoadForceResult.Enabled = true;
-                            else
-                                buttonLoadForceResult.Enabled = false;
+                        // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
+                        if (m_manageFile.isExistFile(strFieldImageFileFullName) == true)
+                            buttonLoadForceResult.Enabled = true;
+                        else
+                            buttonLoadForceResult.Enabled = false;
 
-                            // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
-                            if (m_manageFile.isExistFile(strSectionDensityFileFullName) == true)
-                                buttonPlotSectionDensity.Enabled = true;
-                            else
-                                buttonPlotSectionDensity.Enabled = false;
+                        // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
+                        if (m_manageFile.isExistFile(strSectionDensityFileFullName) == true)
+                            buttonPlotSectionDensity.Enabled = true;
+                        else
+                            buttonPlotSectionDensity.Enabled = false;
 
-                            // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
-                            if (m_manageFile.isExistFile(strFullDensityFileFullName) == true)
-                                buttonPlotFullDensity.Enabled = true;
-                            else
-                                buttonPlotFullDensity.Enabled = false;
+                        // 해석결과가 존재하지 않으면 Result 와 Report 버튼을 비활성화 한다.
+                        if (m_manageFile.isExistFile(strFullDensityFileFullName) == true)
+                            buttonPlotFullDensity.Enabled = true;
+                        else
+                            buttonPlotFullDensity.Enabled = false;
 
-                            splitContainerRight.Panel1.Controls.Add(this.panelForce);
+                        splitContainerRight.Panel1.Controls.Add(this.panelForce);
 
-                            // 초기이미지가 없어서 이미지를 비우고 있다.
-                            loadDefaultImage(EMKind.FORCE_TEST);
-                            textBoxForceX.Text = "0.0";
-                            textBoxForceY.Text = "0.0";
-                            textBoxForceZ.Text = "0.0";
+                        // 초기이미지가 없어서 이미지를 비우고 있다.
+                        loadDefaultImage(EMKind.FORCE_TEST);
+                        textBoxForceX.Text = "0.0";
+                        textBoxForceY.Text = "0.0";
+                        textBoxForceZ.Text = "0.0";
 
-                            // 트리로 선택할 때도 가상실험 내부 전류를 재계산한다.
-                            setCurrentInTest(node);
+                        // 트리로 선택할 때도 가상실험 내부 전류를 재계산한다.
+                        setCurrentInTest(node);
+                        break;
 
-                            break;
-
-                        default:
-                            return;
-                    }
+                    default:
+                        // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
+                        return;
                 }
             }
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -4291,13 +4386,17 @@ namespace DoSA
                         break;
 
                     default:
-                        break;
+                        // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
+                        return;
                 }
             }
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
+
 
             // 수정 되었음을 기록한다.
             m_design.m_bChanged = true;
@@ -4329,11 +4428,11 @@ namespace DoSA
                         forceTest.Current = (forceTest.Voltage / total_resistance);
                     else
                         forceTest.Current = 0.0f;
-
                     break;
 
                 default:
-                    break;
+                    // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
+                    return;
             }
 
         }
@@ -4425,6 +4524,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -4449,12 +4550,14 @@ namespace DoSA
                         break;
 
                     default:
+                        // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
                         return;
                 }
             }
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return;
             }           
         }
@@ -4515,6 +4618,7 @@ namespace DoSA
             {
                 CNotice.printLog(ex.Message);
                 CNotice.printLogID("AEOI1");
+
                 return;
             }
         }

@@ -56,6 +56,8 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 

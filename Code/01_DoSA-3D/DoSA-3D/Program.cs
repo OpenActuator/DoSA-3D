@@ -83,7 +83,7 @@ namespace DoSA
 
         }
 
-        public static bool isDataOK(bool bOpenNoticeDialog = true)
+        public static bool isSettingDataOK(bool bOpenNoticeDialog = true)
         {
             bool bCheck = false;
 

@@ -32,6 +32,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return 0;
             }
         }
@@ -54,6 +55,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
         }
@@ -77,8 +79,6 @@ namespace gtLibrary
                     nLimitProcessCount = 1;
 
                 Process[] processList = null;
-
-                const int TIME_STEP_ms = 100;
 
                 do
                 {
@@ -104,10 +104,11 @@ namespace gtLibrary
                     }
 
                     // 프로세스가 사라지는 시간을 확보한다.
-                    Thread.Sleep(TIME_STEP_ms);
+                    // 대기 시간이 짧으면 예외 발생할 수 있다.
+                    Thread.Sleep(300);
 
-                    // 무한 루프를 방지한다.
-                    if (nCount > 50)
+                    // 동일명의 프로세스가 20 개 이하로 가정한다.
+                    if (nCount > 20)
                         return;
 
                     nCount++;
@@ -121,6 +122,7 @@ namespace gtLibrary
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return;
             }
         }

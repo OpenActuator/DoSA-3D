@@ -3,6 +3,15 @@ https://solenoid.or.kr/index_dosa_open_3d_eng.html
 Gi-Tae Kweon
 zgitae@gmail.com
 
+2022-06-30 Ver(1.2.5)
+ - Use one Gmsh for DoSA-3D.
+ - Automatically copies the sample files to your working directory.
+ - Code refactoring for stabilization.
+
+2022-06-26 Ver(1.2.4)
+ - Bug Fix : Critical bug fixes for getdp settings in Gmsh.
+ - Removed actuator type for improved convenience.
+ - Changed the VCM and solenoid tutorials.
 
 2022-06-13 Ver(1.2.2)
  - Stable Version of magnetic density plot and the new analysis process

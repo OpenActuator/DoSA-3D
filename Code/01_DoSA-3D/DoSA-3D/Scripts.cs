@@ -37,106 +37,71 @@ namespace Onelab
 
     public class COnelab
     {
-        private double m_dMinX = 0, m_dMaxX = 0;
-        private double m_dMinY = 0, m_dMaxY = 0;
-        private double m_dMinZ = 0, m_dMaxZ = 0;
 
-        public double MinX { get { return m_dMinX; } }
-        public double MaxX { get { return m_dMaxX; } }
-        public double MinY { get { return m_dMinY; } }
-        public double MaxY { get { return m_dMaxY; } }
-        public double MinZ { get { return m_dMinZ; } }
-        public double MaxZ { get { return m_dMaxZ; } }
-
-        protected CReadFile m_readFile = new CReadFile();
-
-        public bool calcShapeSize(string strMeshFileFuleName)
-        {
-            List<double> listDataX = new List<double>();   
-            List<double> listDataY = new List<double>();   
-            List<double> listDataZ = new List<double>();
-
-            try
-            {
-                getMeshNodeCoordinate(strMeshFileFuleName, ref listDataX, ref listDataY, ref listDataZ);
-
-                m_dMinX = listDataX.Min();
-                m_dMaxX = listDataX.Max();
-                m_dMinY = listDataY.Min();
-                m_dMaxY = listDataY.Max();
-                m_dMinZ = listDataZ.Min();
-                m_dMaxZ = listDataZ.Max();
-            
-            }
-            catch (Exception ex)
-            {
-                CNotice.printLog(ex.Message);
-                return false;
-            }
-
-            return true;        
-
-        }
-
-        private bool getMeshNodeCoordinate(string strMeshFileFullName, ref List<double> listDataX, ref List<double> listDataY, ref List<double> listDataZ)
-        {
-
-            CReadFile readFile = new CReadFile();
-
-            List<string> listBlockLines = new List<string>();
-            List<double> listColumnData = new List<double>();   
-
-            try
-            {
-                readFile.readBlock(strMeshFileFullName, ref listBlockLines, "$Nodes", "$EndNodes");
-
-                foreach(string strLine in listBlockLines)
-                {
-                    CParsing.getDataInAllLine(strLine, ref listColumnData, ' ');
-
-                    // 3개의 데이터일때만 좌표 데이터 이다.
-                    if(listColumnData.Count == 3)
-                    {
-                        listDataX.Add(listColumnData[0]);
-                        listDataY.Add(listColumnData[1]);
-                        listDataZ.Add(listColumnData[2]);
-                    }
-
-                    listColumnData.Clear();
-                }
-            }
-            catch (Exception ex)
-            {
-                CNotice.printLog(ex.Message);
-                return false;
-            }
-
-            return true;        
-        }
-
-    }
-
-
-    public class CScript
-    {
+        #region --------------------------- APIs ----------------------------------------
         //-----------------------------------------------------------------------------
         // API 함수 사용
         //-----------------------------------------------------------------------------
         // [주의사항] 꼭 Class 안에 존재해야 함
+        //
 
         [DllImport("user32.dll", EntryPoint = "MoveWindow")]
-        private static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+        public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
 
         [DllImport("user32.dll")]
         private static extern Boolean ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hwnd, ref Rect rectangle);
+
+        public struct Rect
+        {
+            public int Left { get; set; }
+            public int Top { get; set; }
+            public int Right { get; set; }
+            public int Bottom { get; set; }
+        }
         //-----------------------------------------------------------------------------
 
-        private static System.Diagnostics.Process m_process;
+        #endregion
 
-        protected CWriteFile m_writeFile = new CWriteFile();
+        private Process m_gmsh = new Process();
 
-        public static void runScript(string strCmd, string strArgs, bool bWaiting = false, ProgressBar progressBar = null)
+        private bool m_bBeforeStart = false;
+
+        public COnelab()
+        {
+
+        }
+
+        /// <summary>
+        /// 아직 하나의 Gmsh 로 관리가 되고 있지 않아서 모두 지우는 것으로 되어 있다.
+        /// 추후 runScript 에서 반복적으로 생성되는 gmsh 를 변경해서 하나의 gmsh 로 관리하라.
+        /// </summary>
+        public void closeGmsh()
+        {
+            try
+            {
+                // 첫번째 실행에서는 m_gmsh.HasExited 오류가 발생해서 제외한다.
+                if ( m_bBeforeStart == true)
+                    // 연결된 프로세스가 있는지 확인하고 명령을 실행한다.
+                    if (false == m_gmsh.HasExited)
+                    {
+                        m_gmsh.CloseMainWindow();
+
+                        // Free resources associated with process.
+                        m_gmsh.Close();
+                    }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
+                return;
+            }
+        }
+
+        public void runScript(string strCmd, string strArgs, bool bWaiting = false, ProgressBar progressBar = null)
         {
             //------------------------------------------------------------
             // runProcess 호출 예제
@@ -153,11 +118,19 @@ namespace Onelab
 
             try
             {
-                m_process = new System.Diagnostics.Process();
-                m_process.StartInfo.FileName = strCmd;
-                m_process.StartInfo.Arguments = strArgs;
-                
-                m_process.Start();
+                // 기존에 떠 있는 Gmsh 를 닫는다.
+                closeGmsh();
+
+                m_gmsh.StartInfo.FileName = strCmd;
+                m_gmsh.StartInfo.Arguments = strArgs;
+
+                m_gmsh.Start();
+
+                m_bBeforeStart = true;
+
+                // 창이 뜨는 시간을 대기한다.
+                Thread.Sleep(200);
+                resizeGmsh();
 
                 const int TIME_STEP_ms = 500;
 
@@ -168,7 +141,7 @@ namespace Onelab
                     if (progressBar == null)
                     {
                         // 작업을 마칠때 까지 기다린다
-                        m_process.WaitForExit();
+                        m_gmsh.WaitForExit();
 
                         // 중간 중간에 이벤트를 받을 수 있도록 한다
                         System.Windows.Forms.Application.DoEvents();
@@ -176,7 +149,7 @@ namespace Onelab
                     // ProgressBar 동작을 하며 기다리는 프로세스
                     else
                     {
-                        while (!m_process.HasExited)
+                        while (!m_gmsh.HasExited)
                         {
                             progressBar.PerformStep();
 
@@ -191,40 +164,63 @@ namespace Onelab
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
-        public static void resizeGmsh()
+        private void resizeGmsh()
         {
-            const int GMSH_WIDTH = 1200;
-            const int GMSH_HEIGHT = 710;
+            try
+            {
+                Rect gmshRect = new Rect();
 
-            int iScreenWidth = Screen.PrimaryScreen.Bounds.Width;
-            int iScreenHeight = Screen.PrimaryScreen.Bounds.Height;
+                const int GMSH_WIDTH = 1200 - 84;
+                const int GMSH_HEIGHT = 710 + 67;
 
-            int iLeftMargin, iTopMargin;
+                #region ----------------- 모니터 중심에 위치 시킨다. --------------------
 
-            // Gmsh 가 화면 중심에 위치하도록 좌측과 상측의 마진을 계산한다.
-            if (iScreenWidth > GMSH_WIDTH)
-                iLeftMargin = (int)((iScreenWidth - GMSH_WIDTH) / 2.0f);
-            else
-                iLeftMargin = 0;
+                //int iScreenWidth = Screen.PrimaryScreen.Bounds.Width;
+                //int iScreenHeight = Screen.PrimaryScreen.Bounds.Height;
 
-            if (iScreenHeight > GMSH_HEIGHT)
-                iTopMargin = (int)((iScreenHeight - GMSH_HEIGHT) / 2.0f);
-            else
-                iTopMargin = 0;
+                //// Gmsh 가 화면 중심에 위치하도록 좌측과 상측의 마진을 계산한다.
+                //if (iScreenWidth > GMSH_WIDTH)
+                //    gmshRect.Left = (int)((iScreenWidth - GMSH_WIDTH) / 2.0f);
+                //else
+                //    gmshRect.Left = 0;
 
-            // 이미지의 XY 비율이 Gmsh 를 따라가기 때문에 Gmsh 의 크기를 강제로 결정한다.
-            // 이번 실행은 이미 위에서 이미지가 만들어져서 어쩔수 없지만
-            // 다음번 실행때부터 크기 문제가 없도록 매번 자속밀도 보기 실행때 마다 크기를 재 설정한다.
+                //if (iScreenHeight > GMSH_HEIGHT)
+                //    gmshRect.Top = (int)((iScreenHeight - GMSH_HEIGHT) / 2.0f);
+                //else
+                //    gmshRect.Top = 0;
 
-            // 약간의 지연시간이 있어야 창크기의 조절이 가능하다
-            // (100 ms 는 부족하여 안전하게 500 ms 를 사용한다)
-            Thread.Sleep(500);
-            MoveWindow(m_process.MainWindowHandle, iLeftMargin, iTopMargin, 1200, 710, true);
+                #endregion
+
+                // 연결된 프로세스가 있는지 확인하고 명령을 실행한다.
+                if (false == m_gmsh.HasExited)
+                {
+                    IntPtr ptr = m_gmsh.MainWindowHandle;
+                    GetWindowRect(ptr, ref gmshRect);
+                }
+
+                // 이미지의 XY 비율이 Gmsh 를 따라가기 때문에 Gmsh 의 크기를 강제로 결정한다.
+                // 이번 실행은 이미 위에서 이미지가 만들어져서 어쩔수 없지만
+                // 다음번 실행때부터 크기 문제가 없도록 매번 자속밀도 보기 실행때 마다 크기를 재 설정한다.
+
+                // 약간의 지연시간이 있어야 창크기의 조절이 가능하다
+                // (100 ms 는 부족하여 안전하게 500 ms 를 사용한다)
+                Thread.Sleep(500);
+                MoveWindow(m_gmsh.MainWindowHandle, gmshRect.Left, gmshRect.Top, GMSH_WIDTH, GMSH_HEIGHT, true);
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
+                return;
+            }
         }
     }
+
 
     /// <summary>
     /// # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)

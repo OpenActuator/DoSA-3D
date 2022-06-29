@@ -29,15 +29,38 @@ namespace DoSA
         {
             bool bCheck;
 
-            // CSettingData 으로 내린다.
-            downloadSettingData();
-
-            bCheck = CSettingData.isDataOK();
-
-            if (bCheck == true)
+            try
             {
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                // CSettingData 으로 내린다.
+                downloadSettingData();
+
+                bCheck = CSettingData.isSettingDataOK();
+
+                if (bCheck == true)
+                {
+                    string strSampleDirPath = Path.Combine(CSettingData.m_strProgramDirPath,"Samples");
+
+                    List<string> listDir = m_manageFile.getDirectoryList(CSettingData.m_strBaseWorkingDirPath);
+                    List<string> listFile = m_manageFile.getFileList(CSettingData.m_strBaseWorkingDirPath);
+
+                    // 새로 지정한 작업디렉토리에 디렉토리나 파일이 없다면 Sample 디렉토리의 샘플 디자인을 복사한다.
+                    if (listDir.Count == 0 && listFile.Count == 0)
+                    {
+                        m_manageFile.copyDirectory(strSampleDirPath, CSettingData.m_strBaseWorkingDirPath);
+                    }
+
+                    // 수정된 기본 작업 디렉토리가 현 작업 디렉토리가 되도록 설정한다.
+                    CSettingData.m_strCurrentWorkingDirPath = CSettingData.m_strBaseWorkingDirPath;
+
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -54,6 +77,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -113,6 +138,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -138,6 +165,8 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
+                return false;
             }
 
             return true;
@@ -177,6 +206,8 @@ namespace DoSA
             {
                 CNotice.printLog(ex.Message);
                 CNotice.printLogID("AEOW");
+
+                return false;
             }
             
             return true;

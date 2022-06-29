@@ -48,6 +48,8 @@ namespace gtLibrary
                     MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
                     CNotice.printLog(ex.Message);
+
+                    return;
                 }
             }
         }
@@ -99,6 +101,8 @@ namespace gtLibrary
                 MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 
@@ -125,6 +129,8 @@ namespace gtLibrary
                 MessageBox.Show("There are no Language resource files.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
                 CNotice.printLog(ex.Message);
+
+                return;
             }
         }
 

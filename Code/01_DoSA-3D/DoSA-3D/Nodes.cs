@@ -68,8 +68,6 @@ namespace Nodes
         // Design 에 사용되는 부품이나 시험조건을 저장하는 List 이다.
         private List<CNode> m_listNode = new List<CNode>();
 
-        COnelab onelab = new COnelab();
-
         private double m_dMinX, m_dMaxX;
         private double m_dMinY, m_dMaxY;
         private double m_dMinZ, m_dMaxZ;
@@ -93,25 +91,73 @@ namespace Nodes
                 return m_listNode;
             }
         }
-                
-        public bool calcShapeSize(string strMeshFileFullName)
+
+        public bool calcShapeSize(string strMeshFileFuleName)
         {
-            if (false == onelab.calcShapeSize(strMeshFileFullName))
+            List<double> listDataX = new List<double>();
+            List<double> listDataY = new List<double>();
+            List<double> listDataZ = new List<double>();
+
+            try
+            {
+                getMeshNodeCoordinate(strMeshFileFuleName, ref listDataX, ref listDataY, ref listDataZ);
+
+                m_dMinX = listDataX.Min();
+                m_dMaxX = listDataX.Max();
+                m_dMinY = listDataY.Min();
+                m_dMaxY = listDataY.Max();
+                m_dMinZ = listDataZ.Min();
+                m_dMaxZ = listDataZ.Max();
+
+                m_dShapeVolumeSize = Math.Abs(m_dMaxX - m_dMinX) * Math.Abs(m_dMaxY - m_dMinY) * Math.Abs(m_dMaxZ - m_dMinZ);
+
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
                 return false;
-
-            m_dMinX = onelab.MinX;
-            m_dMaxX = onelab.MaxX;
-
-            m_dMinY = onelab.MinY;
-            m_dMaxY = onelab.MaxY;
-
-            m_dMinZ = onelab.MinZ;
-            m_dMaxZ = onelab.MaxZ;
-
-            m_dShapeVolumeSize = Math.Abs(m_dMaxX - m_dMinX) * Math.Abs(m_dMaxY - m_dMinY) * Math.Abs(m_dMaxZ - m_dMinZ);
+            }
 
             return true;
-        }                           
+        }
+
+        private bool getMeshNodeCoordinate(string strMeshFileFullName, ref List<double> listDataX, ref List<double> listDataY, ref List<double> listDataZ)
+        {
+
+            CReadFile readFile = new CReadFile();
+
+            List<string> listBlockLines = new List<string>();
+            List<double> listColumnData = new List<double>();
+
+            try
+            {
+                readFile.readBlock(strMeshFileFullName, ref listBlockLines, "$Nodes", "$EndNodes");
+
+                foreach (string strLine in listBlockLines)
+                {
+                    CParsing.getDataInAllLine(strLine, ref listColumnData, ' ');
+
+                    // 3개의 데이터일때만 좌표 데이터 이다.
+                    if (listColumnData.Count == 3)
+                    {
+                        listDataX.Add(listColumnData[0]);
+                        listDataY.Add(listColumnData[1]);
+                        listDataZ.Add(listColumnData[2]);
+                    }
+
+                    listColumnData.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                CNotice.printLog(ex.Message);
+
+                return false;
+            }
+
+            return true;
+        }
 
         // 모든 형상명 (읽어드린 후 변경 없음)
         private List<string> m_listAllShapeName = new List<string>();
@@ -161,6 +207,8 @@ namespace Nodes
                     return node;
             }
 
+            // Node 가 없는 경우는 null 를 보내고,
+            // 사용하는 측에서 꼭 null 를 검사해서 없는 것을 판단하고 있다.
             return null;
         }
 
@@ -249,8 +297,8 @@ namespace Nodes
                     m_listRemainedShapeName.Remove(nodeName);
                     break;
 
-                // 시험 노드를 추가하는 경우
-                default:
+                case EMKind.FORCE_TEST:
+
                     // 남아있는 Shape 형상 명으로 예약되었거나 사용중이 이름이라면 추가 작업을 취소한다.
                     if (enableUseNodeName(nodeName) == false)
                     {
@@ -260,9 +308,13 @@ namespace Nodes
                             CNotice.noticeWarning("There is the same name test already.");
 
                         return false;
-                    }                        
-
+                    }
                     break;
+
+                default:
+                    // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
+                    return false;
+
             }
 
             m_listNode.Add(node);

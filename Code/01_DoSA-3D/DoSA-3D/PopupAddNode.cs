@@ -56,7 +56,8 @@ namespace DoSA
                     break;                    
 
                 default:
-                    break;
+                    // 해당사항이 없는 항목이 넘어 왔기 때문에 바로 retrun 해서 아래의 동작을 하지 않는다.
+                    return;
             }
 
             if (kind != EMKind.SHOW_LIST)
@@ -95,7 +96,7 @@ namespace DoSA
 
                 this.m_bShapeNode = true;
             }
-            // 형상 Node 가 아니면 텍스트 박스를 활성화 시킨다
+            // 형상 Node 가 아니고 가상실험인 경우라면  텍스트 박스를 활성화 시킨다
             else
             {
                 groupBoxParts.Enabled = false;
@@ -106,10 +107,13 @@ namespace DoSA
                 switch (kind)
                 {
                     case EMKind.FORCE_TEST:
-                        textBoxNodeName.Text = "Force";
+                        // 사용자가 직접 넣도록 한다.
+                        // 추후 자동으로 이름 뒤에 번호가 상승하도록 하라.
+                        //textBoxNodeName.Text = "force";
                         break;
 
                     default:
+                        // 해당사항이 없는 항목은 아래에서 형상이 아니라는 것만 알리고 있다.
                         break;
                 }
 

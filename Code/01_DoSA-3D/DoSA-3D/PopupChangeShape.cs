@@ -71,6 +71,7 @@ namespace DoSA
             catch (Exception ex)
             {
                 CNotice.printLog(ex.Message);
+
                 return false;
             }
 

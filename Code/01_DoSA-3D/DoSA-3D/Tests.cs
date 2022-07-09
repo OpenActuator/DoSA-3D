@@ -26,7 +26,7 @@ namespace Tests
     //------------------------------------------------------------------------------------------
     public class CTest : CNode
     {
-        [DisplayNameAttribute("Mesh Size [%]"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Mesh Size / Shape Length * 100")]
+        [DisplayNameAttribute("Mesh Size [%]"), CategoryAttribute("Condition Fields"), DescriptionAttribute("Mesh Size = Model Length * Mesh Size [%] / 100")]
         public double MeshSizePercent { get; set; }
 
         public CTest()

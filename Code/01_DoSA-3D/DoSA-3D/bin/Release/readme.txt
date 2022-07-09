@@ -3,6 +3,11 @@ https://solenoid.or.kr/index_dosa_open_3d_eng.html
 Gi-Tae Kweon
 zgitae@gmail.com
 
+
+2022-07-09 Ver(1.2.6)
+ - Supports magnetic circuit analysis consisting of permanent magnets and coils without a magnetic steel.
+ - Bug Fix : Error when changing step file containing unused parts
+
 2022-06-30 Ver(1.2.5)
  - Use one Gmsh for DoSA-3D.
  - Automatically copies the sample files to your working directory.

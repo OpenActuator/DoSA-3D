@@ -66,6 +66,7 @@ namespace Nodes
         public bool m_bChanged;
 
         // Design 에 사용되는 부품이나 시험조건을 저장하는 List 이다.
+        // - 형상에 포함되었다고 해서 모두 Node 인것은 아니다. 파트 설정작업을 진행해야 Node 에 형상파트가 추가된다.
         private List<CNode> m_listNode = new List<CNode>();
 
         private double m_dMinX, m_dMaxX;
@@ -81,7 +82,11 @@ namespace Nodes
         public double MinZ { get { return m_dMinZ; } set { m_dMinZ = value; } }
         public double MaxZ { get { return m_dMaxZ; } set { m_dMaxZ = value; } }
 
-        public double ShapeVolumeSize { get { return m_dShapeVolumeSize; } set { m_dShapeVolumeSize = value; } }
+        public double ShapeVolumeSize 
+        { 
+            get { return m_dShapeVolumeSize; } 
+            set { m_dShapeVolumeSize = value; } 
+        }
 
         // Get 전용로 오픈한다
         public List<CNode> GetNodeList
@@ -124,7 +129,6 @@ namespace Nodes
 
         private bool getMeshNodeCoordinate(string strMeshFileFullName, ref List<double> listDataX, ref List<double> listDataY, ref List<double> listDataZ)
         {
-
             CReadFile readFile = new CReadFile();
 
             List<string> listBlockLines = new List<string>();
@@ -187,7 +191,22 @@ namespace Nodes
             {
                 m_listRemainedShapeName = value;
             }
-        }      
+        }
+
+        public List<string> UsedShapeNameList
+        {
+            get
+            {
+                List<string> listShape = new List<string>();
+
+                foreach(string strName in m_listAllShapeName)
+                {
+                    if (false == m_listRemainedShapeName.Contains(strName))
+                        listShape.Add(strName);
+                }
+                return listShape;
+            }
+        }
 
         public CDesign()
         {
@@ -325,13 +344,18 @@ namespace Nodes
         // 같이 이름의 Node 가 있는지 검사한다.
         public bool isExistNode(string nodeName)
         {
-            foreach (CNode node in m_listNode)
-            {
-                if (node.NodeName == nodeName)
-                    return true;
-            }
+            int nNodeCount = m_listNode.Where(p => p.NodeName == nodeName).Count();
 
-            return false;
+            //foreach (CNode node in m_listNode)
+            //{
+            //    if (node.NodeName == nodeName)
+            //        return true;
+            //}
+
+            if (nNodeCount == 0)
+                return true;
+            else
+                return false;
         }
 
         public bool deleteNode(string nodeName)
@@ -504,13 +528,34 @@ namespace Nodes
 
         public bool isExistMagnet()
         {
-            foreach (CNode node in m_listNode)
-            {
-                if (node.KindKey == EMKind.MAGNET)
-                    return true;
-            }
+            int nMagnetCount = m_listNode.Where(p => p.KindKey == EMKind.MAGNET).Count();
 
-            return false;
+            //foreach (CNode node in m_listNode)
+            //{
+            //    if (node.KindKey == EMKind.MAGNET)
+            //        return true;
+            //}
+
+            if (nMagnetCount > 0)
+                return true;
+            else
+                return false;
+        }
+
+        public bool isExistSteel()
+        {
+            int nSteelCount = m_listNode.Where(p => p.KindKey == EMKind.STEEL).Count();
+
+            //foreach (CNode node in m_listNode)
+            //{
+            //    if (node.KindKey == EMKind.STEEL)
+            //        return true;
+            //}
+
+            if (nSteelCount > 0)
+                return true;
+            else
+                return false;
         }
 
         internal bool isCoilAreaOK()

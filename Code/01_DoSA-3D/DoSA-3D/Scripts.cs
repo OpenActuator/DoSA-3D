@@ -466,6 +466,7 @@ General.ShowMessagesOnStartup = 1;
 # 9 : Outer Width X
 # 10 : Outer Width Y
 # 11 : Outer Width Z
+# 12 : Decide to use Steel
 
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
@@ -489,7 +490,7 @@ Characteristic Length { PointsOf{ Volume{STEP_Volumes[]}; } } = {{1}} * 1.0;
 #Characteristic Length { PointsOf{ Volume{volMovingParts}; } } = {{1}} * 0.8;
 
 Physical Surface(SKIN_MOVING) = skinMoving();
-Physical Surface(SKIN_STEEL) = skinSteel();
+{{12}}
 
 volAll() = Volume '*';
 skinAir() = CombinedBoundary{ Volume{ volAll() }; };
@@ -620,8 +621,10 @@ Integration {
         public string m_str33_Formulation_Resolution_Script =
         @"#DEFINE,3
 # 1 : Coil Name
-# 2 : First Line String of Magnet
-# 3 : Second Line String of Magnet
+# 2 : First Line String for Steel
+# 3 : Second Line String for Steel
+# 4 : First Line String for Magnet
+# 5 : Second Line String for Magnet
 
 # Script 생성기에서 주석처리는 첫번째 자리에 # 이 위치할 경우이다. (GetDP 주석은 // 이다.)
 # Script 명령어에서 { 기호를 사용하는 경우 {{ 가 발생하지 않도록 주의하라  
@@ -636,13 +639,13 @@ Formulation {
         Equation {
             Integral { [ nu[{d qnt_A}] * Dof{d qnt_A} , {d qnt_A} ] ;
                 In domainALL ; Jacobian jbVolume ; Integration igElement ; }
-                
-            Galerkin { JacNL [ dhdb_NL[{d qnt_A}] * Dof{d qnt_A} , {d qnt_A} ] ;
-                In domainNL ; Jacobian jbVolume ; Integration igElement ; }
 
 {{2}}
 {{3}}
-                
+
+{{4}}
+{{5}}
+
             Galerkin { [ -js0[], {qnt_A} ] ;
                 In vol{{1}} ; Jacobian jbVolume ; Integration igElement ; }
                 

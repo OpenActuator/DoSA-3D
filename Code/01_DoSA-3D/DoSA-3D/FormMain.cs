@@ -1552,6 +1552,9 @@ namespace DoSA
 
                 #endregion
 
+                if(m_manageFile.isExistDirectory(strShapeNewDirPath))
+                    m_manageFile.deleteDirectory(strShapeNewDirPath);
+
                 // 형상 디렉토리도 같이 생성한다.
                 m_manageFile.createDirectory(strShapeNewDirPath);
 
@@ -1652,7 +1655,7 @@ namespace DoSA
                             listNewAllPartNames.Add(strPartName);
                         }
 
-                        if (m_design.AllShapeNameList.Count != listNewAllPartNames.Count)
+                        if (m_design.UsedShapeNameList.Count != listNewAllPartNames.Count)
                         {
                             if (CSettingData.m_emLanguage == EMLanguage.Korean)
                                 CNotice.noticeWarning("작업 형상과 신규 형상의 Part 개수가 일치하지 않습니다.\n교체 작업이 취소 되었습니다.");
@@ -1664,7 +1667,7 @@ namespace DoSA
                             return;
                         }
 
-                        foreach(string strCurrentPartName in m_design.AllShapeNameList)
+                        foreach(string strCurrentPartName in m_design.UsedShapeNameList)
                         {
                             strFindRet = listNewAllPartNames.Find(x => x.Equals(strCurrentPartName));
 
@@ -1679,6 +1682,14 @@ namespace DoSA
                                 m_manageFile.deleteDirectory(strShapeNewDirPath);
                                 return;
                             }
+                        }
+
+                        // 형상 교체는 사용하고 있는 형상을 기준으로 진행되기 때문에 
+                        // 만약 사용하고 있지 않은 형상이 있다면 삭제를 한다.
+                        if(m_design.RemainedShapeNameList.Count >= 0)
+                        {
+                            m_design.AllShapeNameList = m_design.UsedShapeNameList;
+                            m_design.RemainedShapeNameList.Clear();
                         }
 
                         // 정상적으로 신규형상을 읽어드리면 기존 형상을 삭제한다.
@@ -1769,6 +1780,21 @@ namespace DoSA
                 // 해석 전에 전처리 조건을 확인한다.
                 if (false == isForceTestOK(forceTest))
                     return;
+
+                if(m_design.RemainedShapeNameList.Count != 0)
+                {
+                    string strNotice = string.Empty;
+
+                    if(CSettingData.m_emLanguage == EMLanguage.Korean)
+                        strNotice = "부품으로 사용하지 않은 형상이 존재합니다.\n형상을 제외하고 자기력 계산을 하겠습니까?";
+                    else
+                        strNotice = "Unused geometry exists as a part.\nDo you want to calculate the magnetic force without the shape?";
+
+                    DialogResult ret = CNotice.noticeWarningYesNo(strNotice);
+
+                    if (ret == DialogResult.No)
+                        return;
+                }
 
                 // 이전에 해석결과가 존재하면 (디렉토리가 있으면) 삭제하고 시작한다.
                 if (m_manageFile.isExistDirectory(strTestDirName) == true)
@@ -2038,7 +2064,7 @@ namespace DoSA
                 forceTestZeroCurrent.Voltage = 0.0f;
 
                 // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
-                solveForce(forceTestZeroCurrent, true);
+                solveForce(forceTestZeroCurrent, true);                
 
                 // - m_bFinishThread = false 전에
                 //   solveForce() 안 GetDP 의 Log 파일이나 해석 결과 저장을 여유있게 할 시간을 부여한다.
@@ -2071,7 +2097,7 @@ namespace DoSA
                 m_bSolvingThread = true;
 
                 // Gmsh 를 보이지 않고 해석도 자동실행을 하고 있다.
-                solveForce(m_startedForceTest, true);
+                solveForce(m_startedForceTest, true);                
 
                 // - m_bFinishThread = false 전에
                 //   solveForce() 안 GetDP 의 Log 파일이나 해석 결과 저장을 여유있게 할 시간을 부여한다.
@@ -2134,13 +2160,15 @@ namespace DoSA
                 m_startedForceTest = forceTest;
 
                 m_addedThreadInMain.IsBackground = true;
+
+                // Thread 를 동작 시킨다.
                 m_addedThreadInMain.Start();
 
                 const int TIME_STEP_ms = 500;
 
                 do
                 {
-                    // 모니터링을 위한 반복적 지연 시간
+                    // 모니터링을 위한 반복적 지연 시간 (GetDP 가 파일을 기록할 시간을 부여한다.)
                     Thread.Sleep(TIME_STEP_ms);
 
                     // 한번이라도 오류가 발생하면 저장해 둔다.
@@ -2162,6 +2190,8 @@ namespace DoSA
                     else
                         progressBarForce.PerformStep();
 
+
+                    // DoSA 가 동작한 여유를 부여한다.
                     Application.DoEvents();
 
                     nProgressIncreaseValue++;
@@ -2241,7 +2271,8 @@ namespace DoSA
 
             addFuncitonToDesignProFile(forceTest);
 
-            addFormulationToDesignProFile(forceTest);
+            if (false == addFormulationToDesignProFile(forceTest))
+                return false;
 
             addPostToDesignProFile(forceTest);
 
@@ -2249,6 +2280,7 @@ namespace DoSA
 
 
             // Script 에 사용하는 파일이름은 묶음 처리가 되어서는 안된다.
+            
             if ( bAutoRun == false )
                 strArguments = " -log " + m_manageFile.solveDirectoryNameInPC(strLogFileFullName)
                                 + " " + m_manageFile.solveDirectoryNameInPC(strSolveScriptFileFullName);
@@ -2286,7 +2318,6 @@ namespace DoSA
 
             try
             {
-
                 foreach (CNode node in m_design.GetNodeList)
                 {
                     if (node.KindKey == EMKind.COIL)
@@ -2405,7 +2436,7 @@ namespace DoSA
             }
         }
 
-        private void addFormulationToDesignProFile(CForceTest forceTest)
+        private bool addFormulationToDesignProFile(CForceTest forceTest)
         {
             CScriptContents scriptContents = new CScriptContents();
 
@@ -2419,13 +2450,13 @@ namespace DoSA
 
             string strSolveScriptFileFullName = Path.Combine(strTestDirName, strTestName + ".pro");
 
-
             try
             {
                 strOrgStriptContents = scriptContents.m_str33_Formulation_Resolution_Script;
 
                 int nCount = 0;
                 bool bUsedMagnet = false;
+                bool bUsedSteel = false;
 
                 foreach (CNode node in m_design.GetNodeList)
                 {
@@ -2434,8 +2465,8 @@ namespace DoSA
                         if (nCount >= 1)
                         {
                             // 해석때 코일수는 확인하기 때문에 여기서는 사용자에게 알리지 않고 Log 만 출력한다.
-                            CNotice.noticeWarning("코일 수가 하나 이상이 포함되어 있다.");
-                            return;
+                            CNotice.noticeWarning("코일 수가 하나 이상이 포함되어 동작을 취소한다.");
+                            return false;
                         }
 
                         listScriptString.Add(node.NodeName);
@@ -2443,11 +2474,26 @@ namespace DoSA
                         nCount++;
                     }
 
+                    if (node.KindKey == EMKind.STEEL)
+                        bUsedSteel = true;
+
                     if (node.KindKey == EMKind.MAGNET)
                         bUsedMagnet = true;
                 }
 
-                // 영구자석 수와는 상관이 없다.
+                // Steel 를 사용하는 경우만 사용한다.
+                if (bUsedSteel == true)
+                {
+                    listScriptString.Add("            Galerkin { JacNL[dhdb_NL[{ d qnt_A}] *Dof{ d qnt_A} , { d qnt_A} ] ;\n");
+                    listScriptString.Add("                In domainNL; Jacobian jbVolume; Integration igElement; }\n");
+                }
+                else
+                {
+                    listScriptString.Add("");
+                    listScriptString.Add("");
+                }
+
+                // 영구자석를 사용하는 경우만 사용한다.
                 if (bUsedMagnet == true)
                 {
                     listScriptString.Add("            Galerkin { [ nu[] * br[] , {d qnt_A} ] ;\n");
@@ -2455,9 +2501,8 @@ namespace DoSA
                 }
                 else
                 {
-                    // 영구자석이 없는 경우도 파라메터는 설정해 주어야 한다.
-                    listScriptString.Add(" ");
-                    listScriptString.Add(" ");
+                    listScriptString.Add("");
+                    listScriptString.Add("");
                 }
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strSolveScriptFileFullName, listScriptString);
@@ -2467,8 +2512,10 @@ namespace DoSA
             {
                 CNotice.printLog(ex.Message);
 
-                return;
+                return false;
             }
+
+            return true;
         }
 
         private void addFuncitonToDesignProFile(CForceTest forceTest)
@@ -2854,7 +2901,8 @@ namespace DoSA
 
                 int nIndex = 0;
 
-                if (strMovingPartNames.Length > 2)
+                // Moving Part 가 존재하면 처리한다.
+                if (strMovingPartNames != string.Empty)
                 {
                     // 마지막 ", " 를 제거한다.
                     nIndex = strMovingPartNames.Length - 2;
@@ -2866,7 +2914,8 @@ namespace DoSA
                     strOrgStriptContents += "skinMoving() = CombinedBoundary{ Volume{ " + strMovingPartNames + " }; };\n";
                 }
 
-                if (strSteelPartNames.Length > 2)
+                // Steel Part 가 존재하면 처리한다.
+                if (strSteelPartNames != string.Empty)
                 {
                     // 마지막 ", " 를 제거한다.
                     nIndex = strSteelPartNames.Length - 2;
@@ -2992,7 +3041,12 @@ namespace DoSA
                 listScriptString.Add(dInnerRegionLengthX.ToString());
                 listScriptString.Add(dInnerRegionLengthY.ToString());
                 listScriptString.Add(dInnerRegionLengthZ.ToString());
-   
+
+                if (strSteelPartNames != string.Empty)
+                    listScriptString.Add("Physical Surface(SKIN_STEEL) = skinSteel();");
+                else
+                    listScriptString.Add("");
+
                 strOrgStriptContents += scriptContents.m_str22_Region_Script;
 
                 writeFile.addScriptFileUsingString(strOrgStriptContents, strGeometryScriptFileFullName, listScriptString);
@@ -3291,26 +3345,48 @@ namespace DoSA
             {
                 // 1. Moving Part 는 하나만 지원한다.
                 //
-                if (m_design.getMovingPartSize() != 1)
+                if (m_design.getMovingPartSize() == 0)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeWarning("현버전은 하나의 구동부 파트까지만 지원합니다.");
+                        CNotice.noticeWarning("구동 파트가 존재하지 않습니다.");
                     else
-                        CNotice.noticeWarning("This version supports only one Moving Part.");
+                        CNotice.noticeWarning("The moving part does not exist.");
 
                     return false;
                 }
+
+                if (m_design.getMovingPartSize() >= 2)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("여러개의 구동 파트는 지원하지 않습니다.");
+                    else
+                        CNotice.noticeWarning("Multiple moving parts are not supported.");
+
+                    return false;
+                }
+
 
                 // 2. 코일은 하나만 지원한다.
-                if (m_design.getKindNodeSize(EMKind.COIL) != 1)
+                if (m_design.getKindNodeSize(EMKind.COIL) == 0)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeWarning("현 버전은 하나의 코일까지만 지원합니다.");
+                        CNotice.noticeWarning("코일 파트가 필요합니다.");
                     else
-                        CNotice.noticeWarning("This version supports only one Coil.");
+                        CNotice.noticeWarning("A coil part is required.");
 
                     return false;
                 }
+
+                if (m_design.getKindNodeSize(EMKind.COIL) >= 2)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("여러개의 코일은 지원하지 않습니다.");
+                    else
+                        CNotice.noticeWarning("Multiple coils are not supported.");
+
+                    return false;
+                }
+
 
                 // 3. 코일형상 입력을 확인한다.
                 if (m_design.isCoilAreaOK() == false)
@@ -3330,6 +3406,19 @@ namespace DoSA
                         CNotice.noticeWarning("코일사양 계산이 필요합니다.");
                     else
                         CNotice.noticeWarning("You need to calculate the coil specification.");
+
+                    return false;
+                }
+
+                // 5. 연자성체와 영구자석이 모두 없고 코일만 있는 경우를 확인한다.
+                //  - 코일만 있는 경우 해석 결과가 문제가 있어서 제한하다.
+                //  - 모든 형상에서 검사하는 것이 아니라 파트로 사용되는 형상 파트에서만 영구자석과 연자성체를 확인한다.
+                if (m_design.isExistMagnet() == false && m_design.isExistSteel() == false && m_design.RemainedShapeNameList.Count > 0)
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("하나 이상의 영구자석 또는 연자성체가 필요합니다.");
+                    else
+                        CNotice.noticeWarning("At least one permanent magnet or soft magnetic material is required.");
 
                     return false;
                 }

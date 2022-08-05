@@ -1778,7 +1778,7 @@ namespace DoSA
             try
             {
                 // 해석 전에 전처리 조건을 확인한다.
-                if (false == isForceTestOK(forceTest))
+                if (false == isForceTestOK())
                     return;
 
                 if(m_design.RemainedShapeNameList.Count != 0)
@@ -2051,7 +2051,7 @@ namespace DoSA
                 if (m_startedForceTest == null) return;
 
                 // 해석 전에 전처리 조건을 확인한다.
-                if (false == isForceTestOK(m_startedForceTest))
+                if (false == isForceTestOK())
                     return;
 
                 m_bSolvingThread = true;
@@ -2091,7 +2091,7 @@ namespace DoSA
                 if (m_startedForceTest == null) return;
 
                 // 해석 전에 전처리 조건을 확인한다.
-                if (false == isForceTestOK(m_startedForceTest))
+                if (false == isForceTestOK())
                     return;
 
                 m_bSolvingThread = true;
@@ -3339,7 +3339,7 @@ namespace DoSA
 
         #region----------------------- 가상시험 관련 -------------------------------
 
-        private bool isForceTestOK(CForceTest forceTest)
+        private bool isForceTestOK()
         {
             try
             {
@@ -3367,7 +3367,7 @@ namespace DoSA
 
 
                 // 2. 코일은 하나만 지원한다.
-                if (m_design.getKindNodeSize(EMKind.COIL) == 0)
+                if (m_design.isExistCoil() == false)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
                         CNotice.noticeWarning("코일 파트가 필요합니다.");
@@ -3387,25 +3387,28 @@ namespace DoSA
                     return false;
                 }
 
+                //----------------------------------------------------------------------------------
+                // 2022-08-05 
+                // - 코일 설계치를 계산하지 않고 저항과 턴을 입력하는 경우를 인정하기 위해 동작을 제한한다.
+                //----------------------------------------------------------------------------------
+                //// 3. 코일형상 입력을 확인한다.
+                //if (m_design.isCoilAreaOK() == false)
+                //{
+                //    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                //        CNotice.noticeWarning("코일형상 입력이 필요합니다.");
+                //    else
+                //        CNotice.noticeWarning("You need to enter the coil geometry dimensions.");
 
-                // 3. 코일형상 입력을 확인한다.
-                if (m_design.isCoilAreaOK() == false)
-                {
-                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeWarning("코일형상 입력이 필요합니다.");
-                    else
-                        CNotice.noticeWarning("You need to enter the coil geometry dimensions.");
-
-                    return false;
-                }
+                //    return false;
+                //}
 
                 // 4. 코일사양 계산을 확인한다.
                 if (m_design.isCoilSpecificationOK() == false)
                 {
                     if (CSettingData.m_emLanguage == EMLanguage.Korean)
-                        CNotice.noticeWarning("코일사양 계산이 필요합니다.");
+                        CNotice.noticeWarning("코일사양 문제가 있습니다.");
                     else
-                        CNotice.noticeWarning("You need to calculate the coil specification.");
+                        CNotice.noticeWarning("There is a problem with the coil specification.");
 
                     return false;
                 }
@@ -4107,7 +4110,6 @@ namespace DoSA
 
             try
             {
-
                 PopupAddNode popupNodeName = new PopupAddNode(emKind, m_design.RemainedShapeNameList);
                 popupNodeName.StartPosition = FormStartPosition.CenterParent;
 

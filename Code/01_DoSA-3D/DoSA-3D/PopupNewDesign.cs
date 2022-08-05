@@ -31,20 +31,22 @@ namespace DoSA
                 groupBoxComment.Text = "기능 제한";
                 labelComment1.Text = "1. 형상 제한";
                 labelComment2.Text = "- 코일 중심축은 Y 축과 일치해야 합니다.";
-                labelComment3.Text = "- 전류는 다각 코일이라도 원통 형태로 인가됩니다.";
-                labelComment4.Text = "2. 파트 수 제한";
-                labelComment5.Text = "- 동작은 하나의 파트만 지원합니다.";
-                labelComment6.Text = "- 하나의 코일만 지원합니다.";
+                labelComment3.Text = "- STEP 파일의 파트명은 영문만 지원합니다.";
+                labelComment4.Text = "- 다각 코일도 전류는 원통코일처럼 인가됩니다.";
+                labelComment5.Text = "2. 파트 수 제한";
+                labelComment6.Text = "- 움직이는 파트는 하나만 지원합니다.";
+                labelComment7.Text = "- 하나의 코일만 지원합니다.";
             }
             else
             {
-                groupBoxComment.Text = "Functional limitations";
+                groupBoxComment.Text = "Limitations";
                 labelComment1.Text = " 1. Shape constraint";
-                labelComment2.Text = "- Coil central axis must coincide with Y axis.";
-                labelComment3.Text = "- Current is always applied in cylindrical form.";
-                labelComment4.Text = "2. Limited number of parts";
-                labelComment5.Text = "- Actions only support one part.";
-                labelComment6.Text = "- Only one coil is supported.";
+                labelComment2.Text = "- The coil center axis must coincide with the Y axis.";
+                labelComment3.Text = "- The part name of the STEP file supports only English.";
+                labelComment4.Text = "- In polygonal coils, current is applied like a cylindrical coil.";
+                labelComment5.Text = "2. Limited number of parts";
+                labelComment6.Text = "- Only one moving part is supported.";
+                labelComment7.Text = "- Only one coil is supported.";
             }
         }
 

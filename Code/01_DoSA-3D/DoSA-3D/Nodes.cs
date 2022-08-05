@@ -346,16 +346,11 @@ namespace Nodes
         {
             int nNodeCount = m_listNode.Where(p => p.NodeName == nodeName).Count();
 
-            //foreach (CNode node in m_listNode)
-            //{
-            //    if (node.NodeName == nodeName)
-            //        return true;
-            //}
-
+            // 존재하지 않으면 false 를 리턴하고 존재하면 true 를 리턴한다.
             if (nNodeCount == 0)
-                return true;
-            else
                 return false;
+            else
+                return true;
         }
 
         public bool deleteNode(string nodeName)
@@ -530,32 +525,33 @@ namespace Nodes
         {
             int nMagnetCount = m_listNode.Where(p => p.KindKey == EMKind.MAGNET).Count();
 
-            //foreach (CNode node in m_listNode)
-            //{
-            //    if (node.KindKey == EMKind.MAGNET)
-            //        return true;
-            //}
-
-            if (nMagnetCount > 0)
-                return true;
-            else
+            // 존재하지 않으면 false 를 리턴하고 존재하면 true 를 리턴한다.
+            if (nMagnetCount == 0)
                 return false;
+            else
+                return true;
         }
 
         public bool isExistSteel()
         {
             int nSteelCount = m_listNode.Where(p => p.KindKey == EMKind.STEEL).Count();
 
-            //foreach (CNode node in m_listNode)
-            //{
-            //    if (node.KindKey == EMKind.STEEL)
-            //        return true;
-            //}
-
-            if (nSteelCount > 0)
-                return true;
-            else
+            // 존재하지 않으면 false 를 리턴하고 존재하면 true 를 리턴한다.
+            if (nSteelCount == 0)
                 return false;
+            else
+                return true;
+        }
+
+        public bool isExistCoil()
+        {
+            int nCoilCount = m_listNode.Where(p => p.KindKey == EMKind.COIL).Count();
+
+            // 존재하지 않으면 false 를 리턴하고 존재하면 true 를 리턴한다.
+            if (nCoilCount == 0)
+                return false;
+            else
+                return true;
         }
 
         internal bool isCoilAreaOK()
@@ -577,18 +573,16 @@ namespace Nodes
 
         internal bool isCoilSpecificationOK()
         {
-            bool ret = false;
-
             foreach (CNode node in m_listNode)
             {
                 if (node.KindKey == EMKind.COIL)
                 {
-                    if (((CCoil)node).Resistance > 0 && ((CCoil)node).Turns > 0)
-                        ret = true;
+                    if (((CCoil)node).Resistance <= 0 || ((CCoil)node).Turns <= 0)
+                        return false;
                 }
             }
 
-            return ret;
+            return true;
         }
 
 

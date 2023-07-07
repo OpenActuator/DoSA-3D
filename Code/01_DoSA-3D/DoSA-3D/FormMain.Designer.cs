@@ -59,7 +59,6 @@
             this.ribbonPanelHelp = new System.Windows.Forms.RibbonPanel();
             this.ribbonButtonSetting = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonHelp = new System.Windows.Forms.RibbonButton();
-            this.ribbonButtonDonation = new System.Windows.Forms.RibbonButton();
             this.ribbonButtonAbout = new System.Windows.Forms.RibbonButton();
             this.splitContainerLeft = new System.Windows.Forms.SplitContainer();
             this.treeViewMain = new System.Windows.Forms.TreeView();
@@ -67,6 +66,10 @@
             this.propertyGridMain = new System.Windows.Forms.PropertyGrid();
             this.splitterHorizontal = new System.Windows.Forms.Splitter();
             this.splitContainerRight = new System.Windows.Forms.SplitContainer();
+            this.panelEmpty = new System.Windows.Forms.Panel();
+            this.pictureBoxOpenActuator = new System.Windows.Forms.PictureBox();
+            this.messageListView = new gtLibrary.MessageListView();
+            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panelForce = new System.Windows.Forms.Panel();
             this.buttonPlotFullDensity = new System.Windows.Forms.Button();
             this.buttonPlotSectionDensity = new System.Windows.Forms.Button();
@@ -84,10 +87,6 @@
             this.textBoxForceX = new System.Windows.Forms.TextBox();
             this.pictureBoxForce = new System.Windows.Forms.PictureBox();
             this.buttonTestForce = new System.Windows.Forms.Button();
-            this.messageListView = new gtLibrary.MessageListView();
-            this.columnHeaderMessage = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.panelEmpty = new System.Windows.Forms.Panel();
-            this.pictureBoxOpenActuator = new System.Windows.Forms.PictureBox();
             this.panelMagnet = new System.Windows.Forms.Panel();
             this.pictureBoxMagnet = new System.Windows.Forms.PictureBox();
             this.panelSteel = new System.Windows.Forms.Panel();
@@ -117,10 +116,10 @@
             this.splitContainerRight.Panel1.SuspendLayout();
             this.splitContainerRight.Panel2.SuspendLayout();
             this.splitContainerRight.SuspendLayout();
-            this.panelForce.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).BeginInit();
             this.panelEmpty.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).BeginInit();
+            this.panelForce.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).BeginInit();
             this.panelMagnet.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMagnet)).BeginInit();
             this.panelSteel.SuspendLayout();
@@ -138,7 +137,7 @@
             // ribbonToolbar
             // 
             this.ribbonToolbar.CaptionBarVisible = false;
-            this.ribbonToolbar.Font = new System.Drawing.Font("Malgun Gothic", 9F);
+            this.ribbonToolbar.Font = new System.Drawing.Font("맑은 고딕", 9F);
             this.ribbonToolbar.Location = new System.Drawing.Point(0, 0);
             this.ribbonToolbar.Minimized = false;
             this.ribbonToolbar.Name = "ribbonToolbar";
@@ -331,7 +330,6 @@
             // 
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonSetting);
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonHelp);
-            this.ribbonPanelHelp.Items.Add(this.ribbonButtonDonation);
             this.ribbonPanelHelp.Items.Add(this.ribbonButtonAbout);
             this.ribbonPanelHelp.Text = "HELP";
             // 
@@ -350,13 +348,6 @@
             this.ribbonButtonHelp.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonHelp.SmallImage")));
             this.ribbonButtonHelp.Text = "Help";
             this.ribbonButtonHelp.Click += new System.EventHandler(this.ribbonButtonHelp_Click);
-            // 
-            // ribbonButtonDonation
-            // 
-            this.ribbonButtonDonation.Image = ((System.Drawing.Image)(resources.GetObject("ribbonButtonDonation.Image")));
-            this.ribbonButtonDonation.SmallImage = ((System.Drawing.Image)(resources.GetObject("ribbonButtonDonation.SmallImage")));
-            this.ribbonButtonDonation.Text = "Donation";
-            this.ribbonButtonDonation.Click += new System.EventHandler(this.ribbonButtonDonation_Click);
             // 
             // ribbonButtonAbout
             // 
@@ -449,6 +440,47 @@
             this.splitContainerRight.Size = new System.Drawing.Size(746, 743);
             this.splitContainerRight.SplitterDistance = 557;
             this.splitContainerRight.TabIndex = 3;
+            // 
+            // panelEmpty
+            // 
+            this.panelEmpty.Controls.Add(this.pictureBoxOpenActuator);
+            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
+            this.panelEmpty.Name = "panelEmpty";
+            this.panelEmpty.Size = new System.Drawing.Size(742, 553);
+            this.panelEmpty.TabIndex = 0;
+            this.panelEmpty.Resize += new System.EventHandler(this.panelEmpty_Resize);
+            // 
+            // pictureBoxOpenActuator
+            // 
+            this.pictureBoxOpenActuator.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxOpenActuator.Image")));
+            this.pictureBoxOpenActuator.Location = new System.Drawing.Point(197, 232);
+            this.pictureBoxOpenActuator.Name = "pictureBoxOpenActuator";
+            this.pictureBoxOpenActuator.Size = new System.Drawing.Size(348, 75);
+            this.pictureBoxOpenActuator.TabIndex = 1;
+            this.pictureBoxOpenActuator.TabStop = false;
+            this.pictureBoxOpenActuator.Click += new System.EventHandler(this.pictureBoxOpenActuator_Click);
+            this.pictureBoxOpenActuator.MouseEnter += new System.EventHandler(this.pictureBoxOpenActuator_MouseEnter);
+            this.pictureBoxOpenActuator.MouseLeave += new System.EventHandler(this.pictureBoxOpenActuator_MouseLeave);
+            // 
+            // messageListView
+            // 
+            this.messageListView.BackColor = System.Drawing.Color.Ivory;
+            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderMessage});
+            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.messageListView.HideSelection = false;
+            this.messageListView.Location = new System.Drawing.Point(0, 0);
+            this.messageListView.Name = "messageListView";
+            this.messageListView.Size = new System.Drawing.Size(742, 178);
+            this.messageListView.TabIndex = 1;
+            this.messageListView.UseCompatibleStateImageBehavior = false;
+            this.messageListView.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeaderMessage
+            // 
+            this.columnHeaderMessage.Width = 732;
             // 
             // panelForce
             // 
@@ -616,47 +648,6 @@
             this.buttonTestForce.Text = "Force Test";
             this.buttonTestForce.UseVisualStyleBackColor = true;
             this.buttonTestForce.Click += new System.EventHandler(this.buttonTestForce_Click);
-            // 
-            // messageListView
-            // 
-            this.messageListView.BackColor = System.Drawing.Color.Ivory;
-            this.messageListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderMessage});
-            this.messageListView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.messageListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.messageListView.HideSelection = false;
-            this.messageListView.Location = new System.Drawing.Point(0, 0);
-            this.messageListView.Name = "messageListView";
-            this.messageListView.Size = new System.Drawing.Size(742, 178);
-            this.messageListView.TabIndex = 1;
-            this.messageListView.UseCompatibleStateImageBehavior = false;
-            this.messageListView.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeaderMessage
-            // 
-            this.columnHeaderMessage.Width = 732;
-            // 
-            // panelEmpty
-            // 
-            this.panelEmpty.Controls.Add(this.pictureBoxOpenActuator);
-            this.panelEmpty.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelEmpty.Location = new System.Drawing.Point(0, 0);
-            this.panelEmpty.Name = "panelEmpty";
-            this.panelEmpty.Size = new System.Drawing.Size(742, 553);
-            this.panelEmpty.TabIndex = 0;
-            this.panelEmpty.Resize += new System.EventHandler(this.panelEmpty_Resize);
-            // 
-            // pictureBoxOpenActuator
-            // 
-            this.pictureBoxOpenActuator.Image = ((System.Drawing.Image)(resources.GetObject("pictureBoxOpenActuator.Image")));
-            this.pictureBoxOpenActuator.Location = new System.Drawing.Point(197, 232);
-            this.pictureBoxOpenActuator.Name = "pictureBoxOpenActuator";
-            this.pictureBoxOpenActuator.Size = new System.Drawing.Size(348, 75);
-            this.pictureBoxOpenActuator.TabIndex = 1;
-            this.pictureBoxOpenActuator.TabStop = false;
-            this.pictureBoxOpenActuator.Click += new System.EventHandler(this.pictureBoxOpenActuator_Click);
-            this.pictureBoxOpenActuator.MouseEnter += new System.EventHandler(this.pictureBoxOpenActuator_MouseEnter);
-            this.pictureBoxOpenActuator.MouseLeave += new System.EventHandler(this.pictureBoxOpenActuator_MouseLeave);
             // 
             // panelMagnet
             // 
@@ -892,11 +883,11 @@
             this.splitContainerRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).EndInit();
             this.splitContainerRight.ResumeLayout(false);
+            this.panelEmpty.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).EndInit();
             this.panelForce.ResumeLayout(false);
             this.panelForce.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxForce)).EndInit();
-            this.panelEmpty.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOpenActuator)).EndInit();
             this.panelMagnet.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxMagnet)).EndInit();
             this.panelSteel.ResumeLayout(false);
@@ -992,7 +983,6 @@
         private System.Windows.Forms.Label labelN_Z;
         private System.Windows.Forms.Label labelN_Y;
         private System.Windows.Forms.RibbonButton ribbonButtonShowShape;
-        private System.Windows.Forms.RibbonButton ribbonButtonDonation;
         private System.Windows.Forms.RibbonButton ribbonButtonChangeShape;
         private System.Windows.Forms.Label labelProgressForce;
         private System.Windows.Forms.ProgressBar progressBarForce;

@@ -176,7 +176,7 @@
             this.buttonContribution.TabIndex = 3;
             this.buttonContribution.Text = "Contribution";
             this.buttonContribution.UseVisualStyleBackColor = true;
-            this.buttonContribution.Click += new System.EventHandler(this.buttonDonation_Click);
+            this.buttonContribution.Click += new System.EventHandler(this.buttonContribution_Click);
             // 
             // buttonUpgrade
             // 

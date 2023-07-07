@@ -3,6 +3,8 @@ https://solenoid.or.kr/index_dosa_open_3d_eng.html
 Gi-Tae Kweon
 zgitae@gmail.com
 
+2022-08-05 Ver(1.2.7)
+ - Bug Fix : Serious bug where parts are not added
 
 2022-07-09 Ver(1.2.6)
  - Supports magnetic circuit analysis consisting of permanent magnets and coils without a magnetic steel.

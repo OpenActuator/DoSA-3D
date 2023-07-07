@@ -1460,33 +1460,6 @@ namespace DoSA
             frmAbout.ShowDialog();
         }
 
-        private void ribbonButtonDonation_Click(object sender, EventArgs e)
-        {
-            string target;
-
-            if (CSettingData.m_emLanguage == EMLanguage.Korean)
-            {
-                target = "https://solenoid.or.kr/index_donation.html";
-            }
-            else
-            {
-                target = "https://www.buymeacoffee.com/openactuator";
-            }
-
-            try
-            {
-                System.Diagnostics.Process.Start(target);
-            }
-            catch (System.ComponentModel.Win32Exception noBrowser)
-            {
-                if (noBrowser.ErrorCode == -2147467259)
-                    CNotice.printLog(noBrowser.Message);
-            }
-            catch (System.Exception other)
-            {
-                CNotice.printLog(other.Message);
-            }
-        }
 
         private void ribbonButtonChangeShape_Click(object sender, EventArgs e)
         {

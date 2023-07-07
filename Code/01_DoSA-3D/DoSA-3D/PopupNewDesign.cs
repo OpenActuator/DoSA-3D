@@ -31,7 +31,7 @@ namespace DoSA
                 groupBoxComment.Text = "기능 제한";
                 labelComment1.Text = "1. 형상 제한";
                 labelComment2.Text = "- 코일 중심축은 Y 축과 일치해야 합니다.";
-                labelComment3.Text = "- STEP 파일의 파트명은 영문만 지원합니다.";
+                labelComment3.Text = "- 파트명은 영문만 지원하고 공백은 불가합니다.";
                 labelComment4.Text = "- 다각 코일도 전류는 원통코일처럼 인가됩니다.";
                 labelComment5.Text = "2. 파트 수 제한";
                 labelComment6.Text = "- 움직이는 파트는 하나만 지원합니다.";
@@ -42,7 +42,7 @@ namespace DoSA
                 groupBoxComment.Text = "Limitations";
                 labelComment1.Text = " 1. Shape constraint";
                 labelComment2.Text = "- The coil center axis must coincide with the Y axis.";
-                labelComment3.Text = "- The part name of the STEP file supports only English.";
+                labelComment3.Text = "- Only English part names are supported and spaces are not allowed.";
                 labelComment4.Text = "- In polygonal coils, current is applied like a cylindrical coil.";
                 labelComment5.Text = "2. Limited number of parts";
                 labelComment6.Text = "- Only one moving part is supported.";

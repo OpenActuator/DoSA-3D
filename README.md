@@ -9,3 +9,5 @@ This program is an open source software for solenoids &amp; actuators
 <br><br>
 
 ![DoSA-3D](./Images/Auto-Focus_Analysis_3D.png)
+
+<img src="./Images/Auto-Focus_Analysis_3D.png" border="0" alt="">

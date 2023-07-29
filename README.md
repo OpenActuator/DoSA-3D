@@ -7,4 +7,4 @@ This program is an open source software for solenoids &amp; actuators
 3. Board : <a href="https://solenoid.or.kr/direct_eng.php?address=https://solenoid.or.kr/gtzero1/gt_zboard.php?id=open_cae_eng">DoSA-3D Q&A and Data Board</a><br>
 4. Homepage : <a href="https://solenoid.or.kr/index_dosa_open_3d_eng.html">DoSA-3D Homepage Link</a><br>
 <br><br>
-![DoSA-3D]("https://solenoid.or.kr/openactuator/DoSA/DoSA-3D.png)
+![DoSA-3D](https://solenoid.or.kr/openactuator/DoSA/DoSA-3D.png)

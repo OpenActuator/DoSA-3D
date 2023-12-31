@@ -39,6 +39,7 @@ namespace gtLibrary
 
         /// <summary>
         /// - 메모리에 하나라도 해당 이름의 Process 가 동작하고 있는지 확인한다.
+        /// - 주의사항 : ".exe"는 포함되지 않아야 한다. 예)gmsh.exe --> gmsh
         /// </summary>
         /// <param name="strProcessName"></param>  
         public static bool isRunProcesses(string strProcessName)

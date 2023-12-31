@@ -137,7 +137,7 @@
             // ribbonToolbar
             // 
             this.ribbonToolbar.CaptionBarVisible = false;
-            this.ribbonToolbar.Font = new System.Drawing.Font("맑은 고딕", 9F);
+            this.ribbonToolbar.Font = new System.Drawing.Font("Malgun Gothic", 9F);
             this.ribbonToolbar.Location = new System.Drawing.Point(0, 0);
             this.ribbonToolbar.Minimized = false;
             this.ribbonToolbar.Name = "ribbonToolbar";

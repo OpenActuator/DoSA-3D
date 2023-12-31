@@ -64,6 +64,46 @@ namespace DoSA
 
         #region----------------------- 프로그램 초기화 --------------------------
 
+        private void backupGmshrc()
+        {
+            string strRoamingPath = Environment.GetEnvironmentVariable("APPDATA");      // Roaming
+
+            string strGmshSettingFileFullName = Path.Combine(strRoamingPath, "gmshrc");
+            string strBackupGmshSettingFileFullName = Path.Combine(strRoamingPath, "gmshrc_bak");
+
+            // 사용중인 gmshrc 파일을 백업하고 삭제한다.
+            if (m_manageFile.isExistFile(strGmshSettingFileFullName))
+            {
+                if (m_manageFile.isExistFile(strBackupGmshSettingFileFullName))
+                    m_manageFile.deleteFile(strBackupGmshSettingFileFullName);
+
+                m_manageFile.copyFile(strGmshSettingFileFullName, strBackupGmshSettingFileFullName);
+                m_manageFile.deleteFile(strGmshSettingFileFullName);
+
+                // gmshrc 생성은 DoSA 안 Gmsh 창이 실행될때 생성된다.
+            }
+        }
+
+        private void recoverGmshrc()
+        {
+            string strRoamingPath = Environment.GetEnvironmentVariable("APPDATA");      // Roaming
+
+            string strGmshSettingFileFullName = Path.Combine(strRoamingPath, "gmshrc");
+            string strBackupGmshSettingFileFullName = Path.Combine(strRoamingPath, "gmshrc_bak");
+
+            // 백업 gmshrc 파일을 복원한다.
+            if (m_manageFile.isExistFile(strBackupGmshSettingFileFullName))
+            {
+                // DoSA용 gmshrc 파일을 삭제한다.
+                if (m_manageFile.isExistFile(strGmshSettingFileFullName))
+                    m_manageFile.deleteFile(strGmshSettingFileFullName);
+
+                m_manageFile.copyFile(strBackupGmshSettingFileFullName, strGmshSettingFileFullName);
+                m_manageFile.deleteFile(strBackupGmshSettingFileFullName);
+            }
+        }
+
+
         public FormMain(string strDSAFileFullName = null, string strDataFileFullName = null)
         {
             InitializeComponent();
@@ -101,7 +141,6 @@ namespace DoSA
             // 실행전에 CSettingData 의 값들이 설정되어야 한다.
             initializeProgram();
 
-
             // 환경설정의 기본 작업디렉토리의 해당 프로그램의 디렉토리로 일단 설정한다.
             // 환경설정을 읽어온 후 에 초기화 해야 한다.
             // 주의사항 : initializeProgram() 뒤에 호출 해야 한다.
@@ -131,6 +170,9 @@ namespace DoSA
 
             progressBarForce.Hide();
             labelProgressForce.Hide();
+
+            // DoSA가 정상적으로 실행되면 이전 gmshrc 파일을 백업하고 삭제한다.
+            backupGmshrc();
         }
 
         //----------- Update Dialog Test --------------
@@ -316,49 +358,6 @@ namespace DoSA
 
         }
 
-        /// <summary>
-        /// 2023-03-18일 까지 코드를 유지하고 이후는 삭제한다.
-        /// 
-        /// 2022-03-18 의 DoSA-3D Ver0.9.12.7 에서 
-        /// 프로그램 명칭을 DoSA-Open_2D --> DoSA-2D 로 변경되어서 남게된 
-        /// 기존 설치 프로그램과 작업환경 디렉토리를 삭제한다.
-        /// 
-        /// 2022-03-19 의 DoSA-3D Ver0.9.13.0 에서
-        /// 샘플 명칭이 LV --> VCM 으로 변경되어서 필요없는 기존 설치 예제 디렉토리를 삭제한다.
-        /// </summary>
-        private void deleteOldDirectories()
-        {
-            string strAppDataDirPath = Environment.GetEnvironmentVariable("APPDATA");
-            string strSettingDirPath = Path.Combine(strAppDataDirPath, "DoSA-3D");
-            string strOldSettingDirPath = Path.Combine(strAppDataDirPath, "DoSA-Open_3D");
-
-            string strParentDirPath = Path.GetDirectoryName(CSettingData.m_strProgramDirPath);
-            string strOldInstallDirPath = Path.Combine(strParentDirPath, "DoSA-Open_3D");
-
-            string[] arrayDirName = { strParentDirPath, "DoSA-3D", "Samples", "LV" };
-            string strOldExampleDirPath = Path.Combine(arrayDirName);
-
-            // 기존 작업환경 디렉토리가 있으면 디렉토리을 바꾸어 복사하고 기존 디렉토리는 삭제한다.
-            if (m_manageFile.isExistDirectory(strOldSettingDirPath) == true)
-            {
-                m_manageFile.copyDirectory(strOldSettingDirPath, strSettingDirPath);
-                m_manageFile.deleteDirectory(strOldSettingDirPath);
-            }
-
-            // 기존 설치 디렉토리가 있으면 삭제한다.
-            if (m_manageFile.isExistDirectory(strOldInstallDirPath) == true)
-            {
-                m_manageFile.deleteDirectory(strOldInstallDirPath);
-            }
-
-            // 기존 사용 Example 디렉토리가 있으면 삭제한다.
-            if (m_manageFile.isExistDirectory(strOldExampleDirPath) == true)
-            {
-                m_manageFile.deleteDirectory(strOldExampleDirPath);
-            }
-
-        }
-
         private void initializeProgram()
         {
             try
@@ -409,13 +408,6 @@ namespace DoSA
                     System.Windows.Forms.Application.ExitThread();
                     Environment.Exit(0);
                 }
-
-                //=====================================================================
-                // 2023-03-18일 까지 코드를 유지하고 이후는 삭제한다
-                //=====================================================================
-                deleteOldDirectories();
-                //=====================================================================
-
 
                 /// Net Framework V4.51 이전버전이 설치 되었는지를 확인한다.
                 bool retFreamework = checkFramework451();
@@ -651,7 +643,9 @@ namespace DoSA
 
                 CScriptContents scriptContents = new CScriptContents();
 
+                // 형상을 보기위해 Gmsh가 실행되고 종료될때 생성되는 gmshrc 안에 Solver.Executable0 = "C:\onelab-Windows64\getdp.exe"; 를 추가한다
                 string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
+
                 string strOrgStriptContents = scriptContents.m_str02_Show_Part_Script;
 
                 listScriptString.Add(strShapeModelFileFullName);
@@ -874,7 +868,9 @@ namespace DoSA
 
                 CScriptContents scriptContents = new CScriptContents();
 
+                // 형상을 보기위해 Gmsh가 실행되고 종료될때 생성되는 gmshrc 안에 Solver.Executable0 = "C:\onelab-Windows64\getdp.exe"; 를 추가한다
                 string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
+
                 string strOrgStriptContents = scriptContents.m_str01_Show_STEP_Script;
 
                 // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
@@ -1549,7 +1545,9 @@ namespace DoSA
 
                 CScriptContents scriptContents = new CScriptContents();
 
+                // 여기에서는 굳이 getdp.exe 경로추가가 필요없지만 동일한 스크립트를 하용하고 있어서 추가한다
                 string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
+
                 string strOrgStriptContents = scriptContents.m_str01_Show_STEP_Script;
 
                 // 1. 복사한 STEP 파일명과 파트명 저장 파일명을 저장해 둔다
@@ -2141,6 +2139,10 @@ namespace DoSA
 
                 do
                 {
+                    // 2023.12.31
+                    // 신기하게도 아래의 동작에서 Gsmh 창을 닫지 않고 해석을 실행한 경우에 자동으로 Gmsh창을 닫아주고 있다.
+                    // 이런 동작때문에 gmshrc 파일이 생성되어서 해석이 정상적으로 일어나고 있다.
+
                     // 모니터링을 위한 반복적 지연 시간 (GetDP 가 파일을 기록할 시간을 부여한다.)
                     Thread.Sleep(TIME_STEP_ms);
 
@@ -2779,8 +2781,9 @@ namespace DoSA
 
                 writeFile.createScriptFileUsingString(strOrgStriptContents, strImageScriptFileFullName, listScriptString);
 
-
+                // 여기에서는 굳이 getdp.exe 경로추가가 필요없지만 동일한 스크립트를 하용하고 있어서 추가한다
                 string strGetDPFileFullName = Path.Combine(Path.GetDirectoryName(CSettingData.m_strGmshExeFileFullName), "getdp.exe");
+
                 // 전체 자속밀도 벡터를 출력하기 위한 파트형상 출력 스크립트를 생성한다.
                 strOrgStriptContents = scriptContents.m_str02_Show_Part_Script;
 
@@ -3184,6 +3187,9 @@ namespace DoSA
                 }
             }
 
+            // DoSA용 gmshrc 파일을 삭제하고 백업 gmshrc 파일을 복원한다.
+            recoverGmshrc();
+
             // Thread 가 동작중이면 동작을 멈춘다.
             if (m_bSolvingThread == true)
                 stopSolveForceThread();
@@ -3398,6 +3404,17 @@ namespace DoSA
 
                     return false;
                 }
+
+                if(true == CManageProcess.isRunProcesses("gmsh"))
+                {
+                    if (CSettingData.m_emLanguage == EMLanguage.Korean)
+                        CNotice.noticeWarning("Gmsh가 실행 중에 있습니다.\n\nGmsh를 종료 후에 다시 해석을 시작하십시오.");
+                    else
+                        CNotice.noticeWarning("Gmsh is running.\n\nQuit Gmsh and start simulation again.");
+
+                    return false;
+                }
+
 
                 //if (m_design.isDesignShapeOK() == false)
                 //{
@@ -3729,7 +3746,11 @@ namespace DoSA
 
                 string strActuatorDesignFileFullName = Path.Combine(strDesignDirPath, m_design.m_strDesignName + ".dsa3d");
 
+                // StreamWriter의 기본 Encoding 은 UTF-8 이다.
+                // 특정문자(터키어 등)에 문제가 될 수 있으나,
+                // 해당언어로 디렉토리를 만드는 경우가 많을 것으로 판단해서 호환성을 높이기 위해 기존처럼 UTF-8 을 그대로 사용한다
                 StreamWriter writeStream = new StreamWriter(strActuatorDesignFileFullName);
+
                 CWriteFile writeFile = new CWriteFile();
 
                 // Project 정보를 기록한다.

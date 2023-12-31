@@ -454,7 +454,7 @@ namespace Nodes
 
             foreach (CNode node in GetNodeList)
             {
-                node.writeObject(writeStream, nLevel);
+                node.writeObject(writeStream, nLevel + 1);
             }
 
             writeFile.writeEndLine(writeStream, "Design", nLevel);

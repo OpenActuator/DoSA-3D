@@ -153,6 +153,10 @@ namespace DoSA
             try
             {
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(CSettingDataClone));
+
+                // StreamWriter의 기본 Encoding 은 UTF-8 이다.
+                // 특정문자(터키어 등)에 문제가 될 수 있으나,
+                // 해당언어로 디렉토리를 만드는 경우가 많을 것으로 판단해서 호환성을 높이기 위해 기존처럼 UTF-8 을 그대로 사용한다
                 StreamWriter writer = new StreamWriter(strSettingFileFullName);
 
                 // Static 객체는 XML Serialize 가 불가능해서 일반 Clone 객체에 복사를 하고 Serialize 를 하고 있다. 

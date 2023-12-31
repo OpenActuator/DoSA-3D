@@ -1,69 +1,68 @@
 $begin "DoSA_3D_Project"
-	Writed=2022-06-05 오전 11:46:52
-	DoSA_Version=1.2.0.0
-	File_Version=1.2.0.0
+	Writed=8/10/2023 5:29:57 PM
+	DoSA_Version=1.2.7.3
+	File_Version=1.2.7.3
 	$begin "Design"
 		DesignName=Solenoid
 		AllShapeName=Armature,Core,Coil,Case,
 		RemainedShapeName=
-		ShapeMinX=-15.5858032659112
+		ShapeMinX=-15.6
 		ShapeMaxX=15.6
 		ShapeMinY=-12
 		ShapeMaxY=19.2
-		ShapeMinZ=-15.5910348491585
-		ShapeMaxZ=15.5990948959009
-	$begin "Coil"
-		NodeName=Coil
-		KindKey=COIL
-		MovingParts=FIXED
-		Material=Copper
-		CurrentDirection=IN
-		Turns=1040
-		Resistance=15.20945
-		Resistance_20=0
-		Layers=20
-		TurnsOfOneLayer=52
-		CoilWireGrade=Enameled_IEC_Grade_2
-		InnerDiameter=9.6
-		OuterDiameter=21.6
-		Height=16
-		CopperDiameter=0.27
-		WireDiameter=0.31072
-		Temperature=20
-		HorizontalCoefficient=0.9
-		VerticalCoefficient=0.98
-		ResistanceCoefficient=1
-	$end "Coil"
-	$begin "Steel"
-		NodeName=Armature
-		KindKey=STEEL
-		MovingParts=MOVING
-		Material=SUS_430
-	$end "Steel"
-	$begin "Steel"
-		NodeName=Core
-		KindKey=STEEL
-		MovingParts=FIXED
-		Material=SUS_430
-	$end "Steel"
-	$begin "Steel"
-		NodeName=Case
-		KindKey=STEEL
-		MovingParts=FIXED
-		Material=SUS_430
-	$end "Steel"
-	$begin "ForceTest"
-		NodeName=Force
-		KindKey=FORCE_TEST
-		MeshSizePercent=7
-		ActuatorType=Solenoid
-		Voltage=14.5
-		Current=0.95335
-		MovingY=0
-		MovingX=0
-		MovingZ=0
-		B_RotationAngle=45
-		B_VectorResolution=50
-	$end "ForceTest"
+		ShapeMinZ=-15.5484822307177
+		ShapeMaxZ=15.597385795154
+		$begin "Coil"
+			NodeName=Coil
+			KindKey=COIL
+			MovingParts=FIXED
+			Material=Copper
+			CurrentDirection=CounterClockwise
+			Turns=1040
+			Resistance=15.20945
+			Resistance_20=0
+			Layers=20
+			TurnsOfOneLayer=52
+			CoilWireGrade=Enameled_IEC_Grade_2
+			InnerDiameter=9.6
+			OuterDiameter=21.6
+			Height=16
+			CopperDiameter=0.27
+			WireDiameter=0.31072
+			Temperature=20
+			HorizontalCoefficient=0.9
+			VerticalCoefficient=0.98
+			ResistanceCoefficient=1
+		$end "Coil"
+		$begin "Steel"
+			NodeName=Armature
+			KindKey=STEEL
+			MovingParts=MOVING
+			Material=SUS_430
+		$end "Steel"
+		$begin "Steel"
+			NodeName=Core
+			KindKey=STEEL
+			MovingParts=FIXED
+			Material=SUS_430
+		$end "Steel"
+		$begin "Steel"
+			NodeName=Case
+			KindKey=STEEL
+			MovingParts=FIXED
+			Material=SUS_430
+		$end "Steel"
+		$begin "ForceTest"
+			NodeName=Force
+			KindKey=FORCE_TEST
+			MeshSizePercent=12
+			Voltage=14.5
+			Current=0.95335
+			MovingY=0
+			MovingX=0
+			MovingZ=0
+			B_RotationAngle=0
+			B_VectorResolution=100
+		$end "ForceTest"
 	$end "Design"
 $end "DoSA_3D_Project"

@@ -187,7 +187,9 @@ namespace gtLibrary
                     m_manageFile.createDirectory(Path.GetDirectoryName(strNewScriptFileFullName));
                 }
 
-                StreamWriter writeFile = new StreamWriter(strNewScriptFileFullName);
+                // 출력문자를 ANSI 로 지정한다.
+                // 기본 UTF-8의 경우 특정 언어(터키어 등)에서 OneLab이 인식하지 못하는 특수 기호를 만들기 때문이다.
+                StreamWriter stream_writer = new StreamWriter(strNewScriptFileFullName, false, Encoding.GetEncoding(1252));
 
                 string[] arrayLine = strOrgScriptContents.Split('\n');
 
@@ -231,7 +233,7 @@ namespace gtLibrary
                             if (listStartIndex.Count != listEndIndex.Count)
                             {
                                 CNotice.printLog("스크립트 치환에서 {{ 와 }} 의 갯수가 다릅니다.");
-                                writeFile.Close();
+                                stream_writer.Close();
                                 return false;
                             }
 
@@ -268,7 +270,7 @@ namespace gtLibrary
                                     else
                                     {
                                         CNotice.printLog("스크립트 치환에서 배열크기보다 큰 인덱스가 존재합니다.");
-                                        writeFile.Close();
+                                        stream_writer.Close();
                                         return false;
                                     }
                                 }
@@ -280,7 +282,7 @@ namespace gtLibrary
                             strLine = strTemp + strRemain;
 
                             // 원본파일의 한라인 문자열을 생성파일에 한라인으로 쓴다
-                            writeFile.WriteLine(strLine);
+                            stream_writer.WriteLine(strLine);
                         }
                     }
                     else if (strLine.Length > 0)
@@ -289,17 +291,17 @@ namespace gtLibrary
                         if (strLine[0] != cAnnotation)
                         {
                             // 첫줄이 Annotation 아닐때는 그대로 복사한다.
-                            writeFile.WriteLine(strLine);
+                            stream_writer.WriteLine(strLine);
                         }
                     }
                     // 빈줄은 그대로 출력한다.
                     else
                     {
-                        writeFile.WriteLine(strLine);
+                        stream_writer.WriteLine(strLine);
                     }
                 }
 
-                writeFile.Close();
+                stream_writer.Close();
             }
             catch (Exception ex)
             {
@@ -329,8 +331,7 @@ namespace gtLibrary
 
             try
             {
-                StreamWriter writeFile;
-                FileStream fileStream;
+                StreamWriter stream_writer;
 
                 // 스크립트 추가에서 목표 스크립트 파일이 존재하지 않는다면 스크립트 파일을 생성한다.
                 if (m_manageFile.isExistFile(strTargetScriptFileFullName) == false)
@@ -342,13 +343,18 @@ namespace gtLibrary
                     }
 
                     // 파일을 생성모드로 오픈한다.
-                    writeFile = new StreamWriter(strTargetScriptFileFullName);
+                    //
+                    // 출력문자를 ANSI 로 지정한다.
+                    // 기본 UTF-8의 경우 특정 언어(터키어 등)에서 OneLab이 인식하지 못하는 특수 기호를 만들기 때문이다.
+                    stream_writer = new StreamWriter(strTargetScriptFileFullName, false, Encoding.GetEncoding(1252));
                 }
                 else
                 {
                     // 파일을 추가모드로 오픈한다.
-                    fileStream = new FileStream(strTargetScriptFileFullName, FileMode.Append, FileAccess.Write);
-                    writeFile = new StreamWriter(fileStream);
+                    //
+                    // 출력문자를 ANSI 로 지정한다.
+                    // 기본 UTF-8의 경우 특정 언어(터키어 등)에서 OneLab이 인식하지 못하는 특수 기호를 만들기 때문이다.
+                    stream_writer = new StreamWriter(strTargetScriptFileFullName, true, Encoding.GetEncoding(1252));
                 }
 
 
@@ -394,7 +400,7 @@ namespace gtLibrary
                             if (listStartIndex.Count != listEndIndex.Count)
                             {
                                 CNotice.printLog("스크립트 치환에서 {{ 와 }} 의 갯수가 다릅니다.");
-                                writeFile.Close();
+                                stream_writer.Close();
                                 return false;
                             }
 
@@ -431,7 +437,7 @@ namespace gtLibrary
                                     else
                                     {
                                         CNotice.printLog("스크립트 치환에서 배열크기보다 큰 인덱스가 존재합니다.");
-                                        writeFile.Close();
+                                        stream_writer.Close();
                                         return false;
                                     }
                                 }
@@ -443,7 +449,7 @@ namespace gtLibrary
                             strLine = strTemp + strRemain;
 
                             // 원본파일의 한라인 문자열을 생성파일에 한라인으로 쓴다
-                            writeFile.WriteLine(strLine);
+                            stream_writer.WriteLine(strLine);
                         }
                     }
                     else if (strLine.Length > 0)
@@ -452,17 +458,17 @@ namespace gtLibrary
                         if (strLine[0] != cAnnotation)
                         {
                             // 첫줄이 Annotation 아닐때는 그대로 복사한다.
-                            writeFile.WriteLine(strLine);
+                            stream_writer.WriteLine(strLine);
                         }
                     }
                     // 빈줄은 그대로 출력한다.
                     else
                     {
-                        writeFile.WriteLine(strLine);
+                        stream_writer.WriteLine(strLine);
                     }
                 }
 
-                writeFile.Close();
+                stream_writer.Close();
             }
             catch (Exception ex)
             {
@@ -474,7 +480,6 @@ namespace gtLibrary
 
             return true;
         }
-
 
         #endregion
     }

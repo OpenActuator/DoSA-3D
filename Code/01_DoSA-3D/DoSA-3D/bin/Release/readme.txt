@@ -3,6 +3,12 @@ https://solenoid.or.kr/index_dosa_open_3d_eng.html
 Gi-Tae Kweon
 zgitae@gmail.com
 
+2023-12-30 Ver(1.2.9)
+ - Automated handling of Gmsh configuration file issues
+
+2023-12-20 Ver(1.2.8)
+ - Added the ability to delete Gmsh configuration files
+
 2022-08-05 Ver(1.2.7)
  - Bug Fix : Serious bug where parts are not added
 

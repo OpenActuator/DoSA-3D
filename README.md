@@ -13,5 +13,5 @@ This program is an open source software for solenoids &amp; actuators
 ![DoSA-3D](./Images/LinearVibrator_Analysis_3D.png)
 ![DoSA-3D](./Images/Solenoid_Analysis_3D.png)
 
+<img src="./Images/Auto-Focus_Analysis_3D.png" width="660" height="540"  border="0" alt="">
 
-<img src="./Images/Auto-Focus_Analysis_3D.png" border="0" alt="">

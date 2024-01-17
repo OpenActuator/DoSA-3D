@@ -8,8 +8,9 @@ This program is an open source software for solenoids &amp; actuators
 4. Homepage : <a href="https://solenoid.or.kr/index_dosa_open_3d_eng.html">DoSA-3D Homepage Link</a><br>
 <br><br>
 
+<div style="text-align: center;">
 <img src="./Images/Auto-Focus_Analysis_3D.png" width="660" height="540"  border="0" alt="">
 <img src="./Images/Solenoid_Analysis_3D.png" width="660" height="540"  border="0" alt="">
 <img src="./Images/LinearVibrator_Analysis_3D.png" width="660" height="540"  border="0" alt="">
 <img src="./Images/Coil_Design.png" width="660" height="540"  border="0" alt="">
-
+</div>
